@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Mezzi - Flotta Aziendale</title>
+    
+    <!-- Tailwind & Charts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #080810; --bg-elevated: #0e0e18; --card: #13131f; --card-hover: #1a1a28;
+            --border: #22222e; --border-focus: #33334a; --fg: #eeeef2; --fg-muted: #6e6e82;
+            --accent: #00c8ff; --accent-hover: #33d4ff; --accent-muted: rgba(0, 200, 255, 0.1);
+            --success: #22c55e; --warning: #f59e0b; --danger: #ef4444; --danger-muted: rgba(239, 68, 68, 0.1);
+        }
+        * { box-sizing: border-box; outline: none; }
+        body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--fg); min-height: 100vh; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Backgrounds */
+        .bg-ambient { 
+            background: radial-gradient(ellipse at 10% 10%, rgba(0, 200, 255, 0.06) 0%, transparent 50%), 
+                        radial-gradient(ellipse at 90% 90%, rgba(0, 200, 255, 0.04) 0%, transparent 50%), 
+                        var(--bg); 
+            background-attachment: fixed; 
+        }
+        .grid-pattern { 
+            background-image: linear-gradient(rgba(255,255,255,0.012) 1px, transparent 1px), 
+                              linear-gradient(90deg, rgba(255,255,255,0.012) 1px, transparent 1px); 
+            background-size: 50px 50px; 
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; } 
+        ::-webkit-scrollbar-track { background: var(--bg); } 
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
+        
+        /* Animations */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .animate-fade-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .animate-scale-in { animation: scaleIn 0.25s ease-out forwards; }
+        .stagger-1 { animation-delay: 0.05s; } .stagger-2 { animation-delay: 0.1s; } .stagger-3 { animation-delay: 0.15s; } .stagger-4 { animation-delay: 0.2s; }
+        .loading-spinner { animation: spin 1s linear infinite; }
+        
+        @media (prefers-reduced-motion: reduce) { .animate-fade-up, .animate-scale-in { animation: none; opacity: 1; transform: none; } }
+        
+        /* Components */
+        .vehicle-card { 
+            background: var(--card); border: 1px solid var(--border); border-radius: 16px; 
+            overflow: hidden; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); 
+            display: flex; flex-direction: column;
+        }
+        .vehicle-card:hover { 
+            border-color: var(--accent); transform: translateY(-4px); 
+            box-shadow: 0 20px 40px -10px rgba(0, 200, 255, 0.15); 
+        }
+        
+        .photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; height: 160px; background: var(--border); }
+        .photo-grid-item { background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: zoom-in; position: relative; }
+        .photo-grid-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+        .photo-grid-item:hover img { transform: scale(1.1); }
+        
+        .license-plate { 
+            background: linear-gradient(135deg, #1a1a26 0%, #0c0c12 100%); border: 2px solid #2a2a3a; 
+            font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 2px; 
+            padding: 4px 10px; border-radius: 4px; font-size: 14px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        /* Form Elements */
+        .input-field { 
+            background: var(--bg); border: 1px solid var(--border); color: var(--fg); 
+            border-radius: 8px; transition: all 0.2s ease; width: 100%; 
+        }
+        .input-field:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-muted); }
+        .input-field::placeholder { color: var(--fg-muted); opacity: 0.7; }
+        
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--accent) 0%, #0099cc 100%); 
+            color: #000; font-weight: 600; border-radius: 8px; transition: all 0.2s ease; 
+            border: none; cursor: pointer;
+        }
+        .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 20px -4px rgba(0, 200, 255, 0.4); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(0.5); }
+        
+        .btn-secondary { 
+            background: var(--card); border: 1px solid var(--border); color: var(--fg); 
+            border-radius: 8px; transition: all 0.2s ease; cursor: pointer; 
+        }
+        .btn-secondary:hover { background: var(--card-hover); border-color: var(--fg-muted); }
+        
+        .btn-action { 
+            background: rgba(34, 197, 94, 0.1); color: var(--success); border: 1px solid transparent; 
+            border-radius: 8px; transition: all 0.2s ease; cursor: pointer; 
+        }
+        .btn-action:hover { background: var(--success); color: #000; }
+        
+        .btn-danger { 
+            background: var(--danger-muted); color: var(--danger); border-radius: 8px; 
+            transition: all 0.2s ease; cursor: pointer; border: 1px solid transparent;
+        }
+        .btn-danger:hover { background: var(--danger); color: white; }
+        
+        .btn-ghost { background: transparent; color: var(--fg); border-radius: 8px; transition: all 0.2s ease; cursor: pointer; }
+        .btn-ghost:hover { background: rgba(255,255,255,0.05); }
+        
+        .btn-export { 
+            background: var(--card); border: 1px solid var(--border); color: var(--fg); 
+            border-radius: 8px; transition: all 0.2s ease; display: flex; align-items: center; gap: 6px; cursor: pointer;
+        }
+        .btn-export:hover { background: var(--card-hover); border-color: var(--accent); color: var(--accent); }
+        
+        /* Modals */
+        .modal-overlay { 
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(12px); 
+            position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; padding: 1rem;
+        }
+        .modal-content { 
+            background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 16px; 
+            max-height: 90vh; overflow-y: auto; width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .photo-upload-box { 
+            border: 2px dashed var(--border); border-radius: 8px; background: var(--bg); 
+            cursor: pointer; transition: all 0.2s ease; aspect-ratio: 4/3; 
+            display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; 
+        }
+        .photo-upload-box:hover { border-color: var(--accent); background: var(--accent-muted); }
+        .photo-upload-box.has-image { border-style: solid; border-color: var(--accent); }
+        .photo-upload-box img { width: 100%; height: 100%; object-fit: cover; }
+        
+        /* Badges & Tags */
+        .badge { font-size: 10px; font-weight: 600; letter-spacing: 0.5px; border-radius: 4px; padding: 2px 6px; text-transform: uppercase; }
+        .badge-type { background: var(--accent-muted); color: var(--accent); }
+        .badge-expired { background: var(--danger-muted); color: var(--danger); animation: pulse 2s infinite; }
+        .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .badge-ok { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+        
+        .stat-card { 
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px; 
+            padding: 16px; transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .stat-card::after {
+            content: ''; position: absolute; top: 0; right: 0; width: 60px; height: 60px;
+            background: radial-gradient(circle at top right, var(--accent), transparent 70%);
+            opacity: 0.1; pointer-events: none;
+        }
+        
+        .chart-container { 
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px; 
+            padding: 20px; height: 300px; 
+        }
+        
+        .timeline-item { position: relative; padding-left: 24px; padding-bottom: 24px; border-left: 2px solid var(--border); margin-left: 8px; }
+        .timeline-item:last-child { border-left-color: transparent; padding-bottom: 0; }
+        .timeline-dot { position: absolute; left: -6px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg-elevated); }
+        
+        .km-display { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+        .cost-tag { background: rgba(34, 197, 94, 0.15); color: var(--success); font-size: 11px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+        .filter-section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+        
+        .toast-enter { transform: translateX(100%); opacity: 0; }
+        .toast-enter-active { transform: translateX(0); opacity: 1; transition: all 0.3s ease; }
+        .toast-exit { transform: translateX(0); opacity: 1; }
+        .toast-exit-active { transform: translateX(100%); opacity: 0; transition: all 0.3s ease; }
+
+        @media print { body { background: white !important; color: black !important; } .no-print { display: none !important; } }
+    </style>
+</head>
+<body class="bg-ambient grid-pattern">
+
+    <div class="min-h-screen p-4 md:p-6 lg:p-8">
+        <!-- Header -->
+        <header class="max-w-7xl mx-auto mb-8 animate-fade-up">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[#0077aa] flex items-center justify-center shadow-lg shadow-[var(--accent)]/20">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight text-white">Gestione Flotta</h1>
+                        <p class="text-[var(--fg-muted)] text-sm">Dashboard Aziendale <span class="text-[var(--accent)]">Live</span></p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 no-print">
+                    <button onclick="exportCSV()" class="btn-export px-4 py-2 text-sm font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Esporta CSV
+                    </button>
+                    <button onclick="openVehicleModal()" class="btn-primary px-5 py-2.5 flex items-center gap-2 text-sm shadow-lg shadow-[var(--accent)]/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Nuovo Veicolo
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats -->
+        <div class="max-w-7xl mx-auto mb-8 grid grid-cols-2 md:grid-cols-5 gap-4 animate-fade-up stagger-1">
+            <div class="stat-card">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-[var(--bg)] rounded-lg text-[var(--accent)]"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 19H5V8h14m-3-5v2h2V3h-2m-2-1H8v2h6M3 8v11a2 2 0 002 2h14a2 2 0 002-2V8H3z"/></svg></div>
+                    <p class="text-xs text-[var(--fg-muted)] font-medium">Parco Auto</p>
+                </div>
+                <p id="statTotal" class="text-2xl font-bold">0</p>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-[var(--bg)] rounded-lg text-[#60a5fa]"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg></div>
+                    <p class="text-xs text-[var(--fg-muted)] font-medium">Auto</p>
+                </div>
+                <p id="statCars" class="text-2xl font-bold">0</p>
+            </div>
+            <div class="stat-card">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-[var(--bg)] rounded-lg text-[#f472b6]"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg></div>
+                    <p class="text-xs text-[var(--fg-muted)] font-medium">Furgoni</p>
+                </div>
+                <p id="statVans" class="text-2xl font-bold">0</p>
+            </div>
+            <div class="stat-card border-[var(--warning)]/30">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-[var(--bg)] rounded-lg text-[var(--warning)]"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                    <p class="text-xs text-[var(--fg-muted)] font-medium">Scadenze < 30gg</p>
+                </div>
+                <p id="statExpiring" class="text-2xl font-bold text-[var(--warning)]">0</p>
+            </div>
+            <div class="stat-card border-[var(--success)]/30">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="p-2 bg-[var(--bg)] rounded-lg text-[var(--success)]"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></div>
+                    <p class="text-xs text-[var(--fg-muted)] font-medium">Costi Totali</p>
+                </div>
+                <p id="statCosts" class="text-2xl font-bold text-[var(--success)]">€0</p>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="max-w-7xl mx-auto mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-up stagger-2 no-print">
+            <div class="chart-container">
+                <h3 class="text-sm font-semibold mb-4 text-[var(--fg)] flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-[var(--accent)]"></span> Distribuzione Costi
+                </h3>
+                <div class="h-[220px]"><canvas id="costByTypeChart"></canvas></div>
+            </div>
+            <div class="chart-container">
+                <h3 class="text-sm font-semibold mb-4 text-[var(--fg)] flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-[var(--success)]"></span> Top Costi Veicoli
+                </h3>
+                <div class="h-[220px]"><canvas id="costByVehicleChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="max-w-7xl mx-auto mb-6 animate-fade-up stagger-3 no-print">
+            <div class="filter-section">
+                <div class="flex flex-wrap gap-4 items-end">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-xs text-[var(--fg-muted)] mb-1.5 font-semibold uppercase tracking-wider">Cerca Veicolo</label>
+                        <input type="text" id="searchInput" placeholder="Targa, modello o note..." class="input-field px-4 py-2.5 text-sm" oninput="renderVehicles()">
+                    </div>
+                    <div class="w-40">
+                        <label class="block text-xs text-[var(--fg-muted)] mb-1.5 font-semibold uppercase tracking-wider">Tipologia</label>
+                        <select id="typeFilter" class="input-field px-4 py-2.5 text-sm" onchange="renderVehicles()">
+                            <option value="">Tutte</option>
+                            <option value="Auto">Auto</option>
+                            <option value="Furgone">Furgone</option>
+                            <option value="Camion">Camion</option>
+                            <option value="Moto">Moto</option>
+                        </select>
+                    </div>
+                    <button onclick="resetFilters()" class="h-[42px] px-4 btn-secondary text-sm font-medium">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vehicles Grid -->
+        <main class="max-w-7xl mx-auto">
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-20">
+                <div class="relative w-16 h-16 mx-auto mb-4">
+                    <div class="absolute inset-0 border-4 border-[var(--border)] rounded-full"></div>
+                    <div class="absolute inset-0 border-4 border-t-[var(--accent)] rounded-full loading-spinner"></div>
+                </div>
+                <p class="text-[var(--fg-muted)] animate-pulse font-medium">Sincronizzazione con il cloud...</p>
+            </div>
+            
+            <div id="vehiclesGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+            
+            <div id="emptyState" class="hidden text-center py-20 rounded-3xl border border-[var(--border)] bg-[var(--card)]">
+                <div class="w-16 h-16 bg-[var(--bg)] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Nessun veicolo trovato</h3>
+                <p class="text-[var(--fg-muted)] mb-6 max-w-xs mx-auto">Inizia aggiungendo il primo veicolo alla tua flotta aziendale.</p>
+                <button onclick="openVehicleModal()" class="btn-primary px-6 py-2.5 inline-flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Aggiungi Ora
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Veicolo -->
+    <div id="vehicleModal" class="modal-overlay">
+        <div class="modal-content w-full max-w-3xl animate-scale-in">
+            <div class="sticky top-0 bg-[var(--bg-elevated)] z-10 px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
+                <div>
+                    <h2 id="vehicleModalTitle" class="text-xl font-bold text-white">Nuovo Veicolo</h2>
+                    <p class="text-xs text-[var(--fg-muted)]">Compila i dati tecnici e carica le foto</p>
+                </div>
+                <button onclick="closeVehicleModal()" class="w-8 h-8 rounded-lg btn-ghost flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 transition-colors">&times;</button>
+            </div>
+            
+            <form id="vehicleForm" onsubmit="saveVehicle(event)" class="p-6">
+                <input type="hidden" id="vehicleId">
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Foto Veicolo (4 lati)
+                    </label>
+                    <div class="grid grid-cols-4 gap-3">
+                        <!-- Fronte -->
+                        <div class="group">
+                            <p class="text-[10px] text-[var(--fg-muted)] mb-1.5 text-center font-medium uppercase tracking-wider group-hover:text-[var(--accent)] transition-colors">Fronte</p>
+                            <div id="photoFront" class="photo-upload-box relative" onclick="triggerPhotoUpload('front')">
+                                <img id="photoFrontImg" class="hidden w-full h-full object-cover">
+                                <div id="photoFrontPlaceholder" class="text-center p-2 flex flex-col items-center justify-center gap-1">
+                                    <svg class="w-6 h-6 text-[var(--fg-muted)] group-hover:text-[var(--accent)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+                                </div>
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                    <span class="text-white text-xs font-medium">Cambia</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Retro -->
+                        <div class="group">
+                            <p class="text-[10px] text-[var(--fg-muted)] mb-1.5 text-center font-medium uppercase tracking-wider group-hover:text-[var(--accent)] transition-colors">Retro</p>
+                            <div id="photoBack" class="photo-upload-box relative" onclick="triggerPhotoUpload('back')">
+                                <img id="photoBackImg" class="hidden w-full h-full object-cover">
+                                <div id="photoBackPlaceholder" class="text-center p-2 flex flex-col items-center justify-center gap-1">
+                                    <svg class="w-6 h-6 text-[var(--fg-muted)] group-hover:text-[var(--accent)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+                                </div>
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                    <span class="text-white text-xs font-medium">Cambia</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Sinistra -->
+                        <div class="group">
+                            <p class="text-[10px] text-[var(--fg-muted)] mb-1.5 text-center font-medium uppercase tracking-wider group-hover:text-[var(--accent)] transition-colors">Sinistra</p>
+                            <div id="photoLeft" class="photo-upload-box relative" onclick="triggerPhotoUpload('left')">
+                                <img id="photoLeftImg" class="hidden w-full h-full object-cover">
+                                <div id="photoLeftPlaceholder" class="text-center p-2 flex flex-col items-center justify-center gap-1">
+                                    <svg class="w-6 h-6 text-[var(--fg-muted)] group-hover:text-[var(--accent)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+                                </div>
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                    <span class="text-white text-xs font-medium">Cambia</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Destra -->
+                        <div class="group">
+                            <p class="text-[10px] text-[var(--fg-muted)] mb-1.5 text-center font-medium uppercase tracking-wider group-hover:text-[var(--accent)] transition-colors">Destra</p>
+                            <div id="photoRight" class="photo-upload-box relative" onclick="triggerPhotoUpload('right')">
+                                <img id="photoRightImg" class="hidden w-full h-full object-cover">
+                                <div id="photoRightPlaceholder" class="text-center p-2 flex flex-col items-center justify-center gap-1">
+                                    <svg class="w-6 h-6 text-[var(--fg-muted)] group-hover:text-[var(--accent)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+                                </div>
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                                    <span class="text-white text-xs font-medium">Cambia</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" id="photoInput" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label for="targa" class="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-[var(--fg-muted)]">Targa *</label>
+                        <input type="text" id="targa" required class="input-field px-4 py-2.5 text-lg font-mono tracking-widest uppercase text-center" placeholder="AB123CD" oninput="this.value = this.value.toUpperCase()">
+                    </div>
+                    <div>
+                        <label for="tipologia" class="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-[var(--fg-muted)]">Tipologia *</label>
+                        <select id="tipologia" required class="input-field px-4 py-2.5">
+                            <option value="">Seleziona...</option>
+                            <option value="Auto">Auto</option>
+                            <option value="Furgone">Furgone</option>
+                            <option value="Camion">Camion</option>
+                            <option value="Moto">Moto</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label for="scadenzaAssicurazione" class="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-[var(--fg-muted)]">Scadenza Assicurazione</label>
+                        <input type="date" id="scadenzaAssicurazione" class="input-field px-4 py-2.5">
+                    </div>
+                    <div>
+                        <label for="scadenzaRevisione" class="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-[var(--fg-muted)]">Scadenza Revisione</label>
+                        <input type="date" id="scadenzaRevisione" class="input-field px-4 py-2.5">
+                    </div>
+                </div>
+
+                <div class="mb-8">
+                    <label for="note" class="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-[var(--fg-muted)]">Note Aggiuntive</label>
+                    <textarea id="note" rows="3" class="input-field px-4 py-2.5 resize-none" placeholder="Es. Chiave riservata, usi specifici..."></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-4 border-t border-[var(--border)]">
+                    <button type="button" onclick="closeVehicleModal()" class="btn-secondary flex-1 py-3 text-sm font-semibold">Annulla</button>
+                    <button type="submit" id="btnSaveVehicle" class="btn-primary flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                        Salva Veicolo
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Intervento -->
+    <div id="interventionModal" class="modal-overlay">
+        <div class="modal-content w-full max-w-3xl animate-scale-in">
+            <div class="sticky top-0 bg-[var(--bg-elevated)] z-10 px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Nuovo Intervento</h2>
+                    <p id="interventionSubtitle" class="text-xs text-[var(--accent)] font-medium mt-1"></p>
+                </div>
+                <button onclick="closeInterventionModal()" class="w-8 h-8 rounded-lg btn-ghost flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 transition-colors">&times;</button>
+            </div>
+            
+            <form id="interventionForm" onsubmit="saveIntervention(event)" class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label for="interventionType" class="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-[var(--fg-muted)]">Tipo Intervento *</label>
+                        <select id="interventionType" required class="input-field px-4 py-2.5">
+                            <option value="">Seleziona...</option>
+                            <option value="Manutenzione Ordinaria">Manutenzione Ordinaria</option>
+                            <option value="Tagliando">Tagliando</option>
+                            <option value="Riparazione Meccanica">Riparazione Meccanica</option>
+                            <option value="Riparazione Carrozzeria">Riparazione Carrozzeria</option>
+                            <option value="Cambio Pneumatici">Cambio Pneumatici</option>
+                            <option value="Rinnovo Assicurazione">Rinnovo Assicurazione</option>
+                            <option value="Bollo">Bollo</option>
+                            <option value="Altro">Altro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="interventionKm" class="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-[var(--fg-muted)]">Kilometraggio Attuale *</label>
+                        <input type="number" id="interventionKm" required class="input-field px-4 py-2.5 font-mono" placeholder="Es. 150000">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-[var(--fg-muted)]">Data</label>
+                        <input type="date" id="interventionDate" required class="input-field px-4 py-2.5">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-[var(--fg-muted)]">Costo (€)</label>
+                        <input type="number" id="interventionCost" class="input-field px-4 py-2.5 font-mono" placeholder="0.00" step="0.01">
+                    </div>
+                </div>
+
+                <div class="mb-6 p-4 bg-[var(--bg)] rounded-xl border border-[var(--border)] border-dashed">
+                    <label class="block text-sm font-semibold mb-3 text-[var(--accent)] flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Aggiorna Foto (4 lati)
+                        <span class="text-[10px] text-[var(--fg-muted)] font-normal ml-auto">Opzionale - Aggiorna la vista veicolo</span>
+                    </label>
+                    <div class="grid grid-cols-4 gap-2">
+                         <!-- Front -->
+                         <div id="intPhotoFront" class="photo-upload-box h-24" onclick="triggerInterventionPhotoUpload('front')">
+                            <img id="intPhotoFrontImg" class="hidden w-full h-full object-cover">
+                            <div id="intPhotoFrontPlaceholder" class="text-center p-1 flex flex-col items-center justify-center">
+                                <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+                            </div>
+                        </div>
+                        <!-- Back -->
+                        <div id="intPhotoBack" class="photo-upload-box h-24" onclick="triggerInterventionPhotoUpload('back')">
+                            <img id="intPhotoBackImg" class="hidden w-full h-full object-cover">
+                            <div id="intPhotoBackPlaceholder" class="text-center p-1 flex flex-col items-center justify-center">
+                                <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+                            </div>
+                        </div>
+                        <!-- Left -->
+                        <div id="intPhotoLeft" class="photo-upload-box h-24" onclick="triggerInterventionPhotoUpload('left')">
+                            <img id="intPhotoLeftImg" class="hidden w-full h-full object-cover">
+                            <div id="intPhotoLeftPlaceholder" class="text-center p-1 flex flex-col items-center justify-center">
+                                <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+                            </div>
+                        </div>
+                        <!-- Right -->
+                        <div id="intPhotoRight" class="photo-upload-box h-24" onclick="triggerInterventionPhotoUpload('right')">
+                            <img id="intPhotoRightImg" class="hidden w-full h-full object-cover">
+                            <div id="intPhotoRightPlaceholder" class="text-center p-1 flex flex-col items-center justify-center">
+                                <svg class="w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" id="intPhotoInput" accept="image/*" class="hidden" onchange="handleInterventionPhotoUpload(event)">
+                </div>
+                
+                <div class="mb-8">
+                    <label class="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-[var(--fg-muted)]">Note Intervento</label>
+                    <textarea id="interventionNotes" rows="2" class="input-field px-4 py-2.5 resize-none" placeholder="Descrizione lavori eseguiti..."></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-4 border-t border-[var(--border)]">
+                    <button type="button" onclick="closeInterventionModal()" class="btn-secondary flex-1 py-3 text-sm font-semibold">Annulla</button>
+                    <button type="submit" id="btnSaveIntervention" class="btn-primary flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Registra Intervento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Storico -->
+    <div id="historyModal" class="modal-overlay">
+        <div class="modal-content w-full max-w-2xl animate-scale-in">
+            <div class="sticky top-0 bg-[var(--bg-elevated)] z-10 px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-white">Storico Manutenzioni</h2>
+                    <p id="historySubtitle" class="text-xs text-[var(--accent)] font-medium mt-1"></p>
+                </div>
+                <button onclick="closeHistoryModal()" class="w-8 h-8 rounded-lg btn-ghost flex items-center justify-center hover:bg-red-500/20 hover:text-red-400 transition-colors">&times;</button>
+            </div>
+            <div class="p-6">
+                <div id="historyContent" class="max-h-[60vh] overflow-y-auto pr-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Elimina -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-content w-full max-w-sm p-6 text-center animate-scale-in">
+            <div class="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </div>
+            <h3 class="text-lg font-bold mb-2">Elimina Veicolo?</h3>
+            <p class="text-[var(--fg-muted)] text-sm mb-6">Questa azione è irreversibile. Tutti i dati e lo storico verranno persi.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="btn-secondary flex-1 py-2.5 text-sm font-semibold">Annulla</button>
+                <button onclick="confirmDelete()" id="btnConfirmDelete" class="btn-danger flex-1 py-2.5 text-sm font-semibold">Conferma Elimina</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Modal -->
+    <div id="photoModal" class="modal-overlay z-[60]" onclick="closePhotoModal()">
+        <img id="photoModalImg" src="" alt="Foto" class="max-w-full max-h-[90vh] rounded-lg shadow-2xl animate-scale-in border border-[var(--border)]">
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-[70] flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+        // ==================== FIREBASE CONFIG ====================
+        // INSERISCI QUI LE TUE CREDENZIALI FIREBASE SE NON SONO GIÀ PRESENTI
+        const firebaseConfig = {
+            apiKey: "AIzaSyA1y-xr5cZ9kKeO2nIVSiDRBJUN5ZjHTHU",
+            authDomain: "gestionemezzi-490b7.firebaseapp.com",
+            projectId: "gestionemezzi-490b7",
+            storageBucket: "gestionemezzi-490b7.firebasestorage.app",
+            messagingSenderId: "447482604727",
+            appId: "1:447482604727:web:e418f65b8f15453032f132",
+            measurementId: "G-F9GTHW5MHQ"
+        };
+
+        
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+        } catch (e) {
+            console.error("Firebase init error:", e);
+        }
+        const db = firebase.firestore();
+
+        // ==================== STATE ====================
+        let vehicles = [];
+        let currentVehicleId = null;
+        let currentDeleteId = null;
+        let tempPhotos = { front: null, back: null, left: null, right: null };
+        let tempInterventionPhotos = { front: null, back: null, left: null, right: null };
+        let currentPhotoSide = null;
+        let currentInterventionPhotoSide = null;
+        let costByTypeChart = null;
+        let costByVehicleChart = null;
+
+        // ==================== IMAGE COMPRESSION UTILITY (FIXED) ====================
+        /**
+         * Comprime un'immagine per adattarla al limite di Firebase (1MB total document).
+         * Target: ~150KB per foto per stare tranquilli con 4 foto + dati.
+         */
+        function compressImage(dataUrl, maxSizeKB = 150) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = dataUrl;
+                
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Ridimensionamento aggressivo per garantire il successo
+                    // Max dimensione 1280px (ottimo per mobile/web, leggero per DB)
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX_DIM = 1280;
+
+                    if (width > height && width > MAX_DIM) {
+                        height = Math.round(height * (MAX_DIM / width));
+                        width = MAX_DIM;
+                    } else if (height > MAX_DIM) {
+                        width = Math.round(width * (MAX_DIM / height));
+                        height = MAX_DIM;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Compressione iterativa della qualità
+                    let quality = 0.7; // Inizia dal 70%
+                    const maxAttempts = 5;
+                    let attempts = 0;
+                    
+                    const tryCompress = () => {
+                        attempts++;
+                        // Usa 'image/jpeg' per la migliore compressione
+                        const compressedData = canvas.toDataURL('image/jpeg', quality);
+                        
+                        // Calcolo dimensione approssimativa in KB
+                        // Base64 ha un overhead del ~33% rispetto ai byte raw
+                        const sizeInKB = (compressedData.length - 'data:image/jpeg;base64,'.length) * 0.75 / 1024;
+
+                        if (sizeInKB <= maxSizeKB || quality <= 0.1 || attempts >= maxAttempts) {
+                            if (sizeInKB > maxSizeKB) {
+                                console.warn(`Immagine ancora grande (${sizeInKB.toFixed(0)}KB), ma tentativi esauriti. Procedo comunque.`);
+                            }
+                            resolve(compressedData);
+                        } else {
+                            // Riduci la qualità e riprova
+                            quality -= 0.15;
+                            setTimeout(tryCompress, 5); 
+                        }
+                    };
+
+                    tryCompress();
+                };
+                
+                img.onerror = (err) => reject(err);
+            });
+        }
+
+        // ==================== INIT & REALTIME LISTENER ====================
+        function init() {
+            const loading = document.getElementById('loadingState');
+            const grid = document.getElementById('vehiclesGrid');
+            
+            db.collection('vehicles').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                vehicles = [];
+                snapshot.forEach(doc => {
+                    vehicles.push({ id: doc.id, ...doc.data() });
+                });
+                
+                loading.classList.add('hidden');
+                grid.classList.remove('hidden');
+                
+                renderVehicles();
+                updateStats();
+                updateCharts();
+            }, error => {
+                console.error("Firebase Error:", error);
+                showToast("Errore di connessione al database", "error");
+                loading.innerHTML = `
+                    <div class="text-red-500 flex flex-col items-center">
+                        <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <p class="font-semibold">Impossibile caricare i dati</p>
+                    </div>
+                `;
+            });
+        }
+
+        // ==================== RENDER LOGIC ====================
+        function renderVehicles() {
+            const grid = document.getElementById('vehiclesGrid');
+            const empty = document.getElementById('emptyState');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const type = document.getElementById('typeFilter').value;
+
+            const filtered = vehicles.filter(v => {
+                const matchesSearch = v.targa.toLowerCase().includes(search) || 
+                                      (v.note && v.note.toLowerCase().includes(search));
+                const matchesType = !type || v.tipologia === type;
+                return matchesSearch && matchesType;
+            });
+
+            if (vehicles.length === 0) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+            } else if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-12 text-[var(--fg-muted)] animate-fade-up">Nessun veicolo corrisponde ai filtri</div>`;
+                empty.classList.add('hidden');
+            } else {
+                empty.classList.add('hidden');
+                grid.innerHTML = filtered.map((v, i) => {
+                    const photos = v.photos || {};
+                    const records = v.records || [];
+                    
+                    const lastKm = v.km ? v.km : (records.length > 0 ? Math.max(...records.map(r => parseInt(r.km) || 0)) : 0);
+                    const totalCost = records.reduce((sum, r) => sum + (parseFloat(r.cost) || 0), 0);
+                    
+                    const today = new Date();
+                    const getDaysDiff = (dateStr) => {
+                        if (!dateStr) return null;
+                        const target = new Date(dateStr);
+                        const diffTime = target - today;
+                        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    };
+
+                    const insDays = getDaysDiff(v.scadenzaAssicurazione);
+                    const revDays = getDaysDiff(v.scadenzaRevisione);
+
+                    let dateBadge = '';
+                    if (insDays !== null && insDays < 0) dateBadge = `<span class="badge badge-expired">Assic. Scaduta</span>`;
+                    else if (revDays !== null && revDays < 0) dateBadge = `<span class="badge badge-expired">Rev. Scaduta</span>`;
+                    else if (insDays !== null && insDays < 30) dateBadge = `<span class="badge badge-warning">Assic. ${insDays}gg</span>`;
+                    else if (revDays !== null && revDays < 30) dateBadge = `<span class="badge badge-warning">Rev. ${revDays}gg</span>`;
+
+                    return `
+                        <div class="vehicle-card animate-fade-up stagger-${Math.min(i + 1, 4)}">
+                            <div class="photo-grid">
+                                ${['front', 'back', 'left', 'right'].map(s => `
+                                    <div class="photo-grid-item" onclick="${photos[s] ? `openPhotoModal('${photos[s]}')` : ''}">
+                                        ${photos[s] 
+                                            ? `<img src="${photos[s]}" alt="${s}" loading="lazy">` 
+                                            : `<svg class="w-6 h-6 text-[var(--border)] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16"/></svg>`
+                                        }
+                                    </div>
+                                `).join('')}
+                            </div>
+                            
+                            <div class="p-5 flex flex-col flex-1">
+                                <div class="flex items-start justify-between mb-3">
+                                    <span class="license-plate text-sm">${v.targa}</span>
+                                    <div class="flex flex-col gap-1 items-end">
+                                        <span class="badge badge-type">${v.tipologia}</span>
+                                        ${dateBadge}
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-auto pt-4 border-t border-[var(--border)] grid grid-cols-2 gap-2 mb-4 text-sm">
+                                    <div>
+                                        <p class="text-[10px] text-[var(--fg-muted)] uppercase tracking-wider">KM Ultimi</p>
+                                        <p class="km-display font-semibold text-white">${lastKm.toLocaleString()}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[10px] text-[var(--fg-muted)] uppercase tracking-wider">Spese Totali</p>
+                                        <p class="font-bold text-[var(--success)]">€${totalCost.toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-2 no-print mt-auto">
+                                    <button onclick="openHistory('${v.id}')" class="btn-ghost py-2 text-xs font-medium text-[var(--fg-muted)] hover:text-white transition-colors flex items-center justify-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        Storico (${records.length})
+                                    </button>
+                                    <div class="flex gap-1">
+                                        <button onclick="openInterventionModal('${v.id}')" class="btn-action px-2 py-2 text-xs" title="Nuovo Intervento">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        </button>
+                                        <button onclick="editVehicle('${v.id}')" class="btn-ghost px-2 py-2 text-xs hover:bg-[var(--bg)]" title="Modifica">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        </button>
+                                        <button onclick="openDeleteModal('${v.id}')" class="btn-ghost px-2 py-2 text-xs hover:bg-red-500/10 hover:text-red-500" title="Elimina">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function updateStats() {
+            const total = vehicles.length;
+            const cars = vehicles.filter(v => v.tipologia === 'Auto').length;
+            const vans = vehicles.filter(v => v.tipologia === 'Furgone').length;
+            
+            let totalCosts = 0;
+            let expiring = 0;
+            const today = new Date();
+            
+            vehicles.forEach(v => {
+                if(v.records) totalCosts += v.records.reduce((s, r) => s + (parseFloat(r.cost)||0), 0);
+                
+                [v.scadenzaAssicurazione, v.scadenzaRevisione].forEach(d => {
+                    if(d) {
+                        const diff = (new Date(d) - today) / (1000 * 60 * 60 * 24);
+                        if (diff < 30 && diff > -365) expiring++;
+                    }
+                });
+            });
+
+            animateValue("statTotal", parseInt(document.getElementById("statTotal").innerText), total, 500);
+            animateValue("statCars", parseInt(document.getElementById("statCars").innerText), cars, 500);
+            animateValue("statVans", parseInt(document.getElementById("statVans").innerText), vans, 500);
+            animateValue("statExpiring", parseInt(document.getElementById("statExpiring").innerText), expiring, 500);
+            
+            document.getElementById('statCosts').textContent = `€${totalCosts.toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+        }
+
+        function animateValue(id, start, end, duration) {
+            if (start === end) return;
+            const range = end - start;
+            let current = start;
+            const increment = end > start ? 1 : -1;
+            const stepTime = Math.abs(Math.floor(duration / range));
+            const obj = document.getElementById(id);
+            const timer = setInterval(function() {
+                current += increment;
+                obj.textContent = current;
+                if (current == end) clearInterval(timer);
+            }, Math.max(stepTime, 20));
+        }
+
+        function updateCharts() {
+            const costByType = {};
+            const typeColors = { 'Auto': '#00c8ff', 'Furgone': '#f472b6', 'Camion': '#a78bfa', 'Moto': '#fbbf24' };
+            
+            vehicles.forEach(v => {
+                if(v.records) v.records.forEach(r => {
+                    costByType[v.tipologia] = (costByType[v.tipologia] || 0) + (parseFloat(r.cost) || 0);
+                });
+            });
+            
+            const ctx1 = document.getElementById('costByTypeChart').getContext('2d');
+            if (costByTypeChart) costByTypeChart.destroy();
+            
+            costByTypeChart = new Chart(ctx1, {
+                type: 'doughnut',
+                data: { 
+                    labels: Object.keys(costByType), 
+                    datasets: [{ 
+                        data: Object.values(costByType), 
+                        backgroundColor: Object.keys(costByType).map(k => typeColors[k] || '#22c55e'),
+                        borderWidth: 0
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '70%',
+                    plugins: { 
+                        legend: { position: 'right', labels: { color: '#6e6e82', font: {family: 'Space Grotesk'} } } 
+                    } 
+                }
+            });
+
+            const costByVehicle = vehicles.map(v => ({
+                label: v.targa,
+                value: (v.records || []).reduce((s, r) => s + (parseFloat(r.cost) || 0), 0)
+            })).sort((a,b) => b.value - a.value).slice(0, 5);
+            
+            const ctx2 = document.getElementById('costByVehicleChart').getContext('2d');
+            if (costByVehicleChart) costByVehicleChart.destroy();
+            
+            costByVehicleChart = new Chart(ctx2, {
+                type: 'bar',
+                data: { 
+                    labels: costByVehicle.map(c => c.label), 
+                    datasets: [{ 
+                        data: costByVehicle.map(c => c.value), 
+                        backgroundColor: '#22c55e', 
+                        borderRadius: 4,
+                        barThickness: 20
+                    }] 
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } }, 
+                    scales: { 
+                        x: { grid: { display: false }, ticks: { color: '#6e6e82', font: {family: 'JetBrains Mono'} } }, 
+                        y: { grid: { color: '#22222e' }, ticks: { color: '#6e6e82', callback: (val) => '€' + val } } 
+                    } 
+                }
+            });
+        }
+
+        // ==================== CRUD OPERATIONS ====================
+        
+        async function saveVehicle(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btnSaveVehicle');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = `<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Salvataggio...`;
+            btn.disabled = true;
+
+            const id = document.getElementById('vehicleId').value;
+            
+            // Preparazione foto: mantieni quelle esistenti se non cambiate
+            let finalPhotos = {};
+            if (id) {
+                const existing = vehicles.find(v => v.id === id);
+                if (existing && existing.photos) finalPhotos = { ...existing.photos };
+            }
+
+            // Aggiorna solo le foto caricate (non null)
+            let hasNewPhotos = false;
+            Object.keys(tempPhotos).forEach(key => {
+                if (tempPhotos[key]) {
+                    finalPhotos[key] = tempPhotos[key];
+                    hasNewPhotos = true;
+                }
+            });
+
+            const payload = {
+                targa: document.getElementById('targa').value.trim().toUpperCase(),
+                tipologia: document.getElementById('tipologia').value,
+                note: document.getElementById('note').value.trim(),
+                scadenzaAssicurazione: document.getElementById('scadenzaAssicurazione').value,
+                scadenzaRevisione: document.getElementById('scadenzaRevisione').value,
+                photos: finalPhotos,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            // Controllo sicurezza dimensioni documento (Limite Firestore 1MB)
+            // Stima approssimativa della dimensione del payload in bytes
+            const payloadStr = JSON.stringify(payload);
+            const sizeInBytes = new Blob([payloadStr]).size;
+            const sizeInMB = sizeInBytes / (1024 * 1024);
+
+            if (sizeInMB >= 0.95) { // Lasciamo un margine di sicurezza
+                showToast(`Documento troppo grande (${sizeInMB.toFixed(2)} MB). Rimuovi qualche foto.`, "error");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            try {
+                if (id) {
+                    await db.collection('vehicles').doc(id).update(payload);
+                    showToast('Veicolo aggiornato con successo', 'success');
+                } else {
+                    payload.records = [];
+                    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection('vehicles').add(payload);
+                    showToast('Veicolo aggiunto alla flotta', 'success');
+                }
+                closeVehicleModal();
+            } catch (err) {
+                console.error("Errore Firebase:", err);
+                let errorMsg = "Errore di rete o permessi.";
+                if (err.code === 'permission-denied') errorMsg = "Permesso negato. Controlla le regole Firestore.";
+                else if (err.code === 'invalid-argument') errorMsg = "Dati non validi (probabile dimensione eccessiva).";
+                else if (err.message) errorMsg = err.message;
+                showToast("Salvataggio fallito: " + errorMsg, "error");
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function saveIntervention(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSaveIntervention');
+            btn.disabled = true;
+            btn.innerHTML = `<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Salvataggio...`;
+
+            const inputKm = parseInt(document.getElementById('interventionKm').value);
+
+            const record = {
+                id: Date.now().toString(),
+                type: document.getElementById('interventionType').value,
+                km: inputKm,
+                date: document.getElementById('interventionDate').value,
+                cost: parseFloat(document.getElementById('interventionCost').value) || 0,
+                notes: document.getElementById('interventionNotes').value.trim(),
+                photos: tempInterventionPhotos
+            };
+
+            const v = vehicles.find(x => x.id === currentVehicleId);
+            let finalPhotos = { ...(v.photos || {}) };
+            
+            ['front', 'back', 'left', 'right'].forEach(side => {
+                if (tempInterventionPhotos[side]) {
+                    finalPhotos[side] = tempInterventionPhotos[side];
+                }
+            });
+
+            const updates = {
+                km: inputKm,
+                records: firebase.firestore.FieldValue.arrayUnion(record),
+                photos: finalPhotos,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                await db.collection('vehicles').doc(currentVehicleId).update(updates);
+                showToast('Intervento registrato', 'success');
+                closeInterventionModal();
+            } catch (err) {
+                console.error(err);
+                showToast('Errore salvataggio intervento', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Registra Intervento`;
+            }
+        }
+
+        async function confirmDelete() {
+            if (!currentDeleteId) return;
+            try {
+                await db.collection('vehicles').doc(currentDeleteId).delete();
+                showToast('Veicolo eliminato', 'success');
+                closeDeleteModal();
+            } catch (err) {
+                showToast('Errore eliminazione', 'error');
+            }
+        }
+
+        // ==================== MODAL HELPERS ====================
+        function openVehicleModal(id = null) {
+            const modal = document.getElementById('vehicleModal');
+            document.getElementById('vehicleForm').reset();
+            
+            tempPhotos = { front: null, back: null, left: null, right: null };
+            ['front', 'back', 'left', 'right'].forEach(s => {
+                const sCap = s.charAt(0).toUpperCase() + s.slice(1);
+                const img = document.getElementById(`photo${sCap}Img`);
+                const ph = document.getElementById(`photo${sCap}Placeholder`);
+                img.classList.add('hidden'); img.src = '';
+                ph.classList.remove('hidden');
+            });
+
+            if (id) {
+                const v = vehicles.find(x => x.id === id);
+                document.getElementById('vehicleModalTitle').textContent = 'Modifica Veicolo';
+                document.getElementById('vehicleId').value = id;
+                document.getElementById('targa').value = v.targa;
+                document.getElementById('tipologia').value = v.tipologia;
+                document.getElementById('note').value = v.note || '';
+                document.getElementById('scadenzaAssicurazione').value = v.scadenzaAssicurazione || '';
+                document.getElementById('scadenzaRevisione').value = v.scadenzaRevisione || '';
+                
+                if(v.photos) {
+                    Object.keys(v.photos).forEach(side => {
+                        if(v.photos[side]) {
+                            tempPhotos[side] = v.photos[side];
+                            const sCap = side.charAt(0).toUpperCase() + side.slice(1);
+                            const img = document.getElementById(`photo${sCap}Img`);
+                            const ph = document.getElementById(`photo${sCap}Placeholder`);
+                            img.src = v.photos[side];
+                            img.classList.remove('hidden');
+                            ph.classList.add('hidden');
+                        }
+                    });
+                }
+            } else {
+                document.getElementById('vehicleModalTitle').textContent = 'Nuovo Veicolo';
+                document.getElementById('vehicleId').value = '';
+            }
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+        }
+        function closeVehicleModal() { document.getElementById('vehicleModal').classList.add('hidden'); document.getElementById('vehicleModal').classList.remove('flex'); }
+        
+        function editVehicle(id) { openVehicleModal(id); }
+
+        function openInterventionModal(id) {
+            currentVehicleId = id;
+            const v = vehicles.find(x => x.id === id);
+            tempInterventionPhotos = { front: null, back: null, left: null, right: null };
+            document.getElementById('interventionForm').reset();
+            document.getElementById('interventionDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('interventionSubtitle').textContent = `${v.targa} - ${v.tipologia}`;
+            
+            ['front', 'back', 'left', 'right'].forEach(s => {
+                const sCap = s.charAt(0).toUpperCase() + s.slice(1);
+                const img = document.getElementById(`intPhoto${sCap}Img`);
+                const ph = document.getElementById(`intPhoto${sCap}Placeholder`);
+                img.classList.add('hidden'); img.src = '';
+                ph.classList.remove('hidden');
+            });
+
+            document.getElementById('interventionModal').classList.remove('hidden'); document.getElementById('interventionModal').classList.add('flex');
+        }
+        function closeInterventionModal() { document.getElementById('interventionModal').classList.add('hidden'); document.getElementById('interventionModal').classList.remove('flex'); }
+
+        function openDeleteModal(id) { currentDeleteId = id; document.getElementById('deleteModal').classList.remove('hidden'); document.getElementById('deleteModal').classList.add('flex'); }
+        function closeDeleteModal() { currentDeleteId = null; document.getElementById('deleteModal').classList.add('hidden'); document.getElementById('deleteModal').classList.remove('flex'); }
+
+        function openHistory(id) {
+            currentVehicleId = id;
+            const v = vehicles.find(x => x.id === id);
+            document.getElementById('historySubtitle').textContent = `${v.targa} - ${v.tipologia}`;
+            const records = v.records || [];
+            const content = document.getElementById('historyContent');
+            
+            if (records.length === 0) {
+                content.innerHTML = '<div class="text-center py-10 text-[var(--fg-muted)] flex flex-col items-center"><svg class="w-10 h-10 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>Nessun intervento registrato</div>';
+            } else {
+                const sorted = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+                content.innerHTML = sorted.map((r, idx) => `
+                    <div class="timeline-item">
+                        <div class="timeline-dot bg-[var(--accent)] shadow-[0_0_10px_var(--accent)]"></div>
+                        <div class="bg-[var(--card)] rounded-lg p-4 ml-2 mb-3 border border-[var(--border)] hover:border-[var(--border-focus)] transition-colors">
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="font-bold text-sm text-white">${r.type}</span>
+                                <span class="text-xs font-mono text-[var(--accent)] bg-[var(--accent-muted)] px-2 py-0.5 rounded">${r.km.toLocaleString()} km</span>
+                            </div>
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-[var(--fg-muted)] flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    ${r.date || 'N/D'}
+                                </span>
+                                <span class="font-bold text-[var(--success)]">€${(parseFloat(r.cost)||0).toFixed(2)}</span>
+                            </div>
+                            ${r.notes ? `<p class="mt-2 text-xs text-[var(--fg-muted)] italic border-t border-[var(--border)] pt-2">"${r.notes}"</p>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('historyModal').classList.remove('hidden'); document.getElementById('historyModal').classList.add('flex');
+        }
+        function closeHistoryModal() { document.getElementById('historyModal').classList.add('hidden'); document.getElementById('historyModal').classList.remove('flex'); }
+
+        function openPhotoModal(src) { 
+            if(!src) return;
+            document.getElementById('photoModalImg').src = src; 
+            document.getElementById('photoModal').classList.remove('hidden'); 
+            document.getElementById('photoModal').classList.add('flex'); 
+        }
+        function closePhotoModal() { document.getElementById('photoModal').classList.add('hidden'); document.getElementById('photoModal').classList.remove('flex'); }
+
+        // ==================== PHOTO HANDLERS (CON COMPRESSIONE) ====================
+        function triggerPhotoUpload(side) { currentPhotoSide = side; document.getElementById('photoInput').click(); }
+        
+        async function handlePhotoUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                showToast("Compressione immagine...", "info");
+                
+                const reader = new FileReader();
+                reader.onload = async function(ev) {
+                    try {
+                        // COMPRESS IMAGE con limiti più stringenti
+                        const compressedData = await compressImage(ev.target.result, 150); // Target 150KB
+                        
+                        tempPhotos[currentPhotoSide] = compressedData;
+                        const s = currentPhotoSide.charAt(0).toUpperCase() + currentPhotoSide.slice(1);
+                        document.getElementById(`photo${s}Img`).src = compressedData;
+                        document.getElementById(`photo${s}Img`).classList.remove('hidden');
+                        document.getElementById(`photo${s}Placeholder`).classList.add('hidden');
+                        
+                        showToast("Foto pronta", "success");
+                    } catch (err) {
+                        console.error(err);
+                        showToast("Errore durante la compressione", "error");
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+            e.target.value = ''; 
+        }
+
+        function triggerInterventionPhotoUpload(side) { currentInterventionPhotoSide = side; document.getElementById('intPhotoInput').click(); }
+        
+        async function handleInterventionPhotoUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                showToast("Compressione immagine...", "info");
+                
+                const reader = new FileReader();
+                reader.onload = async function(ev) {
+                    try {
+                        const compressedData = await compressImage(ev.target.result, 150);
+                        
+                        tempInterventionPhotos[currentInterventionPhotoSide] = compressedData;
+                        const s = currentInterventionPhotoSide.charAt(0).toUpperCase() + currentInterventionPhotoSide.slice(1);
+                        const img = document.getElementById(`intPhoto${s}Img`);
+                        const ph = document.getElementById(`intPhoto${s}Placeholder`);
+                        img.src = compressedData;
+                        img.classList.remove('hidden');
+                        ph.classList.add('hidden');
+                        
+                        showToast("Foto pronta", "success");
+                    } catch (err) {
+                        console.error(err);
+                        showToast("Errore compressione", "error");
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+            e.target.value = '';
+        }
+
+        // ==================== UTILS ====================
+        function resetFilters() { document.getElementById('searchInput').value = ''; document.getElementById('typeFilter').value = ''; renderVehicles(); }
+        
+        function exportCSV() {
+            let csv = 'Targa;Tipo;KM;Data Intervento;Tipo Intervento;Costo;Note\n';
+            vehicles.forEach(v => {
+                if(!v.records || v.records.length === 0) {
+                    csv += `${v.targa};${v.tipologia};;;;;;\n`;
+                } else {
+                    v.records.forEach(r => {
+                        const safeNotes = r.notes ? r.notes.replace(/"/g, '""') : '';
+                        csv += `${v.targa};${v.tipologia};${r.km};${r.date};${r.type};${r.cost};"${safeNotes}"\n`;
+                    });
+                }
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `flotta_export_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const colors = { 
+                success: 'bg-[var(--bg)] border-l-4 border-[var(--success)] text-white', 
+                error: 'bg-[var(--bg)] border-l-4 border-[var(--danger)] text-white',
+                info: 'bg-[var(--bg)] border-l-4 border-[var(--accent)] text-white'
+            };
+            
+            const icons = {
+                success: '<svg class="w-5 h-5 text-[var(--success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
+                error: '<svg class="w-5 h-5 text-[var(--danger)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+                info: '<svg class="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+            };
+
+            toast.className = `${colors[type]} px-4 py-3 rounded shadow-xl flex items-center gap-3 min-w-[300px] toast-enter pointer-events-auto`;
+            toast.innerHTML = `${icons[type]} <span class="text-sm font-medium">${msg}</span>`;
+            
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                toast.classList.remove('toast-enter');
+                toast.classList.add('toast-enter-active');
+            });
+
+            setTimeout(() => {
+                toast.classList.remove('toast-enter-active');
+                toast.classList.add('toast-exit-active');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

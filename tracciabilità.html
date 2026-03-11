@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tracciabilità Consegna</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container { width: 100%; max-width: 500px; text-align: center; }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle { color: var(--text-secondary); margin-bottom: 40px; font-size: 1.1rem; }
+
+        .search-box {
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1.2rem;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            text-align: center;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus { outline: none; border-color: var(--primary); }
+        input::placeholder { color: var(--text-secondary); letter-spacing: 0; }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary), #0284c7);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3); }
+
+        .result-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            display: none;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .status-icon {
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 20px;
+        }
+        .status-icon.pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+        .status-icon.transit { background: rgba(14, 165, 233, 0.15); color: var(--primary); animation: pulse 2s infinite; }
+        .status-icon.completed { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(14, 165, 233, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+        }
+
+        .status-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; }
+        .status-message { color: var(--text-secondary); margin-bottom: 25px; font-size: 1rem; line-height: 1.6; }
+
+        .info-grid {
+            text-align: left;
+            background: var(--bg-body);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color); }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--text-secondary); font-size: 0.9rem; }
+        .info-value { font-weight: 600; color: var(--text-primary); }
+
+        .eta-box {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.1));
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .eta-time { font-size: 2.5rem; font-weight: 800; color: var(--primary); display: block; margin-bottom: 5px; }
+        .eta-label { color: var(--text-secondary); font-size: 0.9rem; }
+
+        .progress-bar-container {
+            width: 100%; height: 8px;
+            background: var(--bg-body);
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .error-card {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 20px;
+            border-radius: 12px;
+            display: none;
+            animation: slideUp 0.4s ease;
+        }
+
+        .back-btn { background: transparent; border: 2px solid var(--border-color); color: var(--text-secondary); margin-top: 15px; }
+        .back-btn:hover { border-color: var(--text-primary); color: var(--text-primary); }
+
+        @media (max-width: 600px) {
+            .container { padding: 10px; }
+            .search-box, .result-card { padding: 20px; }
+        }
+    </style>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+    <div class="container">
+        <div class="logo">GIPRO</div>
+        <p class="subtitle">Tracciamento Consegna</p>
+
+        <div class="search-box" id="searchBox">
+            <p style="margin-bottom: 20px; color: var(--text-secondary);">Inserisci il codice della tua consegna</p>
+            <input type="text" id="trackingId" placeholder="Es: 0001" maxlength="10" autocomplete="off">
+            <button onclick="Tracker.search()"><i class="fas fa-search me-2"></i> Cerca Consegna</button>
+        </div>
+
+        <div class="result-card" id="resultCard">
+            <div class="status-icon" id="statusIcon"><i class="fas fa-truck"></i></div>
+            <div class="status-title" id="statusTitle">In Consegna</div>
+            <div class="status-message" id="statusMessage">Il corriere è in arrivo</div>
+
+            <div class="info-grid">
+                <div class="info-row">
+                    <span class="info-label">Codice</span>
+                    <span class="info-value" id="infoId">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Operatore</span>
+                    <span class="info-value" id="infoOperator">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Indirizzo</span>
+                    <span class="info-value" id="infoAddress">-</span>
+                </div>
+            </div>
+
+            <div class="eta-box" id="etaBox">
+                <span class="eta-time" id="etaTime">--:--</span>
+                <span class="eta-label" id="etaLabel">Orario stimato arrivo</span>
+                <div class="progress-bar-container">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <button class="back-btn" onclick="Tracker.reset()"><i class="fas fa-redo me-2"></i> Nuova Ricerca</button>
+        </div>
+
+        <div class="error-card" id="errorCard">
+            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+            <p style="font-weight: 600; margin-bottom: 5px;">Codice non trovato</p>
+            <p style="font-size: 0.9rem;">Verifica il codice e riprova.</p>
+            <button class="back-btn" onclick="Tracker.reset()" style="margin-top: 15px; border-color: var(--danger); color: var(--danger);"><i class="fas fa-redo me-2"></i> Riprova</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbKtru1AyoexRXuWybXA_nh7pPmzR1WjI",
+            authDomain: "gipro-c5e47.firebaseapp.com",
+            projectId: "gipro-c5e47",
+            storageBucket: "gipro-c5e47.firebasestorage.app",
+            messagingSenderId: "417519163920",
+            appId: "1:417519163920:web:ad67a8262ede081ad6c895",
+            measurementId: "G-TMP00KTXXV"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const Tracker = {
+            search: async () => {
+                const input = document.getElementById('trackingId').value.trim();
+                if (!input) return;
+
+                document.getElementById('searchBox').style.display = 'none';
+                document.getElementById('errorCard').style.display = 'none';
+                document.getElementById('resultCard').style.display = 'none';
+
+                try {
+                    // 1. Cerca per Ticket ID (es. "0001")
+                    let snapshot = await db.collection("domicile_tickets")
+                        .where("ticketId", "==", input)
+                        .limit(1)
+                        .get();
+
+                    if (snapshot.empty) {
+                        // 2. Se non trova, cerca per ID Documento
+                        const docRef = await db.collection("domicile_tickets").doc(input).get();
+                        if (docRef.exists) {
+                            Tracker.showResult(docRef.data());
+                        } else {
+                            Tracker.showError();
+                        }
+                    } else {
+                        snapshot.forEach(doc => Tracker.showResult(doc.data()));
+                    }
+                } catch (error) {
+                    console.error("Errore:", error);
+                    Tracker.showError();
+                }
+            },
+
+            showResult: async (ticket) => {
+                // Popola dati base
+                document.getElementById('infoId').innerText = `#${ticket.ticketId || ticket.id.substring(0,4)}`;
+                document.getElementById('infoOperator').innerText = ticket.operator || 'N/D';
+                document.getElementById('infoAddress').innerText = ticket.address || 'N/D';
+
+                const iconEl = document.getElementById('statusIcon');
+                const titleEl = document.getElementById('statusTitle');
+                const msgEl = document.getElementById('statusMessage');
+                const etaBox = document.getElementById('etaBox');
+
+                // Stato: Completato
+                if (ticket.status === 'completato') {
+                    iconEl.className = 'status-icon completed';
+                    iconEl.innerHTML = '<i class="fas fa-check-circle"></i>';
+                    titleEl.innerText = 'Consegna Completata';
+                    titleEl.style.color = 'var(--success)';
+                    msgEl.innerText = 'La tua consegna è stata effettuata con successo.';
+                    etaBox.style.display = 'none';
+                } 
+                // Stato: Reclamo
+                else if (ticket.status === 'reclamo') {
+                    iconEl.className = 'status-icon pending';
+                    iconEl.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+                    titleEl.innerText = 'In Verifica';
+                    titleEl.style.color = 'var(--warning)';
+                    msgEl.innerText = 'Il tuo ticket è stato preso in carico.';
+                    etaBox.style.display = 'none';
+                } 
+                // Stato: In Corso (Calcolo Stima)
+                else {
+                    iconEl.className = 'status-icon transit';
+                    iconEl.innerHTML = '<i class="fas fa-truck-moving"></i>';
+                    titleEl.innerText = 'In Programmazione';
+                    titleEl.style.color = 'var(--primary)';
+                    
+                    const estimation = await Tracker.calculateETA(ticket);
+                    
+                    msgEl.innerText = estimation.message;
+                    document.getElementById('etaTime').innerText = estimation.etaTime;
+                    document.getElementById('progressFill').style.width = estimation.progress + '%';
+                    document.getElementById('etaLabel').innerText = estimation.label;
+                    etaBox.style.display = 'block';
+                }
+
+                document.getElementById('resultCard').style.display = 'block';
+            },
+
+            calculateETA: async (currentTicket) => {
+                const today = new Date().toISOString().split('T')[0];
+                const operator = currentTicket.operator;
+
+                // Se la consegna non è oggi
+                if (currentTicket.date !== today) {
+                    return { 
+                        message: `Consegna programmata per il ${currentTicket.date}`, 
+                        etaTime: '--:--', 
+                        progress: 0,
+                        label: 'Data consegna'
+                    };
+                }
+
+                // Scarica tutti i ticket di oggi per questo operatore
+                const snapshot = await db.collection("domicile_tickets")
+                    .where("operator", "==", operator)
+                    .where("date", "==", today)
+                    .get();
+
+                const allTickets = [];
+                snapshot.forEach(doc => allTickets.push(doc.data()));
+
+                // Se non ci sono ticket (strano ma possibile)
+                if (allTickets.length === 0) {
+                    return { message: "In attesa di aggiornamenti", etaTime: '--:--', progress: 0, label: 'Caricamento...' };
+                }
+
+                // Ordiniamo per numero progressivo (orderNumber se esiste, altrimenti creation time)
+                allTickets.sort((a, b) => {
+                    // Se hanno orderNumber usiamo quello
+                    if (a.orderNumber && b.orderNumber) return a.orderNumber - b.orderNumber;
+                    // Altrimenti usiamo l'orario di creazione o ID
+                    return (a.createdAt || "").localeCompare(b.createdAt || "");
+                });
+
+                // Trova la mia posizione
+                let myPosition = 0;
+                let totalStops = allTickets.length;
+
+                allTickets.forEach((t, index) => {
+                    if (t.id === currentTicket.id) {
+                        myPosition = index + 1;
+                    }
+                });
+
+                // Conta consegne fatte (esclusa quella attuale se è assegnato)
+                const completedCount = allTickets.filter(t => t.status === 'completato').length;
+
+                // Calcolo logico
+                const remainingStops = myPosition - completedCount;
+                const minutesPerStop = 30;
+                const estimatedMinutes = remainingStops > 0 ? remainingStops * minutesPerStop : 0;
+                
+                // Calcolo progresso visivo
+                let progress = 0;
+                if (myPosition > 0) {
+                    progress = Math.min(100, Math.max(0, (completedCount / myPosition) * 100));
+                }
+
+                // Messaggio personalizzato
+                let message = "";
+                let label = "Orario stimato arrivo";
+
+                if (remainingStops <= 0) {
+                    message = "È il tuo turno! Il corriere dovrebbe arrivare a momenti.";
+                    label = "Imminente";
+                } else if (remainingStops === 1) {
+                    message = "Sei il prossimo! Il corriere è alla consegna precedente.";
+                    label = "Arrivo tra circa 30 min";
+                } else {
+                    message = `Sei la ${myPosition}ª tappa su ${totalStops}. Mancano ${remainingStops} consegne.`;
+                    label = `Arrivo stimato tra ${estimatedMinutes} min`;
+                }
+
+                // Calcolo orario preciso
+                const now = new Date();
+                const eta = new Date(now.getTime() + estimatedMinutes * 60000);
+                const etaFormatted = eta.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+                return {
+                    message: message,
+                    etaTime: remainingStops <= 0 ? now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : etaFormatted,
+                    progress: progress,
+                    label: label
+                };
+            },
+
+            showError: () => {
+                document.getElementById('searchBox').style.display = 'none';
+                document.getElementById('errorCard').style.display = 'block';
+            },
+
+            reset: () => {
+                document.getElementById('trackingId').value = '';
+                document.getElementById('searchBox').style.display = 'block';
+                document.getElementById('resultCard').style.display = 'none';
+                document.getElementById('errorCard').style.display = 'none';
+            }
+        };
+
+        document.getElementById("trackingId").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") Tracker.search();
+        });
+    </script>
+</body>
+</html>

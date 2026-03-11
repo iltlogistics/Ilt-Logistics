@@ -1,0 +1,75 @@
+// ============================================================
+// REGOLE FIRESTORE DI ESEMPIO PER GIPRO
+// ============================================================
+// Copia questo contenuto in Firebase Console:
+//   Firebase → Il tuo progetto → Firestore Database → Regole
+//
+// NOTA: GIPRO usa solo client SDK (nessun Auth Firebase per login),
+// quindi non puoi usare request.auth. Per ora le regole qui sotto
+// sono un TEMPLATE che puoi adattare quando avrai autenticazione
+// (es. Firebase Auth) o segreto/token lato server.
+// ============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Esempio: consentire lettura a tutti (per app pubblica con login custom)
+    // e scrittura solo da app che conosce le credenziali.
+    // In produzione restringi il più possibile.
+
+    match /users/{userId} {
+      // Solo lettura per chi ha accesso all'app; in produzione
+      // limita con Firebase Auth se lo integri
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /interventions/{docId} {
+      allow read, write: if true;
+    }
+
+    match /warehouse/{docId} {
+      allow read, write: if true;
+    }
+
+    match /logs/{docId} {
+      allow read, write: if true;
+    }
+
+    match /material_history/{docId} {
+      allow read, write: if true;
+    }
+
+    match /messages/{docId} {
+      allow read, write: if true;
+    }
+
+    match /domicile_tickets/{docId} {
+      allow read, write: if true;
+    }
+
+    match /counters/{docId} {
+      allow read, write: if true;
+    }
+  }
+}
+
+// ============================================================
+// VERSIONE PIÙ RESTRITTIVA (da usare quando avrai Firebase Auth)
+// ============================================================
+// Sblocca "Authentication" in Firebase e usa request.auth != null
+// oppure request.auth.token.role == 'admin' per separare utenti/admin.
+//
+// Esempio con Firebase Auth:
+//
+//   match /users/{userId} {
+//     allow read: if request.auth != null;
+//     allow write: if request.auth != null && request.auth.token.admin == true;
+//   }
+//   match /interventions/{docId} {
+//     allow read, write: if request.auth != null;
+//   }
+//   ... etc
+//
+// ============================================================
