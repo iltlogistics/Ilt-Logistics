@@ -564,6 +564,17 @@
             box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3);
         }
 
+        /* Footer versione */
+        .app-footer {
+            text-align: center;
+            padding: 16px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: auto;
+        }
+        .app-footer a { color: var(--primary); text-decoration: none; }
+
         @media (max-width: 768px) {
             .container { padding: 15px; padding-top: 85px; }
             .card { padding: 20px; }
@@ -615,7 +626,8 @@
     <div class="user-badge" id="userBadge">
         <span class="username" id="loggedUser">-</span>
         <span id="badgeRole" class="badge badge-admin" style="display:none;">ADMIN</span>
-        <button onclick="Auth.logout()">Logout</button>
+        <button type="button" onclick="UI.openModal('pwModal')" style="background:none; border:none; color:var(--primary); cursor:pointer; font-size:0.85rem; padding:2px 6px;" title="Cambia password">🔑</button>
+        <button onclick="App.confirmLogout()">Logout</button>
     </div>
 
     <!-- TOAST CONTAINER -->
@@ -655,6 +667,11 @@
                 <option value="user">Utente Standard</option>
                 <option value="admin">Amministratore</option>
             </select>
+            <select id="editUserLocation" style="margin-bottom:12px;">
+                <option value="">-- Sede Operatore --</option>
+                <option value="Palermo">Palermo</option>
+                <option value="Milano">Milano</option>
+            </select>
             <div class="modal-actions row">
                 <button class="btn btn-outline" onclick="UI.closeModal('userModal')">Annulla</button>
                 <button class="btn btn-success" onclick="Admin.saveUser()">Salva</button>
@@ -666,10 +683,19 @@
         <div class="modal">
             <h3>Cambia Password</h3>
             <input type="password" id="newPass1" placeholder="Nuova Password" style="margin-bottom:12px;">
-            <input type="password" id="newPass2" placeholder="Conferma Password" style="margin-bottom:12px;">
-            <div class="modal-actions row">
+            <input type="password" id="newPass2" placeholder="Conferma Password" style="margin-bottom:18px;">
+            <div class="modal-actions">
                 <button class="btn btn-outline" onclick="UI.closeModal('pwModal')">Annulla</button>
-                <button class="btn btn-primary" onclick="Auth.changePassword()">Cambia</button>
+                <button class="btn btn-primary" onclick="Auth.changePassword()">Aggiorna</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CORSO COMPLETO -->
+    <div id="courseModal" class="modal-overlay">
+        <div class="modal" style="max-width: 900px;">
+            <div id="courseModalContent">
+                <!-- Contenuto dinamico del corso -->
             </div>
         </div>
     </div>
@@ -1108,6 +1134,14 @@
                 <div class="form-grid" style="margin-top: 25px; grid-template-columns: 1fr;">
                     <div class="form-group"><label>Destinatario</label><select id="msgRecipient" style="background: var(--bg-body);"><option value="all">📢 A Tutti (Bacheca Generale)</option></select></div>
                     <div class="form-group"><label>Nuovo Messaggio</label><textarea id="newMessageContent" rows="3" placeholder="Scrivi un avviso o comunicazione..."></textarea></div>
+                    <div class="form-group">
+                        <label>Aggiungi file o foto (immagine, max 1MB)</label>
+                        <input type="file" id="msgAttachment" accept="image/*" onchange="CommunicationManager.previewAttachment(event)" style="padding:8px;">
+                        <div id="msgAttachmentPreview" class="hidden" style="margin-top:10px; padding:10px; background:var(--bg-body); border-radius:8px;">
+                            <img id="msgPreviewImg" alt="Anteprima" style="max-width:200px; max-height:150px; border-radius:6px;">
+                            <div style="margin-top:6px; font-size:0.85rem; color:var(--text-secondary);"><span id="msgFileName"></span> <button type="button" class="btn btn-sm btn-danger" onclick="CommunicationManager.clearAttachment()" style="margin-left:10px;">Rimuovi</button></div>
+                        </div>
+                    </div>
                 </div>
                 <div class="text-right" style="margin-top: 10px;"><button class="btn btn-primary" onclick="CommunicationManager.sendMessage()">Invia Messaggio</button></div>
             </div>
@@ -1154,11 +1188,106 @@
             <div class="card" style="border-left: 4px solid var(--corso);">
                 <h3 style="margin:0 0 20px; font-size: 1.2rem; color: var(--corso);"><i class="fas fa-sync-alt" style="margin-right: 8px;"></i>Corsi di aggiornamento</h3>
                 <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.95rem;">Corsi di aggiornamento su normative, nuove tecnologie e buone pratiche.</p>
-                <div id="corsoAggiornamentoList" class="log-container" style="max-height: 280px;">
-                    <div class="log-entry"><span class="log-time">Clima</span> Aggiornamento gas refrigeranti e normative F-Gas</div>
-                    <div class="log-entry"><span class="log-time">Caldaia</span> Normativa condensazione e rendimenti</div>
-                    <div class="log-entry"><span class="log-time">Sicurezza</span> DPI e sicurezza in cantiere</div>
-                    <div class="log-entry"><span class="log-time">Elettrico</span> Impianti elettrici e certificazioni</div>
+                <div id="corsoAggiornamentoList" style="max-height: 400px; overflow-y: auto;">
+                    <div style="background: var(--bg-body); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 15px; border-left: 4px solid var(--cold);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <span style="background: var(--cold); color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">Clima</span>
+                                <h4 style="margin: 8px 0 5px; color: var(--text-primary); font-size: 1.1rem;">Aggiornamento gas refrigeranti e normative F-Gas</h4>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="background: var(--primary); color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.75rem;">4 ore</span>
+                                <div style="margin-top: 5px;">
+                                    <span style="color: var(--text-secondary); font-size: 0.8rem;">Frequenza: <strong style="color: var(--warning);">Annuale</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin: 0;">Corso di aggiornamento obbligatorio sulle nuove normative F-Gas, gestione gas refrigeranti, certificazioni e adempimenti burocratici. Copre tutti gli aspetti della regolamentazione europea sui gas fluorurati a effetto serra.</p>
+                        <div style="margin-top: 12px;">
+                            <span style="color: var(--primary); font-size: 0.85rem; font-weight: 600;">Argomenti principali:</span>
+                            <div style="margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px;">
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Regolamento CE 517/2014</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Certificazione F-Gas</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Recovery e riciclaggio</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Registro telematico</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-body); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 15px; border-left: 4px solid var(--hot);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <span style="background: var(--hot); color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">Caldaia</span>
+                                <h4 style="margin: 8px 0 5px; color: var(--text-primary); font-size: 1.1rem;">Normativa condensazione e rendimenti</h4>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="background: var(--primary); color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.75rem;">3 ore</span>
+                                <div style="margin-top: 5px;">
+                                    <span style="color: var(--text-secondary); font-size: 0.8rem;">Frequenza: <strong style="color: var(--warning);">Biennale</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin: 0;">Aggiornamento sulle normative per caldaie a condensazione, calcolo rendimenti, detrazioni fiscali e requisiti tecnici. Include le nuove direttive UE sull'efficienza energetica e gli incentivi disponibili.</p>
+                        <div style="margin-top: 12px;">
+                            <span style="color: var(--primary); font-size: 0.85rem; font-weight: 600;">Argomenti principali:</span>
+                            <div style="margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px;">
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Direttiva ErP</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Impianti di terra</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Verifiche periodiche</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Libretto impianto</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-body); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 15px; border-left: 4px solid var(--danger);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <span style="background: var(--danger); color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">Sicurezza</span>
+                                <h4 style="margin: 8px 0 5px; color: var(--text-primary); font-size: 1.1rem;">DPI e sicurezza in cantiere</h4>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="background: var(--primary); color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.75rem;">8 ore</span>
+                                <div style="margin-top: 5px;">
+                                    <span style="color: var(--text-secondary); font-size: 0.8rem;">Frequenza: <strong style="color: var(--warning);">Biennale</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin: 0;">Corso sulla sicurezza nei luoghi di lavoro, DPI obbligatori, valutazione rischi, pronto soccorso e antincendio. Conforme al D.Lgs. 81/08 e aggiornamenti recenti.</p>
+                        <div style="margin-top: 12px;">
+                            <span style="color: var(--primary); font-size: 0.85rem; font-weight: 600;">Argomenti principali:</span>
+                            <div style="margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px;">
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">D.Lgs. 81/08</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">DPI obbligatori</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">DVR</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Pronto soccorso</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-body); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 15px; border-left: 4px solid var(--comm);">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <span style="background: var(--comm); color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.8rem; font-weight: 600;">Elettrico</span>
+                                <h4 style="margin: 8px 0 5px; color: var(--text-primary); font-size: 1.1rem;">Impianti elettrici e certificazioni</h4>
+                            </div>
+                            <div style="text-align: right;">
+                                <span style="background: var(--primary); color: white; padding: 3px 8px; border-radius: 10px; font-size: 0.75rem;">6 ore</span>
+                                <div style="margin-top: 5px;">
+                                    <span style="color: var(--text-secondary); font-size: 0.8rem;">Frequenza: <strong style="color: var(--warning);">Triennale</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin: 0;">Aggiornamento su normative CEI, certificazione impianti, messa a terra, protezioni e verifiche periodiche. Include le novità del CEI 64-8 e norme collegate.</p>
+                        <div style="margin-top: 12px;">
+                            <span style="color: var(--primary); font-size: 0.85rem; font-weight: 600;">Argomenti principali:</span>
+                            <div style="margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px;">
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Norme CEI 64-8</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Impianti di terra</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Verifiche periodiche</span>
+                                <span style="background: var(--bg-card); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; color: var(--text-secondary);">Dichiarazione conformità</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1391,7 +1520,9 @@
                 </div>
                 <div class="card mt-2" style="border-color: var(--warning);">
                     <h3 style="margin:0 0 15px; color: var(--warning);">Backup & Sincronizzazione Dati</h3>
-                    <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:15px;">I dati sono salvati in Cloud su Firebase.</p>
+                    <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:8px;">I dati sono salvati in Cloud su Firebase.</p>
+                    <p style="color:var(--text-secondary); font-size:0.85rem; margin-bottom:15px;">Consigliato: esegui un backup periodico (es. mensile) per avere una copia locale.</p>
+                    <p id="lastBackupDate" style="font-size:0.85rem; color:var(--success); margin-bottom:12px;"></p>
                     <div class="action-group"><button class="btn btn-warning" onclick="Admin.exportAllData()">Esporta Tutto (Backup Locale)</button></div>
                 </div>
             </div>
@@ -1405,6 +1536,10 @@
         </button>
         <iframe id="mainExternalFrame" class="external-iframe" src=""></iframe>
     </div>
+
+    <footer class="app-footer" id="appFooter">
+        GIPRO v2.0 — Gestione Interventi Pro · Backup periodico consigliato
+    </footer>
 
     <script>
         // ========== FIREBASE CONFIGURATION ==========
@@ -1426,13 +1561,34 @@
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
             firebaseReady = true;
-        } catch (error) { console.error("Firebase initialization error:", error); }
+            console.log("✅ Firebase inizializzato con successo");
+        } catch (error) { 
+            console.error("❌ Firebase initialization error:", error);
+            Utils.id('intro-status').innerText = "Errore Firebase: Modalità offline";
+            firebaseReady = false;
+            setTimeout(() => { 
+                Auth.checkLocalSession(); 
+            }, 2000);
+        }
 
         // ========== UTILITIES ==========
         const Utils = {
             id: (id) => document.getElementById(id),
             generateId: () => Date.now().toString(36) + Math.random().toString(36).substr(2),
             today: () => new Date().toISOString().split('T')[0],
+            formatDate: (str) => {
+                if (!str) return '';
+                // se è già nel formato gg/mm/aaaa o contiene testo, restituisce com'è
+                if (str.includes('/')) return str;
+                const parts = str.split('-');
+                if (parts.length === 3) {
+                    const [y, m, d] = parts;
+                    if (y.length === 4) {
+                        return `${d}/${m}/${y}`;
+                    }
+                }
+                return str;
+            },
             sanitize: (str) => { if (!str) return ""; const map = { 'à':'a', 'è':'e', 'é':'e', 'ì':'i', 'ò':'o', 'ù':'u', 'À':'A', 'È':'E', 'É':'E', 'Ì':'I', 'Ò':'O', 'Ù':'U' }; return str.toString().replace(/[àèéìòùÀÈÉÌÒÙ]/g, m => map[m]); }
         };
 
@@ -1536,7 +1692,7 @@
             goToDashboard: () => UI.showView('view-dashboard'),
             goToForm: (category) => { FormManager.reset(); FormManager.setCategory(category); FormManager.renderMachines(); UI.showView('view-form'); },
             goToHistory: () => { HistoryManager.render(); UI.showView('view-history'); },
-            goToAdmin: () => { Admin.renderUsers(); Admin.renderLogs(); UI.showView('view-admin'); },
+            goToAdmin: () => { Admin.renderUsers(); Admin.renderLogs(); Admin.renderLastBackup(); UI.showView('view-admin'); },
             goToWarehouse: () => { Warehouse.render(); UI.showView('view-warehouse'); },
             goToCommunication: () => { CommunicationManager.render(); UI.showView('view-communication'); },
             goToCorso: () => { if (typeof CourseManager !== 'undefined' && CourseManager.render) CourseManager.render(); UI.showView('view-corso'); },
@@ -1696,6 +1852,10 @@
                 App.loadEdit(id); 
                 
                 UI.showToast('Compila i dati tecnici e firma per chiudere la commessa', 'info');
+            },
+
+            confirmLogout: () => {
+                UI.confirm('Esci', 'Sei sicuro di voler uscire? Verrai disconnesso.', () => Auth.logout());
             }
         };
         
@@ -1797,7 +1957,7 @@
                     // Dopo aver salvato, invia messaggio WhatsApp
                     const t = Store.getDomicileTickets().find(t => t.id === CallManager.currentTicketId);
                     if(t && t.phone) {
-                        const trackingLink = `https://antoninomaiorana92-star.github.io/giprov4/`;
+                        const trackingLink = `https://iltlogistics.github.io/Ilt-Logistics/`;
                         const message = `Gentile Cliente, la informiamo che la sua consegna è confermata per la fascia oraria: ${slot}.\n\nPuò tracciare la sua consegna al seguente link:\n${trackingLink}\n\nID Ticket: ${t.ticketId || t.id.substring(0,4)}`;
                         
                         // Pulisce il numero (rimuove spazi, +, ecc.)
@@ -1814,7 +1974,7 @@
                     CallManager.saveCallData(status, null, () => {
                         const t = Store.getDomicileTickets().find(x => x.id === CallManager.currentTicketId);
                         if (t && t.phone) {
-                            const trackingLink = 'https://antoninomaiorana92-star.github.io/giprov4/';
+                            const trackingLink = 'https://iltlogistics.github.io/Ilt-Logistics/';
                             const ticketIdDisplay = t.ticketId || t.id.substring(0, 4);
                             const message = `Salve, sono il corriere che ha incarico la sua consegna per oggi. Ho provato a contattarla per avvisarla sull'orario di consegna. Le invio la tracciabilità della sua consegna.\n\nLink tracciabilità: ${trackingLink}\n\nID Ticket: ${ticketIdDisplay}`;
                             let phoneNumber = t.phone.replace(/\s/g, '');
@@ -2093,7 +2253,7 @@
                             ondrop="DomicileManager.handleDrop(event)"
                             ondragend="DomicileManager.handleDragEnd(event)">
                             <td><i class="fas fa-grip-vertical drag-handle"></i></td>
-                            <td>${t.date}</td>
+                            <td>${Utils.formatDate(t.date)}</td>
                             <td>
                                 ${stepIndicator} 
                                 <span style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-right: 5px;">#${t.ticketId || t.id.substring(0, 4)}</span>
@@ -2306,7 +2466,7 @@
                 doc.setFont('helvetica', 'bold'); 
                 doc.text(`RAPPORTO DOMICILIO ${data.status === 'reclamo' ? '- RECLAMO' : ''}`, left, 25); 
                 doc.setFontSize(10); 
-                doc.text(`Data: ${data.date}`, left, 35); 
+                doc.text(`Data: ${Utils.formatDate(data.date)}`, left, 35); 
                 y = 50; 
                 doc.setTextColor(30, 41, 59); 
                 doc.setFont('helvetica', 'bold'); 
@@ -2411,10 +2571,466 @@
 
         // ========== COURSE MANAGER (CORSO) ==========
         const CourseManager = {
-            render: () => { /* eventuale caricamento corsi da Firestore */ },
+            currentCategory: null,
+            currentLesson: 0,
+            quizScore: 0,
+            quizAnswers: [],
+            
+            courses: {
+                clima: {
+                    title: 'Climatizzazione',
+                    icon: '❄️',
+                    color: 'var(--cold)',
+                    description: 'Corso completo di installazione e manutenzione climatizzatori',
+                    lessons: [
+                        { title: 'Introduzione ai climatizzatori', duration: 10, content: 'Concetti base di climatizzazione, principi termodinamici, tipologie di impianti.', topics: ['Principi termodinamici: ciclo frigorifero e scambio di calore', 'Tipologie impianti: split, multi-split, centralizzati, VRF', 'Componenti principali: compressore, condensatore, evaporatore, valvola di espansione'] },
+                        { title: 'Installazione split e multi-split', duration: 10, content: 'Procedura di installazione unità interna ed esterna, collegamenti elettrici e refrigeranti.', topics: ['Posizionamento unità: criteri di scelta e distanze minime', 'Collegamenti elettrici: sezione cavi, protezioni, collegamento quadro', 'Circuiti refrigeranti: saldature, vuoto, carica gas, prova tenuta'] },
+                        { title: 'Sistemi VRF e centralizzati', duration: 10, content: 'Installazione di sistemi VRF, impianti centralizzati, gestione di più unità.', topics: ['Sistemi VRF: configurazione a 2 e 3 tubi, capacità modulazione', 'Impianti centralizzati: chiller, fan coil, sistemi ad acqua', 'Bilanciamento carichi: calcolo portate, regolazione zone, ottimizzazione'] },
+                        { title: 'Manutenzione ordinaria', duration: 10, content: 'Pulizia filtri, controllo pressioni, ricarica gas, diagnosi guasti.', topics: ['Pulizia filtri: frequenza, metodi, prodotti detergenti', 'Controllo pressioni: alta/bassa pressione, temperature, superamento', 'Ricarica gas: tipi gas, quantità, procedura, recupero'] },
+                        { title: 'Normative F-Gas e sicurezza', duration: 10, content: 'Regolamentazione gas refrigeranti, certificazioni obbligatorie, misure di sicurezza.', topics: ['Normative F-Gas: patentino, categorie, obblighi di registrazione', 'Certificazioni: patentino frigoristi, aggiornamento periodico', 'Misure sicurezza: DPI, attrezzatura, emergenze, primo soccorso'] }
+                    ],
+                    quiz: [
+                        { question: 'Qual è il principio termodinamico su cui si basano i climatizzatori?', options: ['Conduzione', 'Convezione', 'Ciclo di Carnot', 'Radiazione'], correct: 2 },
+                        { question: 'Quale gas refrigerante è più comunemente usato oggi?', options: ['R22', 'R410A', 'R32', 'R134a'], correct: 2 },
+                        { question: 'Qual è la pressione di lavoro tipica di un impianto R410A?', options: ['5-8 bar', '8-12 bar', '15-25 bar', '30-40 bar'], correct: 2 },
+                        { question: 'Cosa caratterizza una caldaia a condensazione?', options: ['Maggiore dimensione', 'Recupero calore dai fumi', 'Meno gas', 'Nessuna differenza'], correct: 1 },
+                        { question: 'Quale è la temperatura di rugiada dei fumi di gas metano?', options: ['35°C', '45°C', '55°C', '65°C'], correct: 2 }
+                        { question: 'Con quale frequenza vanno puliti i filtri?', options: ['Ogni giorno', 'Ogni settimana', 'Ogni mese', 'Ogni anno'], correct: 2 },
+                        { question: 'Cosa richiede la certificazione F-Gas?', options: ['Solo installazione', 'Solo manutenzione', 'Entrambe', 'Nessuna'], correct: 2 }
+                    ]
+                },
+                caldaia: {
+                    title: 'Caldaie',
+                    icon: '🔥',
+                    color: 'var(--hot)',
+                    description: 'Corso completo di installazione e manutenzione caldaie e pompe di calore',
+                    lessons: [
+                        { title: 'Tipologie di caldaie', duration: 10, content: 'Caldaie tradizionali, a condensazione, pompe di calore, differenze e applicazioni.', topics: ['Caldaie tradizionali: funzionamento, efficienza, limiti e ambiti di utilizzo', 'Caldaie a condensazione: tecnologia, vantaggi, requisiti installativi', 'Pompe di calore: tipologie aria/acqua, geotermiche, assorbimento'] },
+                        { title: 'Installazione caldaie murali', duration: 10, content: 'Montaggio caldaie murali, allacciamenti gas, scarichi fumi, circuiti idraulici.', topics: ['Montaggio: fissaggio, distanze di sicurezza, accessibilità per manutenzione', 'Allacciamenti gas: tubazioni, valvola di sicurezza, contatore, prova tenuta', 'Scarichi fumi: canali coassiali, condensazione, terminali, ventilazione'] },
+                        { title: 'Impianti a condensazione', duration: 10, content: 'Tecnologia a condensazione, ottimizzazione rendimenti, scarichi condensati.', topics: ['Tecnologia condensazione: recupero calore latente, temperature di rugiada', 'Ottimizzazione rendimenti: bassa temperatura, modulazione, bilanciamento', 'Gestione condensati: raccolta, neutralizzazione, scarico, trattamento'] },
+                        { title: 'Pompe di calore', duration: 10, content: 'Installazione pompe di calore aria/acqua, geotermiche, ottimizzazione performance.', topics: ['Aria/acqua: unità esterne, circuito frigorifero, scambiatori', 'Geotermiche: sonde verticali/orizzontali, fluidi, progettazione', 'Ottimizzazione: coefficiente di prestazione, dimensionamento, integrazione'] },
+                        { title: 'Manutenzione e controllo rendimenti', duration: 10, content: 'Analisi combustione, pulizia scambiatori, regolazione, diagnosi guasti.', topics: ['Analisi combustione: analizzatore fumi, rapporto aria/gas, CO2', 'Pulizia scambiatori: prodotti chimici, metodi meccanici, frequenza', 'Regolazione: sonda esterna, curve di riscaldamento, zone'] }
+                    ],
+                    quiz: [
+                        { question: 'Qual è il rendimento tipico di una caldaia a condensazione?', options: ['80-85%', '85-90%', '95-105%', '110-120%'], correct: 2 },
+                        { question: 'Cosa caratterizza una caldaia a condensazione?', options: ['Maggiore dimensione', 'Recupero calore dai fumi', 'Meno gas', 'Nessuna differenza'], correct: 1 },
+                        { question: 'Quale è la temperatura di rugiada dei fumi di gas metano?', options: ['35°C', '45°C', '55°C', '65°C'], correct: 2 },
+                        { question: 'Cosa serve per installare una pompa di calore?', options: ['Solo corrente', 'Solo gas', 'Entrambe', 'Nessuna'], correct: 0 },
+                        { question: 'Con quale frequenza va fatta la manutenzione?', options: ['Ogni 6 mesi', 'Ogni anno', 'Ogni 2 anni', 'Ogni 5 anni'], correct: 1 }
+                    ]
+                },
+                frigo: {
+                    title: 'Refrigerazione',
+                    icon: '🧊',
+                    color: 'var(--primary)',
+                    description: 'Corso completo di installazione e manutenzione impianti frigoriferi',
+                    lessons: [
+                        { title: 'Principi della refrigerazione', duration: 10, content: 'Ciclo frigorifero, componenti principali, fluidi refrigeranti, safety.', topics: ['Ciclo frigorifero: compressione, condensazione, espansione, evaporazione', 'Componenti: compressore, condensatore, evaporatore, valvola di espansione', 'Fluidi refrigeranti: tipologie, proprietà, impatto ambientale'] },
+                        { title: 'Frigoriferi domestiche e commerciali', duration: 10, content: 'Installazione e manutenzione frigoriferi, celle frigorifere, banchi refrigerati.', topics: ['Frigoriferi domestici: tipi, capacità, installazione, manutenzione', 'Celle frigorifere: pannelli isolanti, porte, unità refrigeranti', 'Banchi refrigerati: vetrine, esposizione, temperatura controllata'] },
+                        { title: 'Catena del freddo', duration: 10, content: 'Trasporto refrigerato, conservazione alimenti, normative HACCP.', topics: ['Trasporto: veicoli isotermici, catena del freddo, monitoraggio temperature', 'Conservazione: temperature critiche, umidità, durata conservazione', 'Normative HACCP: punti critici, procedure di controllo, documentazione'] },
+                        { title: 'Diagnosi e riparazione guasti', duration: 10, content: 'Tecniche di diagnosi, ricerca perdite, sostituzione componenti.', topics: ['Diagnosi guasti: sintomi, analisi, strumenti di misura', 'Ricerca perdite: metodi, prodotti rilevatori, pressurizzazione', 'Sostituzione componenti: procedura, ricarica, prova funzionamento'] },
+                        { title: 'Normative e certificazioni', duration: 10, content: 'Regolamentazione impianti frigoriferi, patentino F-Gas, sicurezza.', topics: ['Regolamentazione: DPR 43/2012, CEI 64-8, obblighi', 'Patentino F-Gas: categorie, scadenza, aggiornamenti', 'Sicurezza: DPI, rischi elettrici, emergenze'] }
+                    ],
+                    quiz: [
+                        { question: 'Qual è la temperatura ideale per un frigorifero domestico?', options: ['0°C', '4°C', '8°C', '12°C'], correct: 1 },
+                        { question: 'Cosa indica HACCP?', options: ['Sicurezza elettrica', 'Sicurezza alimentare', 'Sicurezza gas', 'Sicurezza incendio'], correct: 1 },
+                        { question: 'Quale refrigerante è vietato dal protocollo di Montreal?', options: ['R32', 'R410A', 'R134a', 'R22'], correct: 3 },
+                        { question: 'Qual è la funzione del compressore?', options: ['Raffreddare', 'Comprimere il gas', 'Filtrare', 'Riscaldare'], correct: 1 },
+                        { question: 'Con quale frequenza va controllata la catena del freddo?', options: ['Giornaliera', 'Settimanale', 'Mensile', 'Annuale'], correct: 0 }
+                    ]
+                }
+            },
+            
+            updateCourses: [
+                {
+                    category: 'Clima',
+                    title: 'Aggiornamento gas refrigeranti e normative F-Gas',
+                    description: 'Corso di aggiornamento obbligatorio sulle nuove normative F-Gas, gestione gas refrigeranti, certificazioni e adempimenti burocratici.',
+                    duration: '4 ore',
+                    frequency: 'Annuale'
+                },
+                {
+                    category: 'Caldaia',
+                    title: 'Normativa condensazione e rendimenti',
+                    description: 'Aggiornamento sulle normative per caldaie a condensazione, calcolo rendimenti, detrazioni fiscali e requisiti tecnici.',
+                    duration: '3 ore',
+                    frequency: 'Biennale'
+                },
+                {
+                    category: 'Sicurezza',
+                    title: 'DPI e sicurezza in cantiere',
+                    description: 'Corso sulla sicurezza nei luoghi di lavoro, DPI obbligatori, valutazione rischi, pronto soccorso e antincendio.',
+                    duration: '8 ore',
+                    frequency: 'Biennale'
+                },
+                {
+                    category: 'Elettrico',
+                    title: 'Impianti elettrici e certificazioni',
+                    description: 'Aggiornamento su normative CEI, certificazione impianti, messa a terra, protezioni e verifiche periodiche.',
+                    duration: '6 ore',
+                    frequency: 'Triennale'
+                }
+            ],
+            
+            render: () => {
+                // La view è già renderizzata in HTML, solo inizializziamo gli eventi
+                CourseManager.initializeEvents();
+            },
+            
+            initializeEvents: () => {
+                // Aggiungiamo eventi dinamici se necessario
+                console.log('CourseManager inizializzato');
+            },
+            
             openCategory: (category) => {
-                const labels = { clima: 'Climatizzazione', caldaia: 'Caldaie', frigo: 'Refrigerazione' };
-                UI.showToast(`Sezione "${labels[category] || category}" – I materiali del corso saranno disponibili qui.`, 'info');
+                CourseManager.currentCategory = category;
+                CourseManager.currentLesson = 0;
+                CourseManager.quizScore = 0;
+                CourseManager.quizAnswers = [];
+                
+                const course = CourseManager.courses[category];
+                if (!course) return;
+                
+                UI.openModal('courseModal');
+                CourseManager.renderCourseContent();
+            },
+            
+            renderCourseContent: () => {
+                const course = CourseManager.courses[CourseManager.currentCategory];
+                if (!course) return;
+                
+                const modalContent = Utils.id('courseModalContent');
+                if (!modalContent) return;
+                
+                modalContent.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <div style="font-size: 3rem; margin-bottom: 15px;">${course.icon}</div>
+                        <h2 style="color: ${course.color}; margin: 0 0 10px;">${course.title}</h2>
+                        <p style="color: var(--text-secondary); margin: 0;">${course.description}</p>
+                    </div>
+                    
+                    <div id="courseArea" style="min-height: 400px;">
+                        ${CourseManager.renderLessonsList()}
+                    </div>
+                    
+                    <div class="modal-actions" style="margin-top: 30px;">
+                        <button class="btn btn-outline" onclick="UI.closeModal('courseModal')">
+                            Chiudi
+                        </button>
+                    </div>
+                `;
+            },
+            
+            renderLessonsList: () => {
+                const course = CourseManager.courses[CourseManager.currentCategory];
+                if (!course) return '';
+                
+                return `
+                    <div style="background: var(--bg-body); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                        <h3 style="color: var(--primary); margin: 0 0 20px;">Lezioni del corso (${course.lessons.length} lezioni)</h3>
+                        <div style="display: grid; gap: 15px;">
+                            ${course.lessons.map((lesson, index) => `
+                                <div style="background: var(--bg-card); padding: 15px; border-radius: var(--radius-sm); border-left: 4px solid ${course.color}; cursor: pointer;" 
+                                     onclick="CourseManager.startLesson(${index})">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <h4 style="margin: 0 0 5px; color: var(--text-primary);">Lezione ${index + 1}: ${lesson.title}</h4>
+                                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">${lesson.content}</p>
+                                            <div style="margin-top: 8px;">
+                                                <span style="background: ${course.color}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">${lesson.duration} min</span>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-primary btn-sm">Avvia</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <div style="margin-top: 25px; text-align: center;">
+                            <button class="btn btn-success" onclick="CourseManager.startQuiz()" style="font-size: 1.1rem; padding: 12px 30px;">
+                                <i class="fas fa-question-circle" style="margin-right: 8px;"></i>
+                                Avvia Quiz Finale
+                            </button>
+                            <p style="margin: 10px 0 0; color: var(--text-secondary); font-size: 0.9rem;">
+                                Superando il quiz con almeno 60% otterrai il certificato di partecipazione
+                            </p>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            startLesson: (lessonIndex) => {
+                CourseManager.currentLesson = lessonIndex;
+                const course = CourseManager.courses[CourseManager.currentCategory];
+                const lesson = course.lessons[lessonIndex];
+                
+                const courseArea = Utils.id('courseArea');
+                if (!courseArea) return;
+                
+                courseArea.innerHTML = `
+                    <div style="background: var(--bg-body); padding: 25px; border-radius: var(--radius-sm);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 style="color: ${course.color}; margin: 0;">Lezione ${lessonIndex + 1}: ${lesson.title}</h3>
+                            <span style="background: ${course.color}; color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.9rem;">${lesson.duration} minuti</span>
+                        </div>
+                        
+                        <div style="background: var(--bg-card); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                            <h4 style="color: var(--primary); margin: 0 0 15px;">Contenuto della lezione</h4>
+                            <p style="color: var(--text-primary); line-height: 1.6; margin: 0 0 20px;">${lesson.content}</p>
+                            
+                            <h5 style="color: var(--primary); margin: 0 0 10px;">Argomenti trattati:</h5>
+                            <ul style="margin: 0; padding-left: 20px;">
+                                ${lesson.topics.map(topic => `
+                                    <li style="color: var(--text-secondary); margin-bottom: 5px;">${topic}</li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        
+                        <div style="background: rgba(14, 165, 233, 0.1); border-left: 4px solid var(--primary); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                            <h5 style="color: var(--primary); margin: 0 0 10px;"><i class="fas fa-clock" style="margin-right: 8px;"></i>Tempo di lettura stimato</h5>
+                            <p style="margin: 0; color: var(--text-secondary);">Prenditi circa ${lesson.duration} minuti per leggere e comprendere bene il contenuto. Quando sei pronto, procedi con la lezione successiva o il quiz finale.</p>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; justify-content: space-between;">
+                            <button class="btn btn-outline" onclick="CourseManager.renderCourseContent()">
+                                <i class="fas fa-arrow-left" style="margin-right: 5px;"></i> Torna alle lezioni
+                            </button>
+                            <div>
+                                ${lessonIndex > 0 ? `<button class="btn btn-secondary" onclick="CourseManager.startLesson(${lessonIndex - 1})" style="margin-right: 10px;"><i class="fas fa-arrow-left"></i> Lezione precedente</button>` : ''}
+                                ${lessonIndex < course.lessons.length - 1 ? `<button class="btn btn-primary" onclick="CourseManager.startLesson(${lessonIndex + 1})">Prossima lezione <i class="fas fa-arrow-right"></i></button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            startQuiz: () => {
+                const course = CourseManager.courses[CourseManager.currentCategory];
+                if (!course) return;
+                
+                CourseManager.currentLesson = -1; // Indica che siamo in modalità quiz
+                CourseManager.quizScore = 0;
+                CourseManager.quizAnswers = [];
+                
+                CourseManager.renderQuizQuestion(0);
+            },
+            
+            renderQuizQuestion: (questionIndex) => {
+                const course = CourseManager.courses[CourseManager.currentCategory];
+                if (!course || questionIndex >= course.quiz.length) {
+                    CourseManager.showQuizResults();
+                    return;
+                }
+                
+                const question = course.quiz[questionIndex];
+                const courseArea = Utils.id('courseArea');
+                if (!courseArea) return;
+                
+                courseArea.innerHTML = `
+                    <div style="background: var(--bg-body); padding: 25px; border-radius: var(--radius-sm);">
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: ${course.color}; margin: 0;">Quiz Finale - Domanda ${questionIndex + 1} di ${course.quiz.length}</h3>
+                            <div style="background: var(--bg-card); margin-top: 15px; padding: 15px; border-radius: var(--radius-sm);">
+                                <div style="background: var(--primary); color: white; padding: 8px 15px; border-radius: 20px; display: inline-block; margin-bottom: 15px; font-size: 0.9rem;">
+                                    Progresso: ${Math.round((questionIndex / course.quiz.length) * 100)}%
+                                </div>
+                                <div style="background: var(--border-color); height: 8px; border-radius: 4px; margin-bottom: 20px;">
+                                    <div style="background: var(--primary); height: 100%; width: ${(questionIndex / course.quiz.length) * 100}%; border-radius: 4px; transition: width 0.3s;"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: var(--bg-card); padding: 25px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                            <h4 style="color: var(--text-primary); margin: 0 0 20px; font-size: 1.1rem;">${question.question}</h4>
+                            <div style="display: grid; gap: 12px;">
+                                ${question.options.map((option, index) => `
+                                    <label style="display: flex; align-items: center; padding: 15px; background: var(--bg-body); border-radius: var(--radius-sm); cursor: pointer; border: 2px solid var(--border-color); transition: all 0.2s;"
+                                           onmouseover="this.style.borderColor='${course.color}'" onmouseout="this.style.borderColor='var(--border-color)'">
+                                        <input type="radio" name="quiz_answer" value="${index}" style="margin-right: 12px;">
+                                        <span style="color: var(--text-primary);">${option}</span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; gap: 10px;">
+                            <button class="btn btn-outline" onclick="CourseManager.renderCourseContent()">
+                                <i class="fas fa-arrow-left" style="margin-right: 5px;"></i> Torna al corso
+                            </button>
+                            <button class="btn btn-primary" onclick="CourseManager.submitQuizAnswer(${questionIndex})">
+                                ${questionIndex < course.quiz.length - 1 ? 'Prossima domanda' : 'Vedi risultati'} <i class="fas fa-arrow-right" style="margin-left: 5px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            submitQuizAnswer: (questionIndex) => {
+                const selected = document.querySelector('input[name="quiz_answer"]:checked');
+                if (!selected) {
+                    UI.showToast('Seleziona una risposta', 'error');
+                    return;
+                }
+                
+                const course = CourseManager.courses[CourseManager.currentCategory];
+                const answer = parseInt(selected.value);
+                const isCorrect = answer === course.quiz[questionIndex].correct;
+                
+                CourseManager.quizAnswers.push({
+                    question: questionIndex,
+                    answer: answer,
+                    correct: isCorrect
+                });
+                
+                if (isCorrect) {
+                    CourseManager.quizScore++;
+                }
+                
+                CourseManager.renderQuizQuestion(questionIndex + 1);
+            },
+            
+            showQuizResults: () => {
+                const course = CourseManager.courses[CourseManager.currentCategory];
+                const percentage = Math.round((CourseManager.quizScore / course.quiz.length) * 100);
+                const passed = percentage >= 60;
+                
+                const courseArea = Utils.id('courseArea');
+                if (!courseArea) return;
+                
+                let certificateHtml = '';
+                if (passed) {
+                    const today = new Date().toLocaleDateString('it-IT');
+                    certificateHtml = `
+                        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05)); border: 2px solid var(--success); padding: 25px; border-radius: var(--radius-sm); margin-bottom: 20px; text-align: center;">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">🏆</div>
+                            <h3 style="color: var(--success); margin: 0 0 15px;">Complimenti! Hai superato il quiz!</h3>
+                            <p style="color: var(--text-primary); margin: 0 0 20px;">Hai ottenuto il certificato di partecipazione</p>
+                            
+                            <div style="background: white; padding: 20px; border-radius: var(--radius-sm); margin-bottom: 20px; border: 1px solid var(--border-color);">
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <h2 style="color: var(--primary); margin: 0 0 10px; font-size: 1.8rem;">CERTIFICATO DI PRESENZA</h2>
+                                    <p style="color: var(--text-secondary); margin: 0 0 15px; font-style: italic;">Certificato di completamento corso</p>
+                                </div>
+                                
+                                <div style="text-align: left; margin-bottom: 20px;">
+                                    <p style="margin: 5px 0;"><strong>Corso:</strong> ${course.title}</p>
+                                    <p style="margin: 5px 0;"><strong>Partecipante:</strong> ${Auth.currentUser.username}</p>
+                                    <p style="margin: 5px 0;"><strong>Data:</strong> ${today}</p>
+                                    <p style="margin: 5px 0;"><strong>Risultato quiz:</strong> ${CourseManager.quizScore}/${course.quiz.length} (${percentage}%)</p>
+                                </div>
+                                
+                                <div style="text-align: center; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                                    <p style="margin: 0 0 5px; color: var(--text-secondary); font-size: 0.9rem;">Emesso da:</p>
+                                    <p style="margin: 0 0 5px; font-weight: bold; color: var(--primary);">ILT LOGISTICS</p>
+                                    <p style="margin: 0 0 15px; font-size: 0.9rem; color: var(--text-secondary);">Responsabile Tecnico Installatore</p>
+                                    <p style="margin: 0; font-weight: bold; font-style: italic; color: var(--text-primary);">Maiorana Antonino</p>
+                                </div>
+                            </div>
+                            
+                            <button class="btn btn-success" onclick="CourseManager.downloadCertificate()" style="font-size: 1.1rem; padding: 12px 30px;">
+                                <i class="fas fa-download" style="margin-right: 8px;"></i>
+                                Scarica Certificato
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    certificateHtml = `
+                        <div style="background: rgba(239, 68, 68, 0.1); border: 2px solid var(--danger); padding: 25px; border-radius: var(--radius-sm); margin-bottom: 20px; text-align: center;">
+                            <div style="font-size: 3rem; margin-bottom: 15px;">😔</div>
+                            <h3 style="color: var(--danger); margin: 0 0 15px;">Non hai superato il quiz</h3>
+                            <p style="color: var(--text-primary); margin: 0 0 20px;">Hai ottenuto ${percentage}% (servono almeno 60%)</p>
+                            <p style="color: var(--text-secondary); margin: 0 0 20px;">Ti consigliamo di rileggere le lezioni e riprovare il quiz.</p>
+                            <button class="btn btn-primary" onclick="CourseManager.startQuiz()" style="font-size: 1.1rem; padding: 12px 30px;">
+                                <i class="fas fa-redo" style="margin-right: 8px;"></i>
+                                Riprova il Quiz
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                courseArea.innerHTML = `
+                    <div style="background: var(--bg-body); padding: 25px; border-radius: var(--radius-sm);">
+                        <h3 style="color: ${course.color}; margin: 0 0 20px; text-align: center;">Risultati Quiz Finale</h3>
+                        
+                        <div style="background: var(--bg-card); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 20px; text-align: center;">
+                            <div style="font-size: 3rem; margin-bottom: 10px; color: ${passed ? 'var(--success)' : 'var(--danger)'};">${passed ? '✅' : '❌'}</div>
+                            <h4 style="margin: 0 0 10px; font-size: 2rem; color: ${passed ? 'var(--success)' : 'var(--danger)'};">${percentage}%</h4>
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 1.1rem;">Hai risposto correttamente a ${CourseManager.quizScore} domande su ${course.quiz.length}</p>
+                        </div>
+                        
+                        <div style="background: var(--bg-card); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                            <h5 style="color: var(--primary); margin: 0 0 15px;">Riepilogo risposte:</h5>
+                            <div style="display: grid; gap: 10px;">
+                                ${CourseManager.quizAnswers.map((answer, index) => {
+                                    const question = course.quiz[index];
+                                    const userAnswer = question.options[answer.answer];
+                                    const correctAnswer = question.options[question.correct];
+                                    return `
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg-body); border-radius: var(--radius-sm);">
+                                            <div style="flex: 1;">
+                                                <span style="color: ${answer.correct ? 'var(--success)' : 'var(--danger)'}; margin-right: 10px;">${answer.correct ? '✅' : '❌'}</span>
+                                                <span style="color: var(--text-secondary);">Domanda ${index + 1}:</span>
+                                                <span style="color: var(--text-primary); margin-left: 5px;">${userAnswer}</span>
+                                            </div>
+                                            ${!answer.correct ? `<span style="color: var(--success); font-size: 0.9rem;">(Corretta: ${correctAnswer})</span>` : ''}
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                        
+                        ${certificateHtml}
+                        
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button class="btn btn-outline" onclick="CourseManager.renderCourseContent()">
+                                <i class="fas fa-arrow-left" style="margin-right: 5px;"></i> Torna al corso
+                            </button>
+                            <button class="btn btn-secondary" onclick="UI.closeModal('courseModal')">
+                                Chiudi
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            downloadCertificate: () => {
+                const course = CourseManager.courses[CourseManager.currentCategory];
+                const percentage = Math.round((CourseManager.quizScore / course.quiz.length) * 100);
+                const today = new Date().toLocaleDateString('it-IT');
+                
+                // Creiamo il contenuto del certificato
+                const certificateContent = `
+CERTIFICATO DI PRESENZA
+
+Il sottoscritto Maiorana Antonino, in qualità di Responsabile Tecnico Installatore per ILT LOGISTICS,
+certifica che l'operatore ${Auth.currentUser.username} ha completato con successo il corso:
+
+"${course.title}"
+
+Data: ${today}
+Risultato quiz: ${CourseManager.quizScore}/${course.quiz.length} (${percentage}%)
+Durata corso: ${course.lessons.length * 10} minuti
+
+Questo certificato attesta il completamento del corso di formazione e l'acquisizione delle competenze
+necessarie per operare nel settore ${course.title.toLowerCase()}.
+
+Emesso da: ILT LOGISTICS
+Responsabile Tecnico Installatore: Maiorana Antonino
+                `;
+                
+                // Creiamo un blob e scarichiamo il file
+                const blob = new Blob([certificateContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Certificato_${course.title}_${Auth.currentUser.username}_${new Date().toISOString().split('T')[0]}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                UI.showToast('Certificato scaricato con successo!', 'success');
+                
+                // Salviamo nel log
+                Store.addLog(`Certificato corso ${course.title} scaricato da ${Auth.currentUser.username}`);
             }
         };
 
@@ -2427,6 +3043,18 @@
                 if (!tbody) return; 
                 const search = Utils.id('searchWarehouse')?.value?.toLowerCase() || ''; 
                 const materials = Store.getWarehouse(); 
+                
+                // Se non è admin, forziamo la sede in base all'utente
+                const user = Auth.currentUser;
+                if (user && user.role !== 'admin' && user.location) {
+                    Warehouse.currentLocationFilter = user.location;
+                    // evidenzia il filtro sede corretto
+                    const buttons = document.querySelectorAll('#locationFilter .category-btn');
+                    buttons.forEach(btn => {
+                        btn.classList.remove('active');
+                        if (btn.textContent.indexOf(user.location) !== -1) btn.classList.add('active');
+                    });
+                }
                 
                 let filtered = materials.filter(m => { 
                     const matchSearch = m.name.toLowerCase().includes(search); 
@@ -2555,19 +3183,21 @@
 
     // ========== ADMIN ==========
     const Admin = {
-        renderUsers: () => { const tbody = Utils.id('adminUsersBody'); if (!tbody) return; tbody.innerHTML = ''; Store.getUsers().forEach(u => { const isMe = Auth.currentUser?.id === u.id; tbody.innerHTML += `<tr><td>${u.username} ${isMe ? '<small>(tu)</small>' : ''}</td><td><span class="badge ${u.username === 'admin' ? 'badge-admin' : 'badge-cold'}">${u.role}</span></td><td><button class="btn btn-sm btn-warning" onclick="Admin.openUserModal('${u.id}')" ${isMe ? 'disabled' : ''}>Modifica</button></td></tr>`; }); },
+        renderUsers: () => { const tbody = Utils.id('adminUsersBody'); if (!tbody) return; tbody.innerHTML = ''; Store.getUsers().forEach(u => { const isMe = Auth.currentUser?.id === u.id; const locLabel = u.location ? ` <small>(${u.location})</small>` : ''; tbody.innerHTML += `<tr><td>${u.username} ${isMe ? '<small>(tu)</small>' : ''}${locLabel}</td><td><span class="badge ${u.username === 'admin' ? 'badge-admin' : 'badge-cold'}">${u.role}</span></td><td><button class="btn btn-sm btn-warning" onclick="Admin.openUserModal('${u.id}')" ${isMe ? 'disabled' : ''}>Modifica</button></td></tr>`; }); },
         renderLogs: () => { const logContainer = Utils.id('activityLog'); if (logContainer) { logContainer.innerHTML = Store.localLogs.map(l => `<div class="log-entry"><span class="log-time">[${l.time}]</span>${l.msg}</div>`).join(''); } },
-        openUserModal: (id = null) => { Utils.id('editUserId').value = id || ''; Utils.id('editUserUsername').value = ''; Utils.id('editUserPass').value = ''; Utils.id('editUserRole').value = 'user'; Utils.id('userModalTitle').innerText = id ? 'Modifica Utente' : 'Nuovo Utente'; if (id) { const u = Store.getUsers().find(x => x.id === id); if (u) { Utils.id('editUserUsername').value = u.username; Utils.id('editUserRole').value = u.role; } } UI.openModal('userModal'); },
+        renderLastBackup: () => { try { const last = localStorage.getItem('gipro_last_backup'); const el = Utils.id('lastBackupDate'); if (el) el.textContent = last ? 'Ultimo backup: ' + last : ''; } catch (e) {} },
+        openUserModal: (id = null) => { Utils.id('editUserId').value = id || ''; Utils.id('editUserUsername').value = ''; Utils.id('editUserPass').value = ''; Utils.id('editUserRole').value = 'user'; if (Utils.id('editUserLocation')) Utils.id('editUserLocation').value = ''; Utils.id('userModalTitle').innerText = id ? 'Modifica Utente' : 'Nuovo Utente'; if (id) { const u = Store.getUsers().find(x => x.id === id); if (u) { Utils.id('editUserUsername').value = u.username; Utils.id('editUserRole').value = u.role; if (Utils.id('editUserLocation')) Utils.id('editUserLocation').value = u.location || ''; } } UI.openModal('userModal'); },
         saveUser: () => { 
             const id = Utils.id('editUserId').value; 
             const username = Utils.id('editUserUsername').value.trim(); 
             let pass = Utils.id('editUserPass').value; 
             const role = Utils.id('editUserRole').value; 
+            const location = Utils.id('editUserLocation') ? Utils.id('editUserLocation').value : ''; 
             
             if (!username) { UI.showToast('Username obbligatorio', 'error'); return; } 
             
             if (id) { 
-                const data = { username, role }; 
+                const data = { username, role, location: location || null }; 
                 if (pass) data.password = pass; 
                 db.collection("users").doc(id).update(data); 
                 Store.addLog(`Admin ha modificato l'utente ${username}`); 
@@ -2578,13 +3208,13 @@
                     return; 
                 } 
                 const newId = Utils.generateId(); 
-                db.collection("users").doc(newId).set({ id: newId, username, password: pass, role }); 
+                db.collection("users").doc(newId).set({ id: newId, username, password: pass, role, location: location || null }); 
                 Store.addLog(`Admin ha creato l'utente ${username}`); 
                 UI.showToast('Nuovo utente creato!', 'success');
             } 
             UI.closeModal('userModal'); 
         },
-        exportAllData: () => { const backup = { interventions: Store.localInterventions, warehouse: Store.localWarehouse, users: Store.localUsers, logs: Store.localLogs, materialHistory: Store.localMaterialHistory, messages: Store.localMessages, domicileTickets: Store.localDomicileTickets, exportDate: new Date().toISOString() }; const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup_completo_gipro_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); UI.showToast('Backup completato', 'success'); },
+        exportAllData: () => { const backup = { interventions: Store.localInterventions, warehouse: Store.localWarehouse, users: Store.localUsers, logs: Store.localLogs, materialHistory: Store.localMaterialHistory, messages: Store.localMessages, domicileTickets: Store.localDomicileTickets, exportDate: new Date().toISOString() }; const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup_completo_gipro_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); try { const now = new Date().toLocaleString('it-IT'); localStorage.setItem('gipro_last_backup', now); const el = Utils.id('lastBackupDate'); if (el) { el.textContent = 'Ultimo backup: ' + now; } } catch (e) {} UI.showToast('Backup completato', 'success'); },
 
         openAssignmentModal: () => {
             const currentName = Utils.id('c_nome').value;
@@ -2727,7 +3357,34 @@
     const FormManager = {
         materials: [], currentStep: 1, category: 'refrigerazione',
         setCategory: (cat) => { FormManager.category = cat; const header = Utils.id('formHeader'); if (header) header.innerHTML = `Nuovo Intervento ${cat === 'refrigerazione' ? '❄️' : '🔥'}`; FormManager.updateTipoOptions(); },
-        updateTipoOptions: () => { const select = Utils.id('i_tipo'); if (!select) return; select.innerHTML = '<option value="" disabled selected>-- Seleziona --</option>'; const options = FormManager.category === 'refrigerazione' ? [{ val: 'installazione', text: 'Installazione' }, { val: 'manutenzione', text: 'Manutenzione Ordinaria' }, { val: 'riparazione', text: 'Riparazione Guasto' }, { val: 'ricariga', text: 'Ricarica Gas Refrigerante' }, { val: 'sopralluogo', text: 'Sopralluogo' }] : [{ val: 'installazione', text: 'Installazione Caldaia' }, { val: 'manutenzione', text: 'Manutenzione Caldaia' }, { val: 'riparazione', text: 'Riparazione Guasto' }, { val: 'sopralluogo', text: 'Sopralluogo' }]; options.forEach(o => { const opt = document.createElement('option'); opt.value = o.val; opt.textContent = o.text; select.appendChild(opt); }); },
+        updateTipoOptions: () => { 
+            const select = Utils.id('i_tipo'); 
+            if (!select) return; 
+            select.innerHTML = '<option value="" disabled selected>-- Seleziona --</option>'; 
+            const options = FormManager.category === 'refrigerazione' 
+                ? [
+                    { val: 'installazione', text: 'Installazione' },
+                    { val: 'manutenzione', text: 'Manutenzione Ordinaria' },
+                    { val: 'riparazione', text: 'Riparazione Guasto' },
+                    { val: 'ricariga', text: 'Ricarica Gas Refrigerante' },
+                    { val: 'sopralluogo', text: 'Sopralluogo' }
+                  ]
+                : [
+                    { val: 'installazione', text: 'Installazione Caldaia' },
+                    { val: 'manutenzione', text: 'Manutenzione Caldaia' },
+                    { val: 'riparazione', text: 'Riparazione Guasto' },
+                    { val: 'scaldabagno_elettrico', text: 'Scaldabagno Elettrico' },
+                    { val: 'scaldino', text: 'Scaldino' },
+                    { val: 'stufa_pellet', text: 'Stufa a Pellet' },
+                    { val: 'sopralluogo', text: 'Sopralluogo' }
+                  ]; 
+            options.forEach(o => { 
+                const opt = document.createElement('option'); 
+                opt.value = o.val; 
+                opt.textContent = o.text; 
+                select.appendChild(opt); 
+            }); 
+        },
         reset: () => { 
             const form = Utils.id('interventionForm'); 
             if (form) form.reset(); 
@@ -2786,7 +3443,13 @@
             if (!dropdown || !searchInput) return; 
             const search = searchInput.value.toLowerCase(); 
             const materials = Store.getWarehouse(); 
-            const filtered = materials.filter(m => m.name.toLowerCase().includes(search)); 
+            const user = Auth.currentUser;
+            const userLocation = user && user.role !== 'admin' ? user.location : null;
+            const filtered = materials.filter(m => {
+                const matchSearch = m.name.toLowerCase().includes(search);
+                const matchLocation = !userLocation || m.location === userLocation;
+                return matchSearch && matchLocation;
+            }); 
             if (filtered.length === 0) { 
                 dropdown.innerHTML = '<div class="material-option" style="color: var(--text-secondary);">Nessun risultato</div>'; 
             } else { 
@@ -2920,7 +3583,7 @@
             doc.setFillColor(...dark); doc.rect(0, 0, pageWidth, 45, 'F'); const catColor = data.category === 'riscaldamento' ? hotColor : coldColor; doc.setFillColor(...catColor); doc.rect(0, 45, pageWidth, 4, 'F');
             doc.setTextColor(255); doc.setFontSize(24); doc.setFont('helvetica', 'bold'); doc.text('RAPPORTO INTERVENTO', left, 25);
             doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.text(`Operatore: ${data.author}`, pageWidth - left, 20, {align: 'right'}); doc.text(`Data Intervento: ${data.client.dataIntervento || '-'}`, pageWidth - left, 28, {align: 'right'}); 
-            doc.text(`Data Scontrino: ${data.client.date || '-'}`, pageWidth - left, 36, {align: 'right'}); 
+            doc.text(`Data Scontrino: ${Utils.formatDate(data.client.date || '-')}`, pageWidth - left, 36, {align: 'right'}); 
             const catLabel = data.category === 'riscaldamento' ? 'RISCALDAMENTO' : 'REFRIGERAZIONE'; doc.setFillColor(...catColor); doc.roundedRect(left, 32, 45, 8, 2, 2, 'F'); doc.setTextColor(255); doc.setFontSize(8); doc.text(catLabel, left + 22.5, 37.5, {align: 'center'});
             y = 60;
             const drawSectionHeader = (text) => { if (y > 250) { doc.addPage(); y = 20; } doc.setFillColor(...primary); doc.roundedRect(left, y, contentWidth, 7, 1, 1, 'F'); doc.setTextColor(255); doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.text(text.toUpperCase(), left + 3, y + 5); y += 12; doc.setTextColor(...dark); doc.setFont('helvetica', 'normal'); };
@@ -2961,7 +3624,7 @@
             doc.setTextColor(...gray); 
             doc.text('Data Acquisto:', left, y); 
             doc.setTextColor(...dark); 
-            doc.text(data.client.date || '-', left + 30, y);
+            doc.text(Utils.formatDate(data.client.date || '-'), left + 30, y);
             
             doc.setTextColor(...gray); 
             doc.text('N. Scontrino:', colX, y); 
@@ -3061,7 +3724,7 @@
                 }
 
                 tbody.innerHTML += `<tr class="${rowClass}">
-                    <td>${item.client.date}</td>
+                    <td>${Utils.formatDate(item.client.date)}</td>
                     <td><strong>${item.client.nome}</strong></td>
                     <td>${badge}</td>
                     <td>${item.intervention.tipo_label || '-'}</td>
@@ -3076,9 +3739,49 @@
     // Event Listener per chiusura dropdown materiali
     document.addEventListener('click', (e) => { const dropdown = Utils.id('materialDropdown'); const searchInput = Utils.id('materialSearch'); if (dropdown && !dropdown.contains(e.target) && e.target !== searchInput) { dropdown.classList.remove('show'); } });
 
-    // Inizializzazione Store e Auth
-    Store.setup();
-    window.onload = Auth.init;
-    </script>
+    // Inizializzazione Store e Auth con retry
+    let initAttempts = 0;
+    const maxInitAttempts = 3;
+    
+    function initializeApp() {
+        initAttempts++;
+        console.log(`Tentativo di inizializzazione ${initAttempts}/${maxInitAttempts}`);
+        
+        if (!firebaseReady || !db) {
+            if (initAttempts >= maxInitAttempts) {
+                console.error("❌ Impossibile inizializzare Firebase dopo " + maxInitAttempts + " tentativi");
+                Utils.id('intro-status').innerText = "Modalità offline locale - Firebase non disponibile";
+                setTimeout(() => { 
+                    Auth.checkLocalSession(); 
+                }, 1000);
+                return;
+            }
+            
+            Utils.id('intro-status').innerText = `Tentativo ${initAttempts}/${maxInitAttempts} - Firebase non raggiungibile...`;
+            setTimeout(() => {
+                initializeApp();
+            }, 2000);
+            return;
+        }
+        
+        try {
+            Store.setup();
+            Utils.id('intro-status').innerText = "✅ Applicazione inizializzata";
+            setTimeout(() => {
+                Utils.id('intro-screen').classList.add('hidden');
+                Auth.init();
+            }, 500);
+        } catch (error) {
+            console.error("❌ Errore inizializzazione app:", error);
+            Utils.id('intro-status').innerText = "❌ Errore critico - Modalità offline";
+            setTimeout(() => { 
+                Auth.checkLocalSession(); 
+            }, 2000);
+        }
+    }
+    
+    // Avvia l'inizializzazione
+    window.onload = initializeApp;
+</script>
 </body>
 </html>
