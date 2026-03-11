@@ -1797,7 +1797,7 @@
                     // Dopo aver salvato, invia messaggio WhatsApp
                     const t = Store.getDomicileTickets().find(t => t.id === CallManager.currentTicketId);
                     if(t && t.phone) {
-                        const trackingLink = `https://antoninomaiorana92-star.github.io/giprov4/`;
+                        const trackingLink = `https://iltlogistics.github.io/Ilt-Logistics/`;
                         const message = `Gentile Cliente, la informiamo che la sua consegna è confermata per la fascia oraria: ${slot}.\n\nPuò tracciare la sua consegna al seguente link:\n${trackingLink}\n\nID Ticket: ${t.ticketId || t.id.substring(0,4)}`;
                         
                         // Pulisce il numero (rimuove spazi, +, ecc.)
@@ -1814,7 +1814,7 @@
                     CallManager.saveCallData(status, null, () => {
                         const t = Store.getDomicileTickets().find(x => x.id === CallManager.currentTicketId);
                         if (t && t.phone) {
-                            const trackingLink = 'https://antoninomaiorana92-star.github.io/giprov4/';
+                            const trackingLink = 'https://iltlogistics.github.io/Ilt-Logistics/';
                             const ticketIdDisplay = t.ticketId || t.id.substring(0, 4);
                             const message = `Salve, sono il corriere che ha incarico la sua consegna per oggi. Ho provato a contattarla per avvisarla sull'orario di consegna. Le invio la tracciabilità della sua consegna.\n\nLink tracciabilità: ${trackingLink}\n\nID Ticket: ${ticketIdDisplay}`;
                             let phoneNumber = t.phone.replace(/\s/g, '');
