@@ -576,6 +576,134 @@
             .action-group { width: 100%; justify-content: center; }
             .close-iframe-btn { top: auto; bottom: 20px; left: 20px; right: 20px; width: auto; }
         }
+
+        /* --- STILI COMUNICAZIONE E ALLEGATI --- */
+        .attachment-upload-area {
+            transition: all 0.3s ease;
+        }
+        .attachment-upload-area:hover {
+            border-color: var(--primary) !important;
+            background: rgba(14, 165, 233, 0.05) !important;
+            transform: translateY(-2px);
+        }
+        .attachment-upload-area:hover i {
+            color: var(--primary) !important;
+        }
+        .attachment-upload-area:hover span {
+            color: var(--text-primary) !important;
+        }
+
+        .message-bubble {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .message-bubble:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+        .message-bubble.unread {
+            border-left: 4px solid var(--primary);
+            background: rgba(14, 165, 233, 0.05);
+        }
+        .message-bubble.unread::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .message-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .message-author {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .message-to {
+            color: var(--warning);
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+
+        .message-content {
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .message-attachment-img {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 8px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .message-attachment-img:hover {
+            transform: scale(1.05);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+            animation: pulse 2s ease-in-out infinite;
+            z-index: 10;
+        }
+        .notification-badge.hidden {
+            display: none;
+        }
+
+        /* Animazione per notifiche */
+        @keyframes notificationSlideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .notification-toast {
+            animation: notificationSlideIn 0.3s ease-out;
+        }
+
+        /* Stili per preview allegati */
+        .attachment-preview {
+            border: 2px solid var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+        .attachment-preview:hover {
+            border-color: var(--primary);
+            background: rgba(14, 165, 233, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -654,6 +782,11 @@
             <select id="editUserRole" style="margin-bottom:12px;">
                 <option value="user">Utente Standard</option>
                 <option value="admin">Amministratore</option>
+            </select>
+            <select id="editUserLocation" style="margin-bottom:12px;">
+                <option value="">-- Seleziona Sede --</option>
+                <option value="Palermo">Palermo</option>
+                <option value="Milano">Milano</option>
             </select>
             <div class="modal-actions row">
                 <button class="btn btn-outline" onclick="UI.closeModal('userModal')">Annulla</button>
@@ -1108,6 +1241,27 @@
                 <div class="form-grid" style="margin-top: 25px; grid-template-columns: 1fr;">
                     <div class="form-group"><label>Destinatario</label><select id="msgRecipient" style="background: var(--bg-body);"><option value="all">📢 A Tutti (Bacheca Generale)</option></select></div>
                     <div class="form-group"><label>Nuovo Messaggio</label><textarea id="newMessageContent" rows="3" placeholder="Scrivi un avviso o comunicazione..."></textarea></div>
+                    <div class="form-group">
+                        <label>📎 Allegato (Opzionale)</label>
+                        <input type="file" id="msgAttachment" accept="image/*" onchange="CommunicationManager.previewAttachment(event)" style="display: none;">
+                        <div class="attachment-upload-area" onclick="Utils.id('msgAttachment').click()" style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.3s; background: var(--bg-body);">
+                            <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--text-secondary); margin-bottom: 10px; display: block;"></i>
+                            <span style="color: var(--text-secondary);">Clicca per caricare un'immagine</span>
+                            <small style="color: var(--text-secondary); display: block; margin-top: 5px;">Formati: JPG, PNG, GIF (Max 1MB)</small>
+                        </div>
+                        <div id="msgAttachmentPreview" class="hidden" style="margin-top: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
+                                <img id="msgPreviewImg" src="" alt="Preview" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;">
+                                <div style="flex: 1;">
+                                    <div id="msgFileName" style="font-weight: 600; color: var(--text-primary);"></div>
+                                    <small style="color: var(--text-secondary);">Immagine caricata</small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="CommunicationManager.clearAttachment()" style="padding: 5px 10px;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="text-right" style="margin-top: 10px;"><button class="btn btn-primary" onclick="CommunicationManager.sendMessage()">Invia Messaggio</button></div>
             </div>
@@ -1382,7 +1536,7 @@
                             <h3 style="margin:0; font-size:1.1rem;">Gestione Utenti</h3>
                             <button class="btn btn-sm btn-success" onclick="Admin.openUserModal()">+ Nuovo</button>
                         </div>
-                        <div class="table-responsive"><table><thead><tr><th>Username</th><th>Ruolo</th><th>Azioni</th></tr></thead><tbody id="adminUsersBody"></tbody></table></div>
+                        <div class="table-responsive"><table><thead><tr><th>Username</th><th>Ruolo</th><th>Sede</th><th>Azioni</th></tr></thead><tbody id="adminUsersBody"></tbody></table></div>
                     </div>
                     <div class="card" style="margin:0;">
                         <h3 style="margin:0 0 15px; font-size:1.1rem;">Registro Attivita</h3>
@@ -1798,7 +1952,7 @@
                     const t = Store.getDomicileTickets().find(t => t.id === CallManager.currentTicketId);
                     if(t && t.phone) {
                         const trackingLink = `https://iltlogistics.github.io/Ilt-Logistics/`;
-                        const message = `Gentile Cliente, la informiamo che la sua consegna è confermata per la fascia oraria: ${slot}.\n\nPuò tracciare la sua consegna al seguente link:\n${trackingLink}\n\nID Ticket: ${t.ticketId || t.id.substring(0,4)}`;
+                        const message = `Gentile Cliente, la informiamo che è stata contattata per la sua consegna.\n\nLa sua consegna è confermata per oggi nella fascia oraria: ${slot}.\n\nSe desidera aggiornamenti sulla consegna, può visitare il sito e digitare il suo ID:\n${trackingLink}\n\nID Ticket: ${t.ticketId || t.id.substring(0,4)}`;
                         
                         // Pulisce il numero (rimuove spazi, +, ecc.)
                         let phoneNumber = t.phone.replace(/\s/g, '');
@@ -1816,13 +1970,36 @@
                         if (t && t.phone) {
                             const trackingLink = 'https://iltlogistics.github.io/Ilt-Logistics/';
                             const ticketIdDisplay = t.ticketId || t.id.substring(0, 4);
-                            const message = `Salve, sono il corriere che ha incarico la sua consegna per oggi. Ho provato a contattarla per avvisarla sull'orario di consegna. Le invio la tracciabilità della sua consegna.\n\nLink tracciabilità: ${trackingLink}\n\nID Ticket: ${ticketIdDisplay}`;
+                            const message = `Salve, sono il corriere che ha incarico la sua consegna per oggi. Ho provato a contattarla al telefono ma non ho trovato risposta.\n\nLe inviamo la tracciabilità della sua consegna. Se desidera informazioni o aggiornamenti, può visitare il sito e digitare il suo ID:\n${trackingLink}\n\nID Ticket: ${ticketIdDisplay}`;
                             let phoneNumber = t.phone.replace(/\s/g, '');
                             if (!phoneNumber.startsWith('+')) phoneNumber = '+39' + phoneNumber;
                             const waLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
                             window.open(waLink, '_blank');
                         }
                     });
+                } else if (status === 'Rischedulare') {
+                    const reason = prompt('Perché questo cliente deve essere rischedulato? (es: cliente assente, numero sbagliato, etc.)');
+                    if (reason) {
+                        CallManager.saveCallData(status, null, () => {
+                            const t = Store.getDomicileTickets().find(x => x.id === CallManager.currentTicketId);
+                            if (t) {
+                                const adminUsers = Store.getUsers().filter(u => u.role === 'admin');
+                                adminUsers.forEach(admin => {
+                                    const msg = {
+                                        content: `📅 RICHIESTA RISCHEDULAZIONE\n\nCliente: ${t.clientName}\nTelefono: ${t.phone}\nIndirizzo: ${t.address}\nMotivo: ${reason}\nOperatore: ${Auth.currentUser.username}\nTicket ID: #${t.ticketId || t.id.substring(0,4)}\n\nLa consegna deve essere riassegnata.`,
+                                        author: Auth.currentUser.username,
+                                        recipient: admin.username,
+                                        time: new Date().toLocaleString('it-IT'),
+                                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                                        read: false
+                                    };
+                                    Store.saveMessage(msg);
+                                });
+                                Store.addLog(`Richiesta rischedulazione per ticket ${t.id} - Motivo: ${reason}`);
+                                UI.showToast('Notifica inviata agli amministratori', 'success');
+                            }
+                        });
+                    }
                 } else {
                     CallManager.saveCallData(status, null);
                 }
@@ -1889,7 +2066,7 @@
                 const selectedDate = dateInput.value;
                 const allTickets = Store.getDomicileTickets();
                 
-                let todayTickets = allTickets.filter(t => t.date === selectedDate);
+                let todayTickets = allTickets.filter(t => t.date === selectedDate && t.status !== 'completato');
 
                 if (Auth.currentUser.role !== 'admin') {
                     todayTickets = todayTickets.filter(t => t.operator === Auth.currentUser.username);
@@ -1908,11 +2085,8 @@
                         operatorStats[opName] = { total: 0, done: 0, pending: 0 };
                     }
                     operatorStats[opName].total++;
-                    if (t.status === 'completato') {
-                        operatorStats[opName].done++;
-                    } else {
-                        operatorStats[opName].pending++;
-                    }
+                    // I ticket in questa vista sono solo quelli non completati, quindi sono tutti pending
+                    operatorStats[opName].pending++;
                 });
 
                 container.innerHTML = '';
@@ -2237,8 +2411,15 @@
                 const ticketId = DomicileManager.currentTicketId; 
                 if (!ticketId) { UI.showToast('Errore: ID Ticket non valido', 'error'); return; } 
                 const completionData = { status: status, completedAt: new Date().toLocaleString('it-IT'), completedBy: Auth.currentUser.username, signature: signature, photo: photoData && !photoData.endsWith('undefined') ? photoData : null, privacyAccepted: true, notes: notes }; 
+                
                 db.collection("domicile_tickets").doc(ticketId).update(completionData).then(() => { 
                     UI.showToast(`Ticket ${status === 'reclamo' ? 'segnalato' : 'completato'}!`, 'success'); 
+                    
+                    // Se il ticket è completato (non reclamo), spostalo nello storico
+                    if (status === 'completato') {
+                        DomicileManager.moveToHistory(ticketId);
+                    }
+                    
                     if (status === 'reclamo') { 
                         const originalTicket = Store.getDomicileTickets().find(t => t.id === ticketId); 
                         const msg = { content: `⚠️ RECLAMO segnalato da ${Auth.currentUser.username} per il ticket di ${originalTicket?.clientName || 'N.D.'}. Motivo: ${notes || 'Non specificato'}`, author: Auth.currentUser.username, recipient: 'admin', time: new Date().toLocaleString('it-IT'), timestamp: firebase.firestore.FieldValue.serverTimestamp(), read: false }; 
@@ -2252,6 +2433,58 @@
                     } 
                     UI.closeModal('domicileModal'); 
                 }).catch(err => { console.error("Errore Firestore:", err); UI.showToast('Errore salvataggio: ' + err.message, 'error'); }); 
+            },
+
+            moveToHistory: (ticketId) => {
+                const ticket = Store.getDomicileTickets().find(t => t.id === ticketId);
+                if (!ticket) return;
+
+                // Converti il ticket domicilio in un intervento storico
+                const historyData = {
+                    id: Utils.generateId(),
+                    category: 'domicilio',
+                    status: 'completato',
+                    author: ticket.createdBy || 'Admin',
+                    client: {
+                        nome: ticket.clientName,
+                        indirizzo: ticket.address,
+                        tel: ticket.phone || '',
+                        email: '',
+                        date: ticket.date,
+                        dataIntervento: ticket.date
+                    },
+                    intervention: {
+                        tipo: 'domicilio',
+                        tipo_label: 'Consegna Domicilio',
+                        note: `Tipo: ${ticket.type}\nProdotto: ${ticket.product || 'N.D.'}\nPagamento: ${ticket.payment || 'N.D.'}\nUbicazione: ${ticket.ubicazioneMerce || 'N.D.'}\nNote ticket: ${ticket.note || ''}\nNote completamento: ${ticket.notes || ''}`
+                    },
+                    machines: [],
+                    materials: [],
+                    total: '0.00',
+                    signatures: {
+                        client: ticket.signature,
+                        tech: null
+                    },
+                    completedAt: ticket.completedAt,
+                    completedBy: ticket.completedBy,
+                    ticketId: ticket.ticketId,
+                    originalTicketType: 'domicilio'
+                };
+
+                // Salva nello storico interventi
+                Store.save(historyData);
+                Store.addLog(`Ticket domicilio #${ticket.ticketId} spostato nello storico interventi`);
+
+                // Rimuovi il ticket dalla lista domicilio dopo un breve delay
+                setTimeout(() => {
+                    db.collection("domicile_tickets").doc(ticketId).delete()
+                        .then(() => {
+                            Store.addLog(`Ticket domicilio #${ticket.ticketId} rimosso dalla lista attiva`);
+                        })
+                        .catch(err => {
+                            console.error("Errore eliminazione ticket:", err);
+                        });
+                }, 2000);
             },
             viewPdf: (id) => { const t = Store.getDomicileTickets().find(t => t.id === id); if(t) DomicilePDF.generate(t); },
             openEditModal: (id) => { 
@@ -2555,22 +2788,49 @@
 
     // ========== ADMIN ==========
     const Admin = {
-        renderUsers: () => { const tbody = Utils.id('adminUsersBody'); if (!tbody) return; tbody.innerHTML = ''; Store.getUsers().forEach(u => { const isMe = Auth.currentUser?.id === u.id; tbody.innerHTML += `<tr><td>${u.username} ${isMe ? '<small>(tu)</small>' : ''}</td><td><span class="badge ${u.username === 'admin' ? 'badge-admin' : 'badge-cold'}">${u.role}</span></td><td><button class="btn btn-sm btn-warning" onclick="Admin.openUserModal('${u.id}')" ${isMe ? 'disabled' : ''}>Modifica</button></td></tr>`; }); },
+        renderUsers: () => { 
+            const tbody = Utils.id('adminUsersBody'); 
+            if (!tbody) return; 
+            tbody.innerHTML = ''; 
+            Store.getUsers().forEach(u => { 
+                const isMe = Auth.currentUser?.id === u.id; 
+                const locationBadge = u.location ? `<span class="badge badge-domicile" style="margin-left: 8px;">${u.location}</span>` : '<span style="color: var(--text-secondary); font-size: 0.8rem; margin-left: 8px;">Nessuna sede</span>';
+                tbody.innerHTML += `<tr><td>${u.username} ${isMe ? '<small>(tu)</small>' : ''}</td><td><span class="badge ${u.username === 'admin' ? 'badge-admin' : 'badge-cold'}">${u.role}</span></td><td>${locationBadge}</td><td><button class="btn btn-sm btn-warning" onclick="Admin.openUserModal('${u.id}')" ${isMe ? 'disabled' : ''}>Modifica</button></td></tr>`; 
+            }); 
+        },
         renderLogs: () => { const logContainer = Utils.id('activityLog'); if (logContainer) { logContainer.innerHTML = Store.localLogs.map(l => `<div class="log-entry"><span class="log-time">[${l.time}]</span>${l.msg}</div>`).join(''); } },
-        openUserModal: (id = null) => { Utils.id('editUserId').value = id || ''; Utils.id('editUserUsername').value = ''; Utils.id('editUserPass').value = ''; Utils.id('editUserRole').value = 'user'; Utils.id('userModalTitle').innerText = id ? 'Modifica Utente' : 'Nuovo Utente'; if (id) { const u = Store.getUsers().find(x => x.id === id); if (u) { Utils.id('editUserUsername').value = u.username; Utils.id('editUserRole').value = u.role; } } UI.openModal('userModal'); },
+        openUserModal: (id = null) => { 
+            Utils.id('editUserId').value = id || ''; 
+            Utils.id('editUserUsername').value = ''; 
+            Utils.id('editUserPass').value = ''; 
+            Utils.id('editUserRole').value = 'user'; 
+            Utils.id('editUserLocation').value = ''; 
+            Utils.id('userModalTitle').innerText = id ? 'Modifica Utente' : 'Nuovo Utente'; 
+            if (id) { 
+                const u = Store.getUsers().find(x => x.id === id); 
+                if (u) { 
+                    Utils.id('editUserUsername').value = u.username; 
+                    Utils.id('editUserRole').value = u.role; 
+                    Utils.id('editUserLocation').value = u.location || ''; 
+                } 
+            } 
+            UI.openModal('userModal'); 
+        },
         saveUser: () => { 
             const id = Utils.id('editUserId').value; 
             const username = Utils.id('editUserUsername').value.trim(); 
             let pass = Utils.id('editUserPass').value; 
             const role = Utils.id('editUserRole').value; 
+            const location = Utils.id('editUserLocation').value;
             
             if (!username) { UI.showToast('Username obbligatorio', 'error'); return; } 
+            if (!location) { UI.showToast('Sede obbligatoria', 'error'); return; }
             
             if (id) { 
-                const data = { username, role }; 
+                const data = { username, role, location }; 
                 if (pass) data.password = pass; 
                 db.collection("users").doc(id).update(data); 
-                Store.addLog(`Admin ha modificato l'utente ${username}`); 
+                Store.addLog(`Admin ha modificato l'utente ${username} (sede: ${location})`); 
                 UI.showToast('Utente modificato!', 'success');
             } else { 
                 if (!pass) { 
@@ -2578,8 +2838,8 @@
                     return; 
                 } 
                 const newId = Utils.generateId(); 
-                db.collection("users").doc(newId).set({ id: newId, username, password: pass, role }); 
-                Store.addLog(`Admin ha creato l'utente ${username}`); 
+                db.collection("users").doc(newId).set({ id: newId, username, password: pass, role, location }); 
+                Store.addLog(`Admin ha creato l'utente ${username} (sede: ${location})`); 
                 UI.showToast('Nuovo utente creato!', 'success');
             } 
             UI.closeModal('userModal'); 
@@ -2625,6 +2885,10 @@
                         </div>
                         <div class="form-group"><label>Tipo macchina da installare</label><input type="text" id="comm_machine_type" placeholder="Es. Condizionatore split 9000 BTU, Caldaia a condensazione..."></div>
                         <div class="form-group"><label>Numero macchine da installare</label><input type="number" id="comm_machine_count" min="1" max="20" value="1" style="width:80px;"></div>
+                        <div class="form-group">
+                            <label>Data Intervento *</label>
+                            <input type="date" id="comm_intervention_date" value="${Utils.today()}" required>
+                        </div>
                         <div class="form-group"><label>Note / Pagamento</label><textarea id="comm_notes" rows="3" placeholder="Es. Pagamento in contanti, dettagli extra..."></textarea></div>
 
                         <div class="modal-actions row">
@@ -2650,10 +2914,11 @@
             const type = Utils.id('comm_type').value;
             const machineType = Utils.id('comm_machine_type').value.trim();
             const machineCount = parseInt(Utils.id('comm_machine_count').value, 10) || 1;
+            const interventionDate = Utils.id('comm_intervention_date').value;
             const notes = Utils.id('comm_notes').value;
 
-            if(!client || !operator) {
-                UI.showToast('Cliente e Operatore sono obbligatori', 'error');
+            if(!client || !operator || !interventionDate) {
+                UI.showToast('Cliente, Operatore e Data Intervento sono obbligatori', 'error');
                 return;
             }
 
@@ -2673,7 +2938,7 @@
                     tel: phone,
                     email: email || undefined,
                     date: Utils.today(),
-                    dataIntervento: Utils.today()
+                    dataIntervento: interventionDate
                 },
                 intervention: {
                     tipo: type.toLowerCase(),
@@ -2689,7 +2954,7 @@
             };
 
             Store.save(data);
-            Store.addLog(`Commessa creata per ${operator} - Cliente: ${client}`);
+            Store.addLog(`Commessa creata per ${operator} - Cliente: ${client} - Data Intervento: ${interventionDate}`);
             UI.showToast('Commessa assegnata con successo!', 'success');
             
             Utils.id('createCommessaModal').remove();
@@ -2786,9 +3051,16 @@
             if (!dropdown || !searchInput) return; 
             const search = searchInput.value.toLowerCase(); 
             const materials = Store.getWarehouse(); 
-            const filtered = materials.filter(m => m.name.toLowerCase().includes(search)); 
+            
+            // Filtra materiali per sede dell'utente loggato (se non è admin)
+            let availableMaterials = materials;
+            if (Auth.currentUser?.role !== 'admin' && Auth.currentUser?.location) {
+                availableMaterials = materials.filter(m => m.location === Auth.currentUser.location);
+            }
+            
+            const filtered = availableMaterials.filter(m => m.name.toLowerCase().includes(search)); 
             if (filtered.length === 0) { 
-                dropdown.innerHTML = '<div class="material-option" style="color: var(--text-secondary);">Nessun risultato</div>'; 
+                dropdown.innerHTML = '<div class="material-option" style="color: var(--text-secondary);">Nessun materiale trovato nella tua sede</div>'; 
             } else { 
                 dropdown.innerHTML = filtered.map(m => `
                     <div class="material-option" onclick="FormManager.selectMaterial('${m.id}')">
