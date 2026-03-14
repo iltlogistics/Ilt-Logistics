@@ -67,7 +67,9 @@
         .section-label { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fg-muted); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
         .form-section { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
         .form-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .card-img-top { width: 100%; height: 140px; object-fit: cover; border-radius: 8px 8px 0 0; margin-bottom: 8px; }
+        .card-img-top { width: 100%; height: 140px; object-fit: cover; border-radius: 8px 8px 0 0; margin-bottom: 8px; opacity: 0; transition: opacity 0.3s ease; }
+        .card-img-top.loaded { opacity: 1; }
+        .image-placeholder { width: 100%; height: 140px; background: var(--card); border-radius: 8px 8px 0 0; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; color: var(--fg-muted); }
     </style>
 </head>
 <body class="bg-pattern grid-overlay">
@@ -85,7 +87,7 @@
                     </div>
                     <p class="text-[var(--fg-muted)] text-sm md:text-base">Gestisci e tieni traccia di tutte le attrezzature</p>
                 </div>
-                <button onclick="openModal()" class="btn-primary px-6 py-3 rounded-lg font-semibold flex items-center gap-2 self-start md:self-center">
+                <button onclick="openModal()" aria-label="Aggiungi nuovo attrezzo" class="btn-primary px-6 py-3 rounded-lg font-semibold flex items-center gap-2 self-start md:self-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     Aggiungi Attrezzo
                 </button>
@@ -96,7 +98,7 @@
         <div class="max-w-7xl mx-auto mb-6 animate-fade-in-up stagger-1" style="opacity: 0;">
             <div class="flex flex-wrap gap-4 mb-4">
                 <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg px-4 py-3 flex items-center gap-3 flex-1 min-w-[150px]">
-                    <div class="w-8 h-8 rounded-lg bg-[var(--accent-muted)] flex items-center justify-center"><svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+                    <div class="w-8 h-8 rounded-lg bg-[var(--accent-muted)] flex items-center justify-center"><svg class="w-4 h-4 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10l-8 4"/></svg></div>
                     <div><p class="text-xs text-[var(--fg-muted)]">Totale</p><p id="totalCount" class="text-xl font-bold">0</p></div>
                 </div>
                 <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg px-4 py-3 flex items-center gap-3 flex-1 min-w-[150px]">
@@ -104,17 +106,17 @@
                     <div><p class="text-xs text-[var(--fg-muted)]">In Magazzino</p><p id="availableCount" class="text-xl font-bold">0</p></div>
                 </div>
                 <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg px-4 py-3 flex items-center gap-3 flex-1 min-w-[150px]">
-                    <div class="w-8 h-8 rounded-lg bg-[var(--purple-muted)] flex items-center justify-center"><svg class="w-4 h-4 text-[var(--purple)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                    <div class="w-8 h-8 rounded-lg bg-[var(--purple-muted)] flex items-center justify-center"><svg class="w-4 h-4 text-[var(--purple)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20a6 6 0 0112 0v1H3v-1z"/></svg></div>
                     <div><p class="text-xs text-[var(--fg-muted)]">Assegnati</p><p id="assignedCount" class="text-xl font-bold">0</p></div>
                 </div>
             </div>
             <div class="flex flex-col sm:flex-row gap-4">
-                <div class="relative flex-1">
+                <div class="relative flex-1" aria-label="Cerca attrezzature">
                     <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input type="text" id="searchInput" placeholder="Cerca..." class="input-field search-input w-full pl-12 pr-4 py-3 rounded-lg" oninput="filterEquipment()">
+                    <input type="text" id="searchInput" placeholder="Cerca..." aria-label="Campo di ricerca" class="input-field search-input w-full pl-12 pr-4 py-3 rounded-lg" oninput="filterEquipment()">
                 </div>
-                <select id="typeFilter" class="input-field px-4 py-3 rounded-lg min-w-[180px]" onchange="filterEquipment()"><option value="">Tutte le tipologie</option></select>
-                <select id="statusFilter" class="input-field px-4 py-3 rounded-lg min-w-[160px]" onchange="filterEquipment()">
+                <select id="typeFilter" aria-label="Filtra per tipologia" class="input-field px-4 py-3 rounded-lg min-w-[180px]" onchange="filterEquipment()"><option value="">Tutte le tipologie</option></select>
+                <select id="statusFilter" aria-label="Filtra per stato" class="input-field px-4 py-3 rounded-lg min-w-[160px]" onchange="filterEquipment()">
                     <option value="">Tutti gli stati</option>
                     <option value="available">In Magazzino</option>
                     <option value="assigned">Assegnati</option>
@@ -126,7 +128,7 @@
         <main class="max-w-7xl mx-auto">
             <div id="equipmentGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             <div id="emptyState" class="hidden rounded-2xl border border-[var(--border)] p-12 text-center">
-                <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-[var(--accent-muted)] flex items-center justify-center"><svg class="w-10 h-10 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg></div>
+                <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-[var(--accent-muted)] flex items-center justify-center"><svg class="w-10 h-10 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10l-8 4"/></svg></div>
                 <h3 class="text-xl font-semibold mb-2">Nessuna attrezzatura</h3>
                 <p class="text-[var(--fg-muted)] mb-6">Inizia aggiungendo il tuo primo attrezzo</p>
                 <button onclick="openModal()" class="btn-primary px-6 py-3 rounded-lg font-semibold inline-flex items-center gap-2"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Aggiungi il primo attrezzo</button>
@@ -134,22 +136,25 @@
         </main>
     </div>
 
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
     <!-- Modals -->
     <!-- Add/Edit Modal -->
     <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-overlay">
         <div class="modal-content w-full max-w-lg rounded-2xl p-6 md:p-8 max-h-[90vh] overflow-y-auto animate-slide-in">
             <div class="flex items-center justify-between mb-6">
                 <h2 id="modalTitle" class="text-xl font-bold">Aggiungi Attrezzo</h2>
-                <button onclick="closeModal()" class="w-10 h-10 rounded-lg hover:bg-[var(--card)] flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                <button onclick="closeModal()" aria-label="Chiudi finestra" class="w-10 h-10 rounded-lg hover:bg-[var(--card)] flex items-center justify-center"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
             </div>
             <form id="equipmentForm" onsubmit="saveEquipment(event)">
                 <input type="hidden" id="equipmentId">
                 <div class="form-section">
                     <div class="section-label">Foto Prodotto</div>
-                    <div class="photo-upload rounded-xl p-4 text-center" onclick="document.getElementById('productPhotoInput').click()">
+                    <div class="photo-upload rounded-xl p-4 text-center" onclick="document.getElementById('productPhotoInput').click()" role="button" tabindex="0">
                         <div id="productPhotoPreview" class="hidden">
                             <img id="productPhotoImg" src="" alt="Preview" class="w-full h-40 object-cover rounded-lg mb-2">
-                            <button type="button" onclick="event.stopPropagation(); removeProductPhoto();" class="text-[var(--danger)] text-sm hover:underline">Rimuovi foto</button>
+                            <button type="button" onclick="event.stopPropagation(); removeProductPhoto();" aria-label="Rimuovi foto" class="text-[var(--danger)] text-sm hover:underline">Rimuovi foto</button>
                         </div>
                         <div id="productPhotoPlaceholder">
                             <svg class="w-10 h-10 mx-auto mb-2 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -158,11 +163,11 @@
                     </div>
                     <input type="file" id="productPhotoInput" accept="image/*" class="hidden" onchange="handleProductPhotoUpload(event)">
                 </div>
-                <div class="mb-4"><label class="block text-sm font-medium mb-2">Tipologia *</label><input type="text" id="tipologia" required class="input-field w-full px-4 py-3 rounded-lg"></div>
-                <div class="mb-4"><label class="block text-sm font-medium mb-2">Nome Prodotto *</label><input type="text" id="nomeProdotto" required class="input-field w-full px-4 py-3 rounded-lg"></div>
-                <div class="mb-4"><label class="block text-sm font-medium mb-2">Matricola</label><input type="text" id="matricola" class="input-field w-full px-4 py-3 rounded-lg font-mono"></div>
-                <div class="mb-5"><label class="block text-sm font-medium mb-2">Note</label><textarea id="note" rows="2" class="input-field w-full px-4 py-3 rounded-lg resize-none"></textarea></div>
-                <div id="modificationNotesWrapper" class="mb-5 hidden"><label class="block text-sm font-medium mb-2 text-[var(--accent)]">Note Modifica</label><textarea id="modificationNotes" rows="2" class="input-field w-full px-4 py-3 rounded-lg resize-none"></textarea></div>
+                <div class="mb-4"><label class="block text-sm font-medium mb-2">Tipologia *</label><input type="text" id="tipologia" required aria-label="Tipologia attrezzo" class="input-field w-full px-4 py-3 rounded-lg"></div>
+                <div class="mb-4"><label class="block text-sm font-medium mb-2">Nome Prodotto *</label><input type="text" id="nomeProdotto" required aria-label="Nome prodotto" class="input-field w-full px-4 py-3 rounded-lg"></div>
+                <div class="mb-4"><label class="block text-sm font-medium mb-2">Matricola</label><input type="text" id="matricola" aria-label="Matricola attrezzo" class="input-field w-full px-4 py-3 rounded-lg font-mono"></div>
+                <div class="mb-5"><label class="block text-sm font-medium mb-2">Note</label><textarea id="note" rows="2" aria-label="Note attrezzo" class="input-field w-full px-4 py-3 rounded-lg resize-none"></textarea></div>
+                <div id="modificationNotesWrapper" class="mb-5 hidden"><label class="block text-sm font-medium mb-2 text-[var(--accent)]">Note Modifica</label><textarea id="modificationNotes" rows="2" aria-label="Note modifica" class="input-field w-full px-4 py-3 rounded-lg resize-none"></textarea></div>
                 <div class="flex gap-3"><button type="button" onclick="closeModal()" class="btn-secondary flex-1 py-3 rounded-lg font-medium">Indietro</button><button type="submit" class="btn-primary flex-1 py-3 rounded-lg font-semibold">Salva</button></div>
             </form>
         </div>
@@ -262,12 +267,10 @@
         </div>
     </div>
 
-    <!-- Toast Container -->
-    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
-
     <script>
         // ==================== CONFIGURAZIONE FIREBASE ====================
-        // Inserisci qui le tue configurazioni Firebase
+        // NOTA: In produzione, spostare queste credenziali in variabili d'ambiente
+        // Utilizzare Firebase Security Rules e backend server per maggiore sicurezza
         const firebaseConfig = {
             apiKey: "AIzaSyBOx3Q9RitbbRmwnGVSp3GgfhNOj2sxLIg",
             authDomain: "gestioneattrezzatura-8fc03.firebaseapp.com",
@@ -289,35 +292,96 @@
         let productPhoto = null;
         const signatureStates = {};
 
+        // ==================== LAZY LOADING IMMAGINI ====================
+        // Implementa lazy loading per migliorare performance con molte attrezzature
+        function setupLazyLoading() {
+            const imageObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        const src = img.dataset.src;
+                        if (src) {
+                            img.src = src;
+                            img.onload = () => {
+                                img.classList.add('loaded');
+                                img.style.opacity = '1';
+                            };
+                            img.onerror = () => {
+                                img.style.display = 'none';
+                                const placeholder = img.nextElementSibling;
+                                if (placeholder && placeholder.classList.contains('image-placeholder')) {
+                                    placeholder.style.display = 'flex';
+                                }
+                            };
+                            observer.unobserve(img);
+                        }
+                    }
+                });
+            }, {
+                rootMargin: '50px',
+                threshold: 0.1
+            });
+
+            // Osserva tutte le immagini con lazy loading
+            document.querySelectorAll('img[data-src]').forEach(img => {
+                imageObserver.observe(img);
+            });
+        }
+
         // ==================== FUNZIONE UTILITÀ COMPRESSIONE IMMAGINI ====================
-        // Evita errori Firestore comprimendo le immagini prima di salvarle come Base64
+        // Ottimizza le immagini per ridurre dimensioni e migliorare performance
+        // Supporta validazioni input e gestione errori robusta
         function compressImage(file, maxWidth = 800, quality = 0.6) {
             return new Promise((resolve, reject) => {
+                // Validazione input
+                if (!file || !file.type.startsWith('image/')) {
+                    reject(new Error('File non valido o non è un\'immagine'));
+                    return;
+                }
+                
+                // Limite dimensione file (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    reject(new Error('Dimensione file troppo grande (max 10MB)'));
+                    return;
+                }
+                
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const img = new Image();
                     img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
+                        try {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
 
-                        if (width > maxWidth) {
-                            height = (height * maxWidth) / width;
-                            width = maxWidth;
+                            // Calcolo dimensioni ottimizzate
+                            if (width > maxWidth) {
+                                height = (height * maxWidth) / width;
+                                width = maxWidth;
+                            }
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            
+                            // Qualità immagine migliorata
+                            ctx.imageSmoothingEnabled = true;
+                            ctx.imageSmoothingQuality = 'high';
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            // Formato ottimale basato sul contenuto
+                            const format = file.type.includes('png') ? 'image/png' : 'image/jpeg';
+                            const optimizedQuality = format === 'image/png' ? 0.8 : quality;
+                            
+                            resolve(canvas.toDataURL(format, optimizedQuality));
+                        } catch (error) {
+                            reject(new Error('Errore durante la compressione dell\'immagine'));
                         }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // Restituisce il Base64 compresso
-                        resolve(canvas.toDataURL('image/jpeg', quality));
                     };
-                    img.onerror = reject;
+                    img.onerror = () => reject(new Error('Errore caricamento immagine'));
                     img.src = e.target.result;
                 };
-                reader.onerror = reject;
+                reader.onerror = () => reject(new Error('Errore lettura file'));
                 reader.readAsDataURL(file);
             });
         }
@@ -433,11 +497,19 @@
                     
                     return `
                     <div class="equipment-card ${isAssigned ? 'assigned' : ''} rounded-xl overflow-hidden animate-fade-in-up stagger-${Math.min(index % 3 + 1, 3)}" style="opacity: 0;">
-                        ${item.photo ? `<img src="${item.photo}" alt="Foto" class="card-img-top">` : ''}
+                        ${item.photo ? 
+                            `<img data-src="${item.photo}" alt="Foto" class="card-img-top">
+                             <div class="image-placeholder" style="display: none;">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>` : 
+                            `<div class="image-placeholder">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>`
+                        }
                         <div class="p-5">
                             <div class="flex items-start justify-between mb-4">
                                 <span class="badge px-2 py-1 rounded">${item.tipologia}</span>
-                                <button onclick="openHistory('${item.id}')" class="w-8 h-8 rounded-lg hover:bg-[var(--card-hover)] flex items-center justify-center"><svg class="w-4 h-4 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button>
+                                <button onclick="openHistory('${item.id}')" aria-label="Visualizza storico" class="w-8 h-8 rounded-lg hover:bg-[var(--card-hover)] flex items-center justify-center"><svg class="w-4 h-4 text-[var(--fg-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg></button>
                             </div>
                             <h3 class="text-lg font-semibold mb-1">${item.nomeProdotto}</h3>
                             ${item.matricola ? `<p class="font-mono text-sm text-[var(--accent)] mb-2">${item.matricola}</p>` : ''}
@@ -456,11 +528,11 @@
                                 <span class="text-xs text-[var(--fg-muted)]">${formatDate(item.createdAt)}</span>
                                 <div class="flex items-center gap-2">
                                     ${isAssigned 
-                                        ? `<button onclick="openReturnModal('${item.id}')" class="btn-return px-3 py-1.5 rounded-lg text-sm flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Restituisci</button>`
-                                        : `<button onclick="openAssignModal('${item.id}')" class="btn-assign px-3 py-1.5 rounded-lg text-sm flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>Assegna</button>`
+                                        ? `<button onclick="openReturnModal('${item.id}')" aria-label="Restituisci attrezzo" class="btn-return px-3 py-1.5 rounded-lg text-sm flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>Restituisci</button>`
+                                        : `<button onclick="openAssignModal('${item.id}')" aria-label="Assegna attrezzo" class="btn-assign px-3 py-1.5 rounded-lg text-sm flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>Assegna</button>`
                                     }
-                                    <button onclick="editEquipment('${item.id}')" class="btn-secondary px-3 py-1.5 rounded-lg text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
-                                    <button onclick="openDeleteModal('${item.id}')" class="btn-danger px-3 py-1.5 rounded-lg text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+                                    <button onclick="editEquipment('${item.id}')" aria-label="Modifica attrezzo" class="btn-secondary px-3 py-1.5 rounded-lg text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg></button>
+                                    <button onclick="openDeleteModal('${item.id}')" aria-label="Elimina attrezzo" class="btn-danger px-3 py-1.5 rounded-lg text-sm"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                                 </div>
                             </div>
                         </div>
@@ -469,6 +541,9 @@
             }
             updateStats();
             updateTypeFilter();
+            
+            // Inizializza lazy loading per le nuove immagini
+            setTimeout(() => setupLazyLoading(), 100);
         }
 
         function updateStats() {
@@ -476,7 +551,7 @@
             document.getElementById('availableCount').textContent = equipment.filter(e => !e.assignedTo).length;
             document.getElementById('assignedCount').textContent = equipment.filter(e => e.assignedTo).length;
         }
-        
+
         function updateTypeFilter() {
             const select = document.getElementById('typeFilter');
             const currentValue = select.value;
@@ -664,18 +739,44 @@
         // ==================== AZIONI DB ====================
         async function saveEquipment(event) {
             event.preventDefault();
-            const id = document.getElementById('equipmentId').value;
-            const tipologia = document.getElementById('tipologia').value.trim();
-            const nomeProdotto = document.getElementById('nomeProdotto').value.trim();
-            const matricola = document.getElementById('matricola').value.trim();
-            const note = document.getElementById('note').value.trim();
-            const modificationNotes = document.getElementById('modificationNotes').value.trim();
             
             try {
+                // Validazione base
+                const tipologia = document.getElementById('tipologia').value.trim();
+                const nomeProdotto = document.getElementById('nomeProdotto').value.trim();
+                const matricola = document.getElementById('matricola').value.trim();
+                const note = document.getElementById('note').value.trim();
+                const modificationNotes = document.getElementById('modificationNotes').value.trim();
+                const id = document.getElementById('equipmentId').value;
+                
+                // Validazioni campi obbligatori
+                if (!tipologia || tipologia.length < 2) {
+                    showToast('La tipologia è obbligatoria e deve avere almeno 2 caratteri', 'error');
+                    return;
+                }
+                
+                if (!nomeProdotto || nomeProdotto.length < 2) {
+                    showToast('Il nome prodotto è obbligatorio e deve avere almeno 2 caratteri', 'error');
+                    return;
+                }
+                
+                // Validazione matricola duplicata (solo per nuovi elementi)
+                if (!id && matricola) {
+                    const duplicate = equipment.find(e => e.matricola === matricola);
+                    if (duplicate) {
+                        showToast('Esiste già un attrezzo con questa matricola', 'error');
+                        return;
+                    }
+                }
+                
                 if (id) {
                     // MODIFICA
                     await db.collection('equipment').doc(id).update({
-                        tipologia, nomeProdotto, matricola, note, photo: productPhoto,
+                        tipologia, 
+                        nomeProdotto, 
+                        matricola, 
+                        note, 
+                        photo: productPhoto,
                         history: firebase.firestore.FieldValue.arrayUnion({ 
                             date: new Date().toISOString(), 
                             action: 'Modifica', 
@@ -687,7 +788,11 @@
                 } else {
                     // CREAZIONE
                     await db.collection('equipment').add({
-                        tipologia, nomeProdotto, matricola, note, photo: productPhoto,
+                        tipologia, 
+                        nomeProdotto, 
+                        matricola, 
+                        note, 
+                        photo: productPhoto,
                         assignedTo: null, 
                         currentAssignment: null,
                         history: [{ date: new Date().toISOString(), action: 'Creazione', changes: 'Attrezzatura creata', notes: '' }],
@@ -695,10 +800,22 @@
                     });
                     showToast('Attrezzatura aggiunta', 'success');
                 }
-                closeModal(); // Chiude e torna alla dashboard
+                closeModal();
             } catch (error) { 
-                console.error("Errore:", error); 
-                showToast("Errore salvataggio: " + error.message, "error"); 
+                console.error("Errore salvataggio:", error);
+                let errorMessage = "Errore salvataggio";
+                
+                if (error.code === 'permission-denied') {
+                    errorMessage = "Non hai i permessi per eseguire questa operazione";
+                } else if (error.code === 'unavailable') {
+                    errorMessage = "Servizio temporaneamente non disponibile";
+                } else if (error.code === 'deadline-exceeded') {
+                    errorMessage = "Timeout dell'operazione, riprova";
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
+                showToast(errorMessage, "error"); 
             }
         }
 
