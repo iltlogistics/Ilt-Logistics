@@ -252,6 +252,12 @@
         .row-low-stock { border-left: 4px solid var(--danger); background: rgba(239, 68, 68, 0.03); }
         .negative-stock { color: var(--danger); font-weight: 700; }
         .row-assigned { background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); }
+        
+        /* Colori per ticket basati sulla data */
+        .row-today { background: rgba(14, 165, 233, 0.05); border-left: 4px solid var(--primary); }
+        .row-tomorrow { background: rgba(34, 197, 94, 0.05); border-left: 4px solid var(--success); }
+        .row-future { background: rgba(168, 85, 247, 0.05); border-left: 4px solid var(--warehouse); }
+        .row-past { background: rgba(107, 114, 128, 0.05); border-left: 4px solid var(--secondary); opacity: 0.7; }
 
         /* SIGNATURE PAD */
         .sig-wrapper { 
@@ -938,7 +944,7 @@
 
             <div class="script-box">
                 <strong>Script da leggere:</strong><br>
-                "Buongiorno, sono il corriere per la consegna del suo elettrodomestico. La contatto per avvisarla che oggi sarà effettuata la consegna del suo elettrodomestico nella fascia oraria ***** "
+                "Buongiorno, la contatta ILT LOGISTICS SRL per comunicare che oggi sarà effettuata la consegna del Suo elettrodomestico nella fascia oraria ***** "
             </div>
 
             <div class="form-group" style="text-align: left;">
@@ -1109,10 +1115,7 @@
             <!-- NUOVA SEZIONE: TRACKING OPERATORI -->
             <div class="card" style="border-top: 4px solid var(--success);">
                 <div class="flex-between mb-2" style="flex-wrap: wrap; gap: 10px;">
-                    <h3 style="margin:0; font-size:1.2rem; color: var(--success);"><i class="fas fa-truck-loading me-2"></i>Operatività Consegne</h3>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <input type="date" id="overviewDate" value="" onchange="DomicileManager.renderDailyOverview()" style="padding: 8px 12px; border-radius: 20px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-primary);">
-                    </div>
+                    <h3 style="margin:0; font-size:1.2rem; color: var(--success);"><i class="fas fa-truck-loading me-2"></i>Operatività Consegne - Oggi</h3>
                 </div>
                 <div id="operatorOverviewGrid" class="operator-overview-grid">
                     <!-- Le card degli operatori verranno generate qui dal JS -->
@@ -1181,7 +1184,7 @@
                 </table>
             </div>
             
-            <div class="text-right mt-2 admin-only">
+            <div class="text-right mt-2">
                 <button class="btn btn-success" onclick="DomicileManager.saveOrder()"><i class="fas fa-save"></i> Salva Ordine Consegne</button>
             </div>
             
@@ -1767,7 +1770,21 @@
             },
             
             loadEdit: (id) => {
-                const data = Store.getById(id); if (!data) return; UI.showView('view-form'); FormManager.reset(); FormManager.setCategory(data.category); Utils.id('editId').value = data.id;
+                const data = Store.getById(id); if (!data) return;
+                
+                // Controllo permessi: solo admin può modificare commesse assegnate ad altri operatori
+                if (data.status === 'assegnato' && data.assignedTo) {
+                    if (!Auth.currentUser || Auth.currentUser.role !== 'admin') {
+                        UI.showToast('Solo gli amministratori possono modificare le commesse assegnate', 'error');
+                        return;
+                    }
+                    if (data.assignedTo !== Auth.currentUser.username && Auth.currentUser.role !== 'admin') {
+                        UI.showToast('Non puoi modificare una commessa assegnata a un altro operatore', 'error');
+                        return;
+                    }
+                }
+                
+                UI.showView('view-form'); FormManager.reset(); FormManager.setCategory(data.category); Utils.id('editId').value = data.id;
                 Utils.id('c_nome').value = data.client.nome || ''; Utils.id('c_indirizzo').value = data.client.indirizzo || ''; Utils.id('c_intervention_date').value = data.client.dataIntervento || ''; 
                 Utils.id('c_date').value = data.client.date || Utils.today(); Utils.id('c_tel').value = data.client.tel || ''; Utils.id('c_email').value = data.client.email || ''; Utils.id('c_fiscal').value = data.client.fiscal || ''; Utils.id('c_receipt_no').value = data.client.receipt_no || '';
                 Utils.id('op_name').value = data.author || ''; Utils.id('i_tipo').value = data.intervention.tipo; Utils.id('i_note').value = data.intervention.note || '';
@@ -1794,7 +1811,28 @@
                 FormManager.materials = data.materials || []; FormManager.renderMaterials();
             },
             downloadPDF: (id) => { const data = Store.getById(id); if (data) PDF.generate(data); },
-            deleteItem: (id) => { UI.confirm('Eliminazione', 'Eliminare definitivamente questo intervento?', () => { Store.delete(id); Store.addLog(`Intervento eliminato da ${Auth.currentUser.username}`); UI.showToast('Intervento eliminato', 'info'); }); },
+            deleteItem: (id) => { 
+                const data = Store.getById(id);
+                if (!data) return;
+                
+                // Controllo permessi: solo admin può eliminare commesse assegnate ad altri operatori
+                if (data.status === 'assegnato' && data.assignedTo) {
+                    if (!Auth.currentUser || Auth.currentUser.role !== 'admin') {
+                        UI.showToast('Solo gli amministratori possono eliminare le commesse assegnate', 'error');
+                        return;
+                    }
+                    if (data.assignedTo !== Auth.currentUser.username && Auth.currentUser.role !== 'admin') {
+                        UI.showToast('Non puoi eliminare una commessa assegnata a un altro operatore', 'error');
+                        return;
+                    }
+                }
+                
+                UI.confirm('Eliminazione', 'Eliminare definitivamente questo intervento?', () => { 
+                    Store.delete(id); 
+                    Store.addLog(`Intervento eliminato da ${Auth.currentUser.username}`); 
+                    UI.showToast('Intervento eliminato', 'info'); 
+                }); 
+            },
 
             callPhone: () => {
                 const phone = Utils.id('c_tel').value;
@@ -1872,8 +1910,12 @@
                 const tbody = Utils.id('callClientTableBody');
                 if (!tbody) return;
                 const currentUser = Auth.currentUser.username;
+                const today = Utils.today();
                 const tickets = Store.getDomicileTickets().filter(t => 
-                    t.operator === currentUser && t.status !== 'completato' && t.status !== 'reclamo'
+                    t.operator === currentUser && 
+                    t.status !== 'completato' && 
+                    t.status !== 'reclamo' &&
+                    t.date === today  // Solo consegne di oggi
                 );
                 tbody.innerHTML = '';
                 let pending = 0, confirmed = 0, reschedule = 0;
@@ -1952,7 +1994,29 @@
                     const t = Store.getDomicileTickets().find(t => t.id === CallManager.currentTicketId);
                     if(t && t.phone) {
                         const trackingLink = `https://iltlogistics.github.io/Ilt-Logistics/`;
-                        const message = `Gentile Cliente, la informiamo che è stata contattata per la sua consegna.\n\nLa sua consegna è confermata per oggi nella fascia oraria: ${slot}.\n\nSe desidera aggiornamenti sulla consegna, può visitare il sito e digitare il suo ID:\n${trackingLink}\n\nID Ticket: ${t.ticketId || t.id.substring(0,4)}`;
+                        const message = `Spett.le Clienti,
+
+La presente per comunicare ufficialmente che ILT LOGISTICS SRL ha provveduto a contattarLa in riferimento alla Sua consegna.
+
+Con la presente si conferma che la consegna è stata programmata per oggi nella fascia oraria: ${slot}.
+
+Per il monitoraggio in tempo reale dello stato della consegna, La invitiamo a visitare il nostro portale clienti inserendo il Suo codice di tracciatura:
+${trackingLink}
+
+Per qualsiasi informazione o assistenza, può contattare il nostro servizio clienti ai seguenti recapiti:
+ ILT LOGISTICS SRL
++39 389 873 5341 | +39 331 164 0977
+Oppure rispondere al presente messaggio
+
+Dati Consegna:
+ Codice Ticket: ${t.ticketId || t.id.substring(0,4)}
+ Cliente: ${t.clientName}
+ Indirizzo: ${t.address}
+
+Cordiali saluti,
+ILT LOGISTICS SRL
+Servizio Clienti | Divisione Logistica
+www.iltlogistics.it`;
                         
                         // Pulisce il numero (rimuove spazi, +, ecc.)
                         let phoneNumber = t.phone.replace(/\s/g, '');
@@ -1970,7 +2034,29 @@
                         if (t && t.phone) {
                             const trackingLink = 'https://iltlogistics.github.io/Ilt-Logistics/';
                             const ticketIdDisplay = t.ticketId || t.id.substring(0, 4);
-                            const message = `Salve, sono il corriere che ha incarico la sua consegna per oggi. Ho provato a contattarla al telefono ma non ho trovato risposta.\n\nLe inviamo la tracciabilità della sua consegna. Se desidera informazioni o aggiornamenti, può visitare il sito e digitare il suo ID:\n${trackingLink}\n\nID Ticket: ${ticketIdDisplay}`;
+                            const message = `Spett.le Clienti,
+
+La presente per comunicare ufficialmente che ILT LOGISTICS SRL ha provveduto a programmare il Suo ordine di consegna per la data odierna.
+
+Si comunica che non è stato possibile stabilire un contatto telefonico diretto nonostante i tentativi effettuati.
+
+Di conseguenza, Le trasmettiamo la tracciabilità della Sua consegna. Per il monitoraggio in tempo reale dello stato della spedizione, La invitiamo a visitare il nostro portale clienti inserendo il Suo codice di tracciatura:
+${trackingLink}
+
+Per qualsiasi informazione o assistenza, può contattare il nostro servizio clienti ai seguenti recapiti:
+ ILT LOGISTICS SRL
++39 389 873 5341 | +39 331 164 0977
+Oppure rispondere al presente messaggio
+
+Dati Consegna:
+ Codice Ticket: ${ticketIdDisplay}
+ Cliente: ${t.clientName}
+ Indirizzo: ${t.address}
+
+Distinti saluti,
+ILT LOGISTICS SRL
+Servizio Clienti | Divisione Logistica
+www.iltlogistics.it`;
                             let phoneNumber = t.phone.replace(/\s/g, '');
                             if (!phoneNumber.startsWith('+')) phoneNumber = '+39' + phoneNumber;
                             const waLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
@@ -2035,7 +2121,6 @@
             draggedItem: null,
             
             init: () => { 
-                if (Utils.id('overviewDate')) Utils.id('overviewDate').value = Utils.today(); 
                 if (Utils.id('dom_date')) Utils.id('dom_date').value = Utils.today(); 
                 const select = Utils.id('dom_operator'); 
                 if (select && Auth.currentUser?.role === 'admin') { 
@@ -2060,20 +2145,20 @@
             
             renderDailyOverview: () => {
                 const container = Utils.id('operatorOverviewGrid');
-                const dateInput = Utils.id('overviewDate');
-                if (!container || !dateInput) return;
+                if (!container) return;
 
-                const selectedDate = dateInput.value;
+                const today = Utils.today();
                 const allTickets = Store.getDomicileTickets();
                 
-                let todayTickets = allTickets.filter(t => t.date === selectedDate && t.status !== 'completato');
+                // Mostra solo i ticket di oggi non completati
+                let todayTickets = allTickets.filter(t => t.date === today && t.status !== 'completato');
 
                 if (Auth.currentUser.role !== 'admin') {
                     todayTickets = todayTickets.filter(t => t.operator === Auth.currentUser.username);
                 }
                 
                 if (todayTickets.length === 0) {
-                    container.innerHTML = `<div class="empty-overview">Nessuna consegna programmata per questa data.</div>`;
+                    container.innerHTML = `<div class="empty-overview">Nessuna consegna programmata per oggi.</div>`;
                     return;
                 }
 
@@ -2193,6 +2278,7 @@
                 const rows = Utils.id('domicileTableBody').querySelectorAll('tr.sortable-row');
                 if (rows.length === 0) return;
 
+                const today = Utils.today();
                 const batch = db.batch();
                 let count = 0;
 
@@ -2200,17 +2286,29 @@
                     const id = row.getAttribute('data-id');
                     if (!id) return;
                     
-                    const ref = db.collection("domicile_tickets").doc(id);
-                    batch.update(ref, { 
-                        orderNumber: index + 1,
-                        orderIndex: index 
-                    });
-                    count++;
+                    // Recupera il ticket per verificare la data
+                    const ticket = Store.getDomicileTickets().find(t => t.id === id);
+                    if (!ticket) return;
+                    
+                    // Salva l'ordine solo per le consegne di oggi
+                    if (ticket.date === today) {
+                        const ref = db.collection("domicile_tickets").doc(id);
+                        batch.update(ref, { 
+                            orderNumber: index + 1,
+                            orderIndex: index 
+                        });
+                        count++;
+                    }
                 });
 
+                if (count === 0) {
+                    UI.showToast('Nessuna consegna di oggi da ordinare', 'warning');
+                    return;
+                }
+
                 batch.commit().then(() => {
-                    UI.showToast(`Ordine salvato per ${count} consegne!`, 'success');
-                    Store.addLog(`Ordine consegne aggiornato`);
+                    UI.showToast(`Ordine salvato per ${count} consegne di oggi!`, 'success');
+                    Store.addLog(`Ordine consegne aggiornato per ${count} consegne del ${today}`);
                     DomicileManager.renderDailyOverview();
                 }).catch(err => {
                     console.error("Errore batch:", err);
@@ -2228,7 +2326,11 @@
                 tbody.innerHTML = ''; 
                 
                 let filteredTickets = tickets.filter(t => {
+                    // Gli admin vedono tutti i ticket, gli utenti solo i propri
                     if (Auth.currentUser.role !== 'admin' && t.operator !== Auth.currentUser.username) return false;
+                    
+                    // Gli utenti non vedono i ticket completati
+                    if (Auth.currentUser.role !== 'admin' && t.status === 'completato') return false;
                     
                     const matchSearch = !searchText || 
                         (t.clientName && t.clientName.toLowerCase().includes(searchText)) || 
@@ -2236,6 +2338,13 @@
                     const matchStatus = !statusFilter || t.status === statusFilter;
                     const matchOperator = !operatorFilter || t.operator === operatorFilter;
                     return matchSearch && matchStatus && matchOperator;
+                });
+
+                // Ordina i ticket per data
+                filteredTickets.sort((a, b) => {
+                    const dateA = new Date(a.date);
+                    const dateB = new Date(b.date);
+                    return dateA - dateB; // Ordine crescente
                 });
 
                 if (filteredTickets.length === 0) { 
@@ -2248,9 +2357,47 @@
                         else if (t.status === 'reclamo') statusBadge = '<span class="badge badge-warning">Reclamo</span>'; 
                         else statusBadge = '<span class="badge badge-low">Assegnato</span>'; 
                         
-                        const actions = t.status === 'assegnato' 
-                            ? `<button class="btn btn-sm btn-primary" onclick="DomicileManager.openTicket('${t.id}')">Esegui</button>` 
-                            : `<button class="btn btn-sm btn-secondary" onclick="DomicileManager.viewPdf('${t.id}')">Vedi PDF</button>`;
+                        // Determina il colore della riga in base alla data
+                        let rowColorClass = '';
+                        const today = Utils.today();
+                        const ticketDate = t.date;
+                        
+                        if (ticketDate === today) {
+                            rowColorClass = 'row-today'; // Oggi - colore normale
+                        } else {
+                            const ticketDateObj = new Date(ticketDate);
+                            const todayDateObj = new Date(today);
+                            const diffTime = ticketDateObj - todayDateObj;
+                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                            
+                            if (diffDays === 1) {
+                                rowColorClass = 'row-tomorrow'; // Domani - colore diverso
+                            } else if (diffDays > 1) {
+                                rowColorClass = 'row-future'; // Futuro - altro colore
+                            } else if (diffDays < 0) {
+                                rowColorClass = 'row-past'; // Passato - colore scuro
+                            }
+                        }
+                        
+                        // Determina se la riga è trascinabile (solo consegne di oggi)
+                        const isDraggable = ticketDate === today;
+                        const draggableAttr = isDraggable ? 'true' : 'false';
+                        const dragHandle = isDraggable ? '<i class="fas fa-grip-vertical drag-handle"></i>' : '<i class="fas fa-lock" style="color: var(--text-secondary); opacity: 0.5;"></i>';
+                        
+                        // Determina se l'utente può eseguire la consegna (solo oggi)
+                        const canExecute = ticketDate === today;
+                        let actions = '';
+                        
+                        if (t.status === 'assegnato') {
+                            if (canExecute) {
+                                actions = `<button class="btn btn-sm btn-primary" onclick="DomicileManager.openTicket('${t.id}')">Esegui</button>`;
+                            } else {
+                                actions = `<button class="btn btn-sm btn-secondary" disabled style="opacity: 0.5; cursor: not-allowed;">Esegui (Data: ${t.date})</button>`;
+                            }
+                        } else {
+                            actions = `<button class="btn btn-sm btn-secondary" onclick="DomicileManager.viewPdf('${t.id}')">Vedi PDF</button>`;
+                        }
+                        
                         const adminActions = Auth.currentUser.role === 'admin' 
                             ? `<button class="btn btn-sm btn-warning" onclick="DomicileManager.openEditModal('${t.id}')" style="margin-left:5px;">Modifica</button><button class="btn btn-sm btn-danger" onclick="DomicileManager.deleteTicket('${t.id}')" style="margin-left:5px;">Elimina</button>` 
                             : '';
@@ -2258,15 +2405,15 @@
                         const stepIndicator = `<span class="step-indicator">${index + 1}</span>`;
 
                         tbody.innerHTML += `
-                        <tr class="sortable-row ${t.status === 'completato' ? 'row-closed' : ''}" 
-                            draggable="true"
+                        <tr class="sortable-row ${t.status === 'completato' ? 'row-closed' : ''} ${rowColorClass}" 
+                            draggable="${draggableAttr}"
                             data-id="${t.id}"
-                            ondragstart="DomicileManager.handleDragStart(event)"
-                            ondragover="DomicileManager.handleDragOver(event)"
-                            ondragleave="DomicileManager.handleDragLeave(event)"
-                            ondrop="DomicileManager.handleDrop(event)"
-                            ondragend="DomicileManager.handleDragEnd(event)">
-                            <td><i class="fas fa-grip-vertical drag-handle"></i></td>
+                            ondragstart="${isDraggable ? 'DomicileManager.handleDragStart(event)' : ''}"
+                            ondragover="${isDraggable ? 'DomicileManager.handleDragOver(event)' : ''}"
+                            ondragleave="${isDraggable ? 'DomicileManager.handleDragLeave(event)' : ''}"
+                            ondrop="${isDraggable ? 'DomicileManager.handleDrop(event)' : ''}"
+                            ondragend="${isDraggable ? 'DomicileManager.handleDragEnd(event)' : ''}">
+                            <td>${dragHandle}</td>
                             <td>${t.date}</td>
                             <td>
                                 ${stepIndicator} 
@@ -2415,11 +2562,6 @@
                 db.collection("domicile_tickets").doc(ticketId).update(completionData).then(() => { 
                     UI.showToast(`Ticket ${status === 'reclamo' ? 'segnalato' : 'completato'}!`, 'success'); 
                     
-                    // Se il ticket è completato (non reclamo), spostalo nello storico
-                    if (status === 'completato') {
-                        DomicileManager.moveToHistory(ticketId);
-                    }
-                    
                     if (status === 'reclamo') { 
                         const originalTicket = Store.getDomicileTickets().find(t => t.id === ticketId); 
                         const msg = { content: `⚠️ RECLAMO segnalato da ${Auth.currentUser.username} per il ticket di ${originalTicket?.clientName || 'N.D.'}. Motivo: ${notes || 'Non specificato'}`, author: Auth.currentUser.username, recipient: 'admin', time: new Date().toLocaleString('it-IT'), timestamp: firebase.firestore.FieldValue.serverTimestamp(), read: false }; 
@@ -2430,61 +2572,240 @@
                     if(originalTicket) { 
                         const fullData = {...originalTicket, ...completionData}; 
                         DomicilePDF.generate(fullData); 
-                    } 
+                    }
+                    
+                    // Verifica se è l'ultima consegna del giorno e genera resoconto
+                    if (status === 'completato') {
+                        DomicileManager.checkAndGenerateDailyReport();
+                    }
+                    
                     UI.closeModal('domicileModal'); 
                 }).catch(err => { console.error("Errore Firestore:", err); UI.showToast('Errore salvataggio: ' + err.message, 'error'); }); 
             },
-
-            moveToHistory: (ticketId) => {
-                const ticket = Store.getDomicileTickets().find(t => t.id === ticketId);
-                if (!ticket) return;
-
-                // Converti il ticket domicilio in un intervento storico
-                const historyData = {
-                    id: Utils.generateId(),
-                    category: 'domicilio',
-                    status: 'completato',
-                    author: ticket.createdBy || 'Admin',
-                    client: {
-                        nome: ticket.clientName,
-                        indirizzo: ticket.address,
-                        tel: ticket.phone || '',
-                        email: '',
-                        date: ticket.date,
-                        dataIntervento: ticket.date
-                    },
-                    intervention: {
-                        tipo: 'domicilio',
-                        tipo_label: 'Consegna Domicilio',
-                        note: `Tipo: ${ticket.type}\nProdotto: ${ticket.product || 'N.D.'}\nPagamento: ${ticket.payment || 'N.D.'}\nUbicazione: ${ticket.ubicazioneMerce || 'N.D.'}\nNote ticket: ${ticket.note || ''}\nNote completamento: ${ticket.notes || ''}`
-                    },
-                    machines: [],
-                    materials: [],
-                    total: '0.00',
-                    signatures: {
-                        client: ticket.signature,
-                        tech: null
-                    },
-                    completedAt: ticket.completedAt,
-                    completedBy: ticket.completedBy,
-                    ticketId: ticket.ticketId,
-                    originalTicketType: 'domicilio'
+            
+            checkAndGenerateDailyReport: () => {
+                const today = Utils.today();
+                const currentUser = Auth.currentUser.username;
+                
+                // Ottieni tutti i ticket dell'operatore per oggi
+                const todayTickets = Store.getDomicileTickets().filter(t => 
+                    t.operator === currentUser && 
+                    t.date === today
+                );
+                
+                // Conta le consegne completate oggi
+                const completedToday = todayTickets.filter(t => t.status === 'completato').length;
+                const totalToday = todayTickets.length;
+                
+                // Se tutte le consegne di oggi sono state completate, genera il resoconto
+                if (completedToday === totalToday && totalToday > 0) {
+                    UI.confirm('Resoconto Giornaliero', 
+                        `Hai completato tutte le ${totalToday} consegne di oggi! Vuoi generare il resoconto giornaliero?`, 
+                        () => DomicileManager.generateDailyReport(todayTickets)
+                    );
+                }
+            },
+            
+            generateDailyReport: (tickets) => {
+                const today = Utils.today();
+                const currentUser = Auth.currentUser.username;
+                
+                // Raccogli i dati per il resoconto
+                const completedTickets = tickets.filter(t => t.status === 'completato');
+                const reportData = {
+                    date: today,
+                    operator: currentUser,
+                    totalDeliveries: tickets.length,
+                    completedDeliveries: completedTickets.length,
+                    clients: completedTickets.map(t => ({
+                        name: t.clientName,
+                        address: t.address,
+                        type: t.type,
+                        product: t.product || 'N.D.',
+                        payment: t.payment || 'N.D.',
+                        completedAt: t.completedAt,
+                        notes: t.notes || '',
+                        signature: t.signature
+                    })),
+                    generatedAt: new Date().toLocaleString('it-IT'),
+                    vehicle: '', // Sarà compilato nel modal
+                    expenses: '', // Sarà compilato nel modal
+                    refuel: '', // Sarà compilato nel modal
+                    operatorSignature: '' // Sarà compilato nel modal
                 };
-
-                // Salva nello storico interventi
-                Store.save(historyData);
-                Store.addLog(`Ticket domicilio #${ticket.ticketId} spostato nello storico interventi`);
-
-                // Rimuovi il ticket dalla lista domicilio dopo un breve delay
+                
+                // Mostra il modal per i dati aggiuntivi
+                DomicileManager.showDailyReportModal(reportData);
+            },
+            
+            showDailyReportModal: (reportData) => {
+                // Crea un modal per inserire i dati aggiuntivi del resoconto
+                const modalHtml = `
+                    <div id="dailyReportModal" class="modal-overlay" style="display: flex;">
+                        <div class="modal" style="max-width: 700px;">
+                            <h3 style="color: var(--primary); margin-bottom: 20px;">📋 Resoconto Giornaliero</h3>
+                            
+                            <div style="text-align: left; margin-bottom: 20px;">
+                                <p><strong>Data:</strong> ${reportData.date}</p>
+                                <p><strong>Operatore principale:</strong> ${reportData.operator}</p>
+                                <p><strong>Consegne completate:</strong> ${reportData.completedDeliveries}/${reportData.totalDeliveries}</p>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label><strong>Targa Veicolo *</strong></label>
+                                <input type="text" id="reportVehicle" placeholder="Es: AB123CD" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label><strong>Spese (€)</strong></label>
+                                <input type="number" id="reportExpenses" placeholder="Es: 25.50" step="0.01">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label><strong>Rifornimento (€)</strong></label>
+                                <input type="number" id="reportRefuel" placeholder="Es: 45.00" step="0.01">
+                            </div>
+                            
+                            <!-- Aggiunti altri 2 operatori -->
+                            <div class="form-group">
+                                <label><strong>Secondo Operatore (opzionale)</strong></label>
+                                <input type="text" id="reportOperator2" placeholder="Nome del secondo operatore">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label><strong>Terzo Operatore (opzionale)</strong></label>
+                                <input type="text" id="reportOperator3" placeholder="Nome del terzo operatore">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label><strong>Note aggiuntive</strong></label>
+                                <textarea id="reportNotes" rows="3" placeholder="Eventuali note sulla giornata..."></textarea>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label><strong>Firma Operatore Principale *</strong></label>
+                                <div class="sig-wrapper">
+                                    <canvas id="sigOperatorReport" class="sig-canvas"></canvas>
+                                    <button type="button" class="sig-clear" onclick="SignaturePad.clear('sigOperatorReport')">Cancella</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label><strong>Firma Secondo Operatore</strong></label>
+                                <div class="sig-wrapper">
+                                    <canvas id="sigOperator2Report" class="sig-canvas"></canvas>
+                                    <button type="button" class="sig-clear" onclick="SignaturePad.clear('sigOperator2Report')">Cancella</button>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label><strong>Firma Terzo Operatore</strong></label>
+                                <div class="sig-wrapper">
+                                    <canvas id="sigOperator3Report" class="sig-canvas"></canvas>
+                                    <button type="button" class="sig-clear" onclick="SignaturePad.clear('sigOperator3Report')">Cancella</button>
+                                </div>
+                            </div>
+                            
+                            <div class="modal-actions row">
+                                <button class="btn btn-secondary" onclick="UI.closeModal('dailyReportModal')">Annulla</button>
+                                <button class="btn btn-primary" onclick="DomicileManager.finalizeDailyReport()">Genera PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
                 setTimeout(() => {
-                    db.collection("domicile_tickets").doc(ticketId).delete()
-                        .then(() => {
-                            Store.addLog(`Ticket domicilio #${ticket.ticketId} rimosso dalla lista attiva`);
-                        })
-                        .catch(err => {
-                            console.error("Errore eliminazione ticket:", err);
-                        });
-                }, 2000);
+                    SignaturePad.init('sigOperatorReport');
+                    SignaturePad.init('sigOperator2Report');
+                    SignaturePad.init('sigOperator3Report');
+                }, 100);
+            },
+            
+            finalizeDailyReport: () => {
+                console.log('🔍 Inizio finalizeDailyReport');
+                
+                const vehicle = Utils.id('reportVehicle').value.trim();
+                const expenses = Utils.id('reportExpenses').value || '0';
+                const refuel = Utils.id('reportRefuel').value || '0';
+                const notes = Utils.id('reportNotes').value.trim();
+                const operatorSignature = SignaturePad.getImage('sigOperatorReport');
+                
+                // Recupera gli altri operatori e firme
+                const operator2 = Utils.id('reportOperator2').value.trim();
+                const operator3 = Utils.id('reportOperator3').value.trim();
+                const operator2Signature = SignaturePad.getImage('sigOperator2Report');
+                const operator3Signature = SignaturePad.getImage('sigOperator3Report');
+                
+                console.log('🔍 Dati recuperati:', { vehicle, expenses, refuel, operator2, operator3, hasSignature: !!operatorSignature });
+                
+                if (!vehicle) {
+                    UI.showToast('La targa del veicolo è obbligatoria', 'error');
+                    return;
+                }
+                
+                if (!operatorSignature) {
+                    UI.showToast('La firma dell\'operatore principale è obbligatoria', 'error');
+                    return;
+                }
+                
+                const today = Utils.today();
+                const currentUser = Auth.currentUser.username;
+                const todayTickets = Store.getDomicileTickets().filter(t => 
+                    t.operator === currentUser && 
+                    t.date === today
+                );
+                const completedTickets = todayTickets.filter(t => t.status === 'completato');
+                
+                console.log('🔍 Ticket trovati:', { total: todayTickets.length, completed: completedTickets.length });
+                
+                const reportData = {
+                    id: Utils.generateId(),
+                    date: today,
+                    operator: currentUser,
+                    vehicle: vehicle,
+                    expenses: parseFloat(expenses),
+                    refuel: parseFloat(refuel),
+                    notes: notes,
+                    totalDeliveries: todayTickets.length,
+                    completedDeliveries: completedTickets.length,
+                    clients: completedTickets.map(t => ({
+                        name: t.clientName,
+                        address: t.address,
+                        type: t.type,
+                        product: t.product || 'N.D.',
+                        payment: t.payment || 'N.D.',
+                        completedAt: t.completedAt,
+                        notes: t.notes || '',
+                        signature: t.signature
+                    })),
+                    operatorSignature: operatorSignature,
+                    operator2: operator2 || null,
+                    operator3: operator3 || null,
+                    operator2Signature: operator2Signature || null,
+                    operator3Signature: operator3Signature || null,
+                    generatedAt: new Date().toLocaleString('it-IT'),
+                    type: 'daily_report'
+                };
+                
+                console.log('🔍 ReportData creato:', reportData);
+                
+                try {
+                    // Genera il PDF del resoconto
+                    console.log('🔍 Chiamo generateDailyReport...');
+                    DomicilePDF.generateDailyReport(reportData);
+                    console.log('🔍 PDF generato con successo');
+                    
+                    // Salva nello storico
+                    Store.save(reportData);
+                    Store.addLog(`Resoconto giornaliero generato per ${currentUser} - ${completedTickets.length} consegne completate`);
+                    
+                    UI.closeModal('dailyReportModal');
+                    UI.showToast('Resoconto giornaliero generato con successo!', 'success');
+                } catch (error) {
+                    console.error('❌ Errore durante la generazione del PDF:', error);
+                    UI.showToast('Errore durante la generazione del PDF: ' + error.message, 'error');
+                }
             },
             viewPdf: (id) => { const t = Store.getDomicileTickets().find(t => t.id === id); if(t) DomicilePDF.generate(t); },
             openEditModal: (id) => { 
@@ -2589,6 +2910,210 @@
                 if (data.photo) { if (y > 200) { doc.addPage(); y = 20; } doc.text('Foto Allegata:', left, y); try { doc.addImage(data.photo, 'JPEG', left, y + 5, 100, 75); } catch(e) { console.error(e); } } 
                 doc.save(`Domicilio_${Utils.sanitize(data.clientName).replace(/\s+/g, '_')}.pdf`); 
                 UI.showToast('PDF scaricato', 'success'); 
+            },
+            
+            generateDailyReport: (reportData) => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'landscape', // Imposta il formato orizzontale
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                const left = 14;
+                let y = 20;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                
+                // Header
+                doc.setFillColor(245, 158, 11);
+                doc.rect(0, 0, pageWidth, 40, 'F');
+                doc.setTextColor(255);
+                doc.setFontSize(24);
+                doc.setFont('helvetica', 'bold');
+                doc.text('RESOCONTO GIORNALIERO', left, 25);
+                doc.setFontSize(12);
+                doc.text(`Operatore: ${reportData.operator}`, left, 35);
+                doc.text(`Data: ${reportData.date}`, pageWidth - 60, 35);
+                
+                y = 55;
+                doc.setTextColor(30, 41, 59);
+                
+                // Statistiche in due colonne per sfruttare meglio lo spazio orizzontale
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text('Riepilogo Giornata', left, y);
+                y += 10;
+                
+                doc.setFontSize(12);
+                const col1X = left;
+                const col2X = pageWidth / 2 + 20;
+                
+                // Colonna sinistra
+                doc.text(`Consegne completate: ${reportData.completedDeliveries}/${reportData.totalDeliveries}`, col1X, y);
+                y += 8;
+                doc.text(`Targa veicolo: ${reportData.vehicle}`, col1X, y);
+                y += 8;
+                doc.text(`Spese: €${reportData.expenses.toFixed(2)}`, col1X, y);
+                y += 8;
+                
+                // Colonna destra
+                let yStart = y - 16; // Allinea con la prima riga della colonna sinistra
+                doc.text(`Rifornimento: €${reportData.refuel.toFixed(2)}`, col2X, yStart);
+                yStart += 8;
+                doc.text(`Totale spese: €${(reportData.expenses + reportData.refuel).toFixed(2)}`, col2X, yStart);
+                yStart += 8;
+                
+                y = Math.max(y, yStart) + 15;
+                
+                // Elenco clienti in due colonne per ottimizzare lo spazio
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text('Clienti Serviti', left, y);
+                y += 15;
+                
+                doc.setFontSize(11);
+                const clientsPerColumn = Math.ceil(reportData.clients.length / 2);
+                let col1Y = y;
+                let col2Y = y;
+                
+                reportData.clients.forEach((client, index) => {
+                    const isInFirstColumn = index < clientsPerColumn;
+                    let currentY = isInFirstColumn ? col1Y : col2Y;
+                    const currentX = isInFirstColumn ? left : pageWidth / 2 + 20;
+                    
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`${index + 1}. ${client.name}`, currentX, currentY);
+                    currentY += 6;
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`   Indirizzo: ${client.address}`, currentX, currentY);
+                    currentY += 5;
+                    doc.text(`   Tipo: ${client.type}`, currentX, currentY);
+                    currentY += 5;
+                    if (client.product && client.product !== 'N.D.') {
+                        doc.text(`   Prodotto: ${client.product}`, currentX, currentY);
+                        currentY += 5;
+                    }
+                    if (client.payment && client.payment !== 'N.D.') {
+                        doc.text(`   Pagamento: ${client.payment}`, currentX, currentY);
+                        currentY += 5;
+                    }
+                    if (client.completedAt) {
+                        doc.text(`   Completato: ${client.completedAt}`, currentX, currentY);
+                        currentY += 5;
+                    }
+                    if (client.notes && client.notes.trim()) {
+                        doc.text(`   Note: ${client.notes}`, currentX, currentY);
+                        currentY += 5;
+                    }
+                    currentY += 8;
+                    
+                    if (isInFirstColumn) {
+                        col1Y = currentY;
+                    } else {
+                        col2Y = currentY;
+                    }
+                });
+                
+                y = Math.max(col1Y, col2Y) + 10;
+                
+                // Note aggiuntive
+                if (reportData.notes && reportData.notes.trim()) {
+                    if (y > 140) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    doc.setDrawColor(200);
+                    doc.line(left, y, pageWidth - left, y);
+                    y += 10;
+                    
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text('Note Aggiuntive', left, y);
+                    y += 8;
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(11);
+                    const splitNotes = doc.splitTextToSize(Utils.sanitize(reportData.notes), pageWidth - (left * 2));
+                    doc.text(splitNotes, left, y);
+                    y += (splitNotes.length * 5) + 10;
+                }
+                
+                // Firma operatore e timestamp in basso a destra
+                if (y > 120) {
+                    doc.addPage();
+                    y = 20;
+                }
+                
+                doc.setDrawColor(200);
+                doc.line(left, y, pageWidth - left, y);
+                y += 15;
+                
+                // Calcola lo spazio per le firme
+                const signatureWidth = 80;
+                const signatureHeight = 40;
+                const signatureSpacing = 20;
+                const totalSignatures = 1 + (reportData.operator2 ? 1 : 0) + (reportData.operator3 ? 1 : 0);
+                const availableWidth = pageWidth - (left * 2);
+                const signatureX = left;
+                
+                // Firma operatore principale (sempre presente)
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.text('Firma Operatore Principale:', signatureX, y);
+                y += 20;
+                if (reportData.operatorSignature) {
+                    try {
+                        doc.addImage(reportData.operatorSignature, 'PNG', signatureX, y, signatureWidth, signatureHeight);
+                    } catch(e) {
+                        console.error(e);
+                    }
+                }
+                
+                // Firma secondo operatore (se presente)
+                if (reportData.operator2 && reportData.operator2Signature) {
+                    const op2X = signatureX + signatureWidth + signatureSpacing;
+                    doc.text(`Firma ${reportData.operator2}:`, op2X, y - 20);
+                    try {
+                        doc.addImage(reportData.operator2Signature, 'PNG', op2X, y, signatureWidth, signatureHeight);
+                    } catch(e) {
+                        console.error(e);
+                    }
+                }
+                
+                // Firma terzo operatore (se presente)
+                if (reportData.operator3 && reportData.operator3Signature) {
+                    const op3X = signatureX + (signatureWidth + signatureSpacing) * (reportData.operator2 ? 2 : 1);
+                    doc.text(`Firma ${reportData.operator3}:`, op3X, y - 20);
+                    try {
+                        doc.addImage(reportData.operator3Signature, 'PNG', op3X, y, signatureWidth, signatureHeight);
+                    } catch(e) {
+                        console.error(e);
+                    }
+                }
+                
+                y += signatureHeight + 30;
+                
+                // Timestamp in basso a sinistra
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Resoconto generato il: ${reportData.generatedAt}`, left, y);
+                
+                // Elenco operatori partecipanti in alto a destra
+                if (totalSignatures > 1) {
+                    const operatorsList = [reportData.operator];
+                    if (reportData.operator2) operatorsList.push(reportData.operator2);
+                    if (reportData.operator3) operatorsList.push(reportData.operator3);
+                    
+                    doc.setFontSize(10);
+                    doc.setTextColor(50);
+                    doc.text(`Operatori: ${operatorsList.join(', ')}`, pageWidth - 150, 35);
+                }
+                
+                // Salva il PDF
+                const fileName = `Resoconto_Giornaliero_${reportData.date}_${reportData.operator.replace(/\s+/g, '_')}.pdf`;
+                doc.save(fileName);
+                UI.showToast('Resoconto giornaliero scaricato', 'success');
             }
         };
 
@@ -2949,7 +3474,7 @@
                 },
                 materials: [],
                 total: '0.00',
-                category: 'refrigerazione',
+                category: type.toLowerCase(), // Usa il tipo specifico di intervento
                 createdAt: new Date().toLocaleString('it-IT')
             };
 
@@ -3157,7 +3682,7 @@
             techIds.forEach(id => { const el = Utils.id(id); if (el) techData[id] = el.value; }); 
             return { 
                 id: Utils.id('editId').value || Utils.generateId(), 
-                category: FormManager.category, 
+                category: Utils.id('i_tipo').value, // Usa il tipo specifico di intervento 
                 status: 'sospeso', 
                 author: Auth.currentUser.username, 
                 client: { 
@@ -3314,7 +3839,27 @@
                 // Gestione Visuale Commesse Assegnate
                 if (item.status === 'assegnato') {
                     rowClass = 'row-assigned';
-                    actions = `<button class="btn btn-sm btn-warning" onclick="App.openAssignmentDetails('${item.id}')"><i class="fas fa-eye"></i> Visualizza Commessa</button>`;
+                    
+                    // Logica permessi per commesse assegnate
+                    if (Auth.currentUser && Auth.currentUser.role === 'admin') {
+                        // L'admin può visualizzare, modificare ed eliminare commesse assegnate
+                        actions = `
+                            <button class="btn btn-sm btn-warning" onclick="App.openAssignmentDetails('${item.id}')"><i class="fas fa-eye"></i> Visualizza Commessa</button>
+                            <button class="btn btn-sm btn-primary" onclick="App.loadEdit('${item.id}')">Modifica</button>
+                            <button class="btn btn-sm btn-danger" onclick="App.deleteItem('${item.id}')">Elimina</button>
+                        `;
+                    } else {
+                        // Gli utenti standard possono solo visualizzare le proprie commesse
+                        if (item.assignedTo === Auth.currentUser.username || item.author === Auth.currentUser.username) {
+                            actions = `
+                                <button class="btn btn-sm btn-warning" onclick="App.openAssignmentDetails('${item.id}')"><i class="fas fa-eye"></i> Visualizza Commessa</button>
+                                <button class="btn btn-sm btn-primary" onclick="App.loadEdit('${item.id}')">Modifica</button>
+                            `;
+                        } else {
+                            // Commesse assegnate ad altri operatori - solo visualizzazione
+                            actions = `<button class="btn btn-sm btn-warning" onclick="App.openAssignmentDetails('${item.id}')"><i class="fas fa-eye"></i> Visualizza Commessa</button>`;
+                        }
+                    }
                 } else {
                     rowClass = item.status === 'chiuso' ? 'row-closed' : 'row-suspended';
                     
