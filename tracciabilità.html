@@ -20,7 +20,12 @@
 
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+            background: 
+                linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 58, 95, 0.92) 100%),
+                url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             color: var(--text-primary);
             min-height: 100vh;
             display: flex;
@@ -39,6 +44,7 @@
             margin-bottom: 10px;
             background: linear-gradient(135deg, var(--primary), var(--success));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
@@ -373,7 +379,7 @@
 
                 // Calcolo logico
                 const remainingStops = myPosition - completedCount;
-                const minutesPerStop = 30;
+                const minutesPerStop = 15;
                 const estimatedMinutes = remainingStops > 0 ? remainingStops * minutesPerStop : 0;
                 
                 // Calcolo progresso visivo
@@ -391,7 +397,7 @@
                     label = "Imminente";
                 } else if (remainingStops === 1) {
                     message = "Sei il prossimo! Il corriere è alla consegna precedente.";
-                    label = "Arrivo tra circa 30 min";
+                    label = "Arrivo tra circa 15 min";
                 } else {
                     message = `Sei la ${myPosition}ª tappa su ${totalStops}. Mancano ${remainingStops} consegne.`;
                     label = `Arrivo stimato tra ${estimatedMinutes} min`;
