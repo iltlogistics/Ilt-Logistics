@@ -1268,6 +1268,336 @@
         </div>
     </div>
 
+    <!-- VIEW: TIMBRATURE -->
+    <div id="view-timbrature" class="view" style="padding: 0; overflow: hidden;">
+        <style>
+            /* Stili specifici per l'app Timbrature */
+            #view-timbrature { 
+                background: var(--bg-body); 
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 99999;
+            }
+            #view-timbrature .app-container {
+                width: 100%; 
+                max-width: none; 
+                height: 100vh; 
+                background: var(--bg-card);
+                position: relative; 
+                overflow: hidden; 
+                box-shadow: none;
+                display: flex; 
+                flex-direction: column;
+                border: none;
+                border-radius: 0; 
+                margin: 0 auto;
+            }
+            #view-timbrature .timbra-screen {
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                padding: 20px; display: flex; flex-direction: column;
+                transition: all 0.4s; background: var(--bg-card); overflow-y: auto;
+            }
+            #view-timbrature .timbra-screen.hidden { opacity: 0; pointer-events: none; transform: translateX(100%); }
+            #view-timbrature #timbraSplashScreen { 
+                background: linear-gradient(135deg, var(--bg-body), var(--primary), var(--bg-card)); 
+                justify-content: center; align-items: center; z-index: 10; 
+            }
+            #view-timbrature .splash-logo { 
+                font-size: 36px; font-weight: 900; color: white; opacity: 0; 
+                animation: slideUp 1s forwards; 
+                background: linear-gradient(135deg, var(--cold), var(--primary), var(--hot)); 
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+                background-clip: text; letter-spacing: 2px; 
+            }
+            #view-timbrature .loader { 
+                width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); 
+                border-top-color: white; border-radius: 50%; margin-top: 30px; opacity: 0; 
+                animation: fadeIn 0.5s 1s forwards, spin 1s linear infinite; 
+            }
+            @keyframes slideUp { to { transform: translateY(0); opacity: 1; } }
+            @keyframes fadeIn { to { opacity: 1; } }
+            @keyframes spin { to { transform: rotate(360deg); } }
+            #view-timbrature h1, #view-timbrature h2 { margin: 0 0 20px 0; text-align: center; color: var(--text-primary); }
+            #view-timbrature h1 { font-size: 22px; margin-top: 30px; font-weight: 700; }
+            #view-timbrature .btn-timbra {
+                padding: 15px; border: none; border-radius: var(--radius-sm); cursor: pointer;
+                font-size: 16px; font-weight: 600; width: 100%; margin-bottom: 12px;
+                transition: all 0.25s; box-shadow: var(--shadow);
+                display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            }
+            #view-timbrature .btn-timbra:active { transform: scale(0.98); }
+            #view-timbrature .btn-timbra-primary { background: var(--primary); color: white; }
+            #view-timbrature .btn-timbra-success { background: var(--success); color: white; }
+            #view-timbrature .btn-timbra-danger { background: var(--danger); color: white; }
+            #view-timbrature .btn-timbra-expense { background: var(--expense); color: white; }
+            #view-timbrature .btn-timbra-warning { background: var(--warning); color: var(--bg-body); }
+            #view-timbrature .btn-timbra-secondary { background: var(--secondary); color: white; }
+            #view-timbrature .btn-timbra:disabled { background: var(--border-color); cursor: not-allowed; }
+            #view-timbrature .btn-timbra-small { padding: 8px 12px; font-size: 12px; width: auto; margin: 2px; }
+            #view-timbrature input, #view-timbrature select { 
+                width: 100%; padding: 14px 16px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); 
+                font-size: 16px; margin-bottom: 10px; background: var(--bg-body); color: var(--text-primary);
+                transition: all 0.25s;
+            }
+            #view-timbrature input:focus, #view-timbrature select:focus { 
+                outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); 
+            }
+            #view-timbrature input:disabled { background-color: var(--border-color); color: var(--text-secondary); }
+            #view-timbrature input::placeholder { color: var(--text-secondary); opacity: 0.7; }
+            #view-timbrature label { 
+                font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; display: block; font-weight: 500; 
+            }
+            #view-timbrature #reader { width: 100%; border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+            #view-timbrature .balance-card { 
+                background: linear-gradient(135deg, var(--primary), var(--cold)); color: white; 
+                padding: 20px; border-radius: var(--radius); text-align: center; margin-bottom: 15px; box-shadow: var(--shadow); 
+            }
+            #view-timbrature .balance-amount { font-size: 28px; font-weight: bold; margin: 5px 0; }
+            #view-timbrature .wage-box { 
+                background: rgba(245, 158, 11, 0.15); border: 2px solid var(--warning); color: var(--warning); 
+                padding: 10px; border-radius: var(--radius-sm); text-align: center; margin-bottom: 15px; 
+                font-weight: 600; display: flex; justify-content: space-between; align-items: center; 
+            }
+            #view-timbrature .history-list { flex: 1; overflow-y: auto; margin-top: 10px; }
+            #view-timbrature .timbra-list-item { 
+                background: var(--bg-body); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 8px; 
+                display: flex; justify-content: space-between; align-items: center; font-size: 14px; 
+                border-left: 5px solid var(--primary); border: 1px solid var(--border-color); transition: all 0.2s; 
+            }
+            #view-timbrature .timbra-list-item:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+            #view-timbrature .timbra-list-item.payment { border-left-color: var(--danger); }
+            #view-timbrature .timbra-list-item.work { border-left-color: var(--success); }
+            #view-timbrature .timbra-list-item.expense { border-left-color: var(--expense); }
+            #view-timbrature .admin-tabs { 
+                display: flex; gap: 5px; margin-bottom: 15px; background: var(--bg-body); 
+                padding: 5px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); 
+            }
+            #view-timbrature .admin-tab { 
+                flex: 1; padding: 10px; text-align: center; cursor: pointer; border-radius: var(--radius-sm); 
+                font-weight: 600; font-size: 14px; color: var(--text-secondary); transition: all 0.2s; 
+            }
+            #view-timbrature .admin-tab:hover { background: rgba(14, 165, 233, 0.1); color: var(--primary); }
+            #view-timbrature .admin-tab.active { 
+                background: var(--primary); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+            }
+            #view-timbrature .filter-box { 
+                background: var(--bg-body); padding: 10px; border-radius: var(--radius-sm); 
+                margin-bottom: 10px; border: 1px solid var(--border-color); 
+            }
+            #view-timbrature .filter-row { display: flex; gap: 10px; margin-bottom: 5px; }
+            #view-timbrature .timbra-modal-overlay { 
+                position: fixed; top:0; left:0; width:100%; height:100%; 
+                background: rgba(0,0,0,0.75); z-index: 100001; display: none; 
+                justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(4px);
+            }
+            #view-timbrature .timbra-modal-content { 
+                background: var(--bg-card); padding: 20px; border-radius: var(--radius); 
+                width: 100%; max-width: 400px; max-height: 85vh; overflow-y: auto; 
+                box-shadow: var(--shadow); border: 1px solid var(--border-color); 
+            }
+            #view-timbrature .timbra-modal-content h3 { color: var(--primary); margin-bottom: 15px; }
+            #view-timbrature #qrCodeContainer { display: flex; justify-content: center; margin: 20px 0; }
+            #view-timbrature .btn-timbra-back { 
+                background: transparent; color: var(--text-secondary); border: 1px solid var(--border-color); 
+                padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; 
+                margin-bottom: 15px; font-size: 14px; display: inline-flex; align-items: center; gap: 5px;
+            }
+            #view-timbrature .btn-timbra-back:hover { color: var(--primary); border-color: var(--primary); }
+        </style>
+
+        <div class="app-container">
+            <div style="padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn-timbra-back" onclick="App.goToDashboard()">← Torna alla Home</button>
+                <h2 style="margin: 0; font-size: 18px;">Gestore Timbrature</h2>
+                <div style="width: 80px;"></div>
+            </div>
+            
+            <div id="timbraMainMenu" class="timbra-screen" style="position: relative; justify-content: center; align-items: center; text-align: center;">
+                <div style="margin-bottom: 40px;">
+                    <div style="font-size: 80px; margin-bottom: 20px;">🕐</div>
+                    <h1 style="font-size: 28px; margin-bottom: 10px;">Gestore Timbrature</h1>
+                    <p style="color: var(--text-secondary); font-size: 16px;">Registra il tuo ingresso e uscita</p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 500px; width: 100%;">
+                    <button class="btn-timbra btn-timbra-primary" onclick="TimbraManager.startScanner('clock')" style="flex-direction: column; padding: 30px 20px; height: auto;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">📷</div>
+                        <div style="font-size: 16px;">Timbra Entrata/Uscita</div>
+                        <small style="font-size: 12px; opacity: 0.8; margin-top: 5px;">Scansiona QR Code</small>
+                    </button>
+                    <button class="btn-timbra btn-timbra-secondary" onclick="TimbraManager.startScanner('history')" style="flex-direction: column; padding: 30px 20px; height: auto;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">📊</div>
+                        <div style="font-size: 16px;">Storico Personale</div>
+                        <small style="font-size: 12px; opacity: 0.8; margin-top: 5px;">Visualizza turni</small>
+                    </button>
+                </div>
+                
+                <button class="btn-timbra btn-timbra-warning" onclick="TimbraManager.showScreen('adminLogin')" style="margin-top: 40px; max-width: 500px; background: var(--secondary); color: white; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">🔐</span>
+                    <span>Accesso Amministratore</span>
+                </button>
+            </div>
+
+            <div id="timbraScannerView" class="timbra-screen hidden">
+                <button class="btn-timbra btn-timbra-secondary" style="width: auto; margin-bottom: 15px;" onclick="TimbraManager.stopScanner()">← Annulla</button>
+                <h2 id="scannerTitle">Scansiona QR Code</h2>
+                <div id="timbraReader"></div>
+            </div>
+
+            <div id="timbraOperatorDashboard" class="timbra-screen hidden">
+                <button class="btn-timbra btn-timbra-secondary" style="width: auto; margin-bottom: 15px;" onclick="TimbraManager.showScreen('mainMenu')">← Menu</button>
+                <h2 id="opDashTitle">Storico</h2>
+                <div class="wage-box">
+                    <span>Paga Base:</span>
+                    <span id="opDailyWageDisplay">0.00 €</span>
+                </div>
+                <div class="balance-card">
+                    <div style="font-size: 12px; opacity: 0.9;">Rimanenza Dovuta</div>
+                    <div class="balance-amount" id="opRemaining">0.00 €</div>
+                    <div style="display: flex; justify-content: space-around; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
+                        <div><div style="font-size: 11px; opacity: 0.8;">Guadagnato</div><div style="font-weight:bold" id="opEarned">0€</div></div>
+                        <div><div style="font-size: 11px; opacity: 0.8;">Spese</div><div style="font-weight:bold" id="opExpenses">0€</div></div>
+                        <div><div style="font-size: 11px; opacity: 0.8;">Pagato</div><div style="font-weight:bold" id="opPaid">0€</div></div>
+                    </div>
+                </div>
+                <h3 style="font-size:16px; margin: 10px 0;">Storico Attività</h3>
+                <div class="history-list" id="opHistoryList"></div>
+            </div>
+
+            <div id="timbraAdminLogin" class="timbra-screen hidden">
+                <button class="btn-timbra btn-timbra-secondary" style="width: auto; margin-bottom: 20px;" onclick="TimbraManager.showScreen('mainMenu')">← Indietro</button>
+                <h2>Accesso Admin</h2>
+                <input type="password" id="adminPassInput" placeholder="Password">
+                <button class="btn-timbra btn-timbra-primary" onclick="TimbraManager.loginAdmin()">Accedi</button>
+                <p id="adminLoginError" style="color: var(--danger); text-align: center; display: none;">Password errata</p>
+            </div>
+
+            <div id="timbraAdminDashboard" class="timbra-screen hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="border:none; margin:0;">Admin</h2>
+                    <button class="btn-timbra btn-timbra-secondary btn-timbra-small" onclick="TimbraManager.logoutAdmin()">Esci</button>
+                </div>
+                <div class="admin-tabs" style="margin-top: 15px;">
+                    <div class="admin-tab active" onclick="TimbraManager.showAdminTab('operators')">Operatori</div>
+                    <div class="admin-tab" onclick="TimbraManager.showAdminTab('history')">Storico Globale</div>
+                </div>
+                <div id="adminTabOperators">
+                    <button class="btn-timbra btn-timbra-success" onclick="TimbraManager.openOperatorModal()">+ Crea Operatore</button>
+                    <div class="history-list" id="operatorsList" style="margin-top: 10px;"></div>
+                </div>
+                <div id="adminTabHistory" class="hidden" style="flex:1; display:flex; flex-direction:column;">
+                    <div class="filter-box">
+                        <div class="filter-row">
+                            <input type="text" id="searchName" placeholder="Nome Operatore..." style="margin-bottom:0; flex:2;">
+                        </div>
+                        <div class="filter-row">
+                            <input type="date" id="searchDateFrom" style="margin-bottom:0; flex:1;" title="Da Data">
+                            <input type="date" id="searchDateTo" style="margin-bottom:0; flex:1;" title="A Data">
+                        </div>
+                        <button class="btn-timbra btn-timbra-small btn-timbra-primary" onclick="TimbraManager.renderAdminHistory()">Cerca</button>
+                        <button class="btn-timbra btn-timbra-small btn-timbra-secondary" onclick="TimbraManager.clearSearch()">Reset</button>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+                         <button class="btn-timbra btn-timbra-success btn-timbra-small" onclick="TimbraManager.openAddRecordModal()">+ Aggiungi Voce</button>
+                    </div>
+                    <div class="history-list" id="adminGlobalHistory" style="flex:1;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <div id="modalOperator" class="timbra-modal-overlay">
+            <div class="timbra-modal-content">
+                <h3 id="modalOpTitle">Nuovo Operatore</h3>
+                <input type="hidden" id="editOpId">
+                <label>Nome</label>
+                <input type="text" id="modalOpName" placeholder="Nome">
+                <label>Paga Base (€)</label>
+                <input type="number" id="modalOpWage" placeholder="0.00" step="0.01">
+                <div id="qrCodeContainer"></div>
+                <p id="qrInstruction" style="font-size:12px; text-align:center; color:var(--text-secondary); display:none;">QR Code Identificativo</p>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn-timbra btn-timbra-secondary" onclick="TimbraManager.closeOperatorModal()">Chiudi</button>
+                    <button class="btn-timbra btn-timbra-success" onclick="TimbraManager.saveOperator()">Salva</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalPayment" class="timbra-modal-overlay">
+            <div class="timbra-modal-content">
+                <h3 id="modalPaymentTitle">Fine Turno</h3>
+                <p style="text-align:center; color:var(--text-secondary); margin-bottom:15px;">Hai concluso la giornata lavorativa.</p>
+                
+                <div style="background:var(--bg-body); padding:15px; border-radius:var(--radius-sm); margin-bottom:15px; border: 1px solid var(--border-color);">
+                    <h4 style="margin:0 0 10px 0; text-align:center;">Riepilogo Giornata</h4>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span>Paga Base:</span>
+                        <strong id="modalWagePreview">0.00 €</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span>Saldo Precedente:</span>
+                        <strong id="modalOldBalance">0.00 €</strong>
+                    </div>
+                </div>
+
+                <label>Spese sostenute oggi (€)</label>
+                <input type="number" id="expenseAmountInput" placeholder="Es. 15.00" step="0.01">
+                
+                <label style="margin-top:10px;">Pagamento riscosso oggi (€)</label>
+                <input type="number" id="paymentAmountInput" placeholder="Es. 50.00" step="0.01">
+
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn-timbra btn-timbra-secondary" style="flex:1" onclick="TimbraManager.confirmExit(false)">Annulla</button>
+                    <button class="btn-timbra btn-timbra-success" style="flex:1" onclick="TimbraManager.confirmExit(true)">Salva</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalMessage" class="timbra-modal-overlay">
+            <div class="timbra-modal-content" style="text-align: center;">
+                <h3 id="msgTitle">Info</h3>
+                <p id="msgBody" style="font-size: 16px; margin: 20px 0;"></p>
+                <button class="btn-timbra btn-timbra-primary" onclick="TimbraManager.closeModal('modalMessage')">OK</button>
+            </div>
+        </div>
+        
+        <div id="modalRecord" class="timbra-modal-overlay">
+            <div class="timbra-modal-content">
+                <h3 id="modalRecTitle">Modifica Voce</h3>
+                <input type="hidden" id="editRecId">
+                <label>Operatore</label>
+                <select id="modalRecOpId"></select>
+                
+                <label>Tipo</label>
+                <select id="modalRecType" onchange="TimbraManager.toggleRecFields()">
+                    <option value="work">Lavoro</option>
+                    <option value="payment">Pagamento</option>
+                    <option value="expense">Spesa</option>
+                </select>
+
+                <label>Importo (€)</label>
+                <input type="number" id="modalRecAmount" step="0.01">
+                
+                <div id="recWorkFields">
+                    <label>Inizio</label>
+                    <input type="datetime-local" id="modalRecStart">
+                    <label>Fine</label>
+                    <input type="datetime-local" id="modalRecEnd">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                    <button class="btn-timbra btn-timbra-danger" onclick="TimbraManager.deleteRecordAdmin()">Elimina</button>
+                    <button class="btn-timbra btn-timbra-success" onclick="TimbraManager.saveRecordAdmin()">Salva</button>
+                </div>
+                <button class="btn-timbra btn-timbra-secondary" style="margin-top:5px;" onclick="TimbraManager.closeModal('modalRecord')">Annulla</button>
+            </div>
+        </div>
+    </div>
+
     <!-- VIEW: FORM -->
     <div id="view-form" class="view">
         <div class="container">
@@ -1643,7 +1973,10 @@
             goToWarehouse: () => { Warehouse.render(); UI.showView('view-warehouse'); },
             goToCommunication: () => { CommunicationManager.render(); UI.showView('view-communication'); },
             goToDomicile: () => { DomicileManager.init(); DomicileManager.render(); UI.showView('view-domicile'); },
-            goToTimbratura: () => { window.open('https://gestionetimbrature.netlify.app/', '_blank'); },
+            goToTimbratura: () => { 
+                UI.showView('view-timbrature'); 
+                TimbraManager.init();
+            },
             
             goToEquipment: () => { App.openExternalView('attrezzatura.html'); },
             goToVehicles: () => { App.openExternalView('mezzi.html'); },
@@ -3800,6 +4133,13 @@ www.iltlogistics.it`;
 
             items = items.filter(i => i.client.nome.toLowerCase().includes(filter));
 
+            // Ordinamento per data intervento decrescente (più recente prima)
+            items.sort((a, b) => {
+                const dateA = a.client?.dataIntervento ? new Date(a.client.dataIntervento.split('/').reverse().join('-')) : new Date(0);
+                const dateB = b.client?.dataIntervento ? new Date(b.client.dataIntervento.split('/').reverse().join('-')) : new Date(0);
+                return dateB - dateA;
+            });
+
             if (items.length === 0) { 
                 tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">Nessun intervento trovato</td></tr>'; 
                 return; 
@@ -3866,6 +4206,462 @@ www.iltlogistics.it`;
         }
     };
         
+    // ========== TIMBRA MANAGER ==========
+    const TimbraManager = {
+        html5QrCode: null,
+        currentScanMode: null,
+        pendingOpData: null,
+        localOperators: [],
+        localRecords: [],
+        ADMIN_PASS: 'Palermo4ever',
+        
+        init: () => {
+            // Inizializza Firebase per timbrature (usa la stessa istanza)
+            TimbraManager.showScreen('mainMenu');
+            TimbraManager.loadData();
+        },
+        
+        loadData: () => {
+            // Carica operatori
+            db.collection("operators").onSnapshot(snapshot => {
+                TimbraManager.localOperators = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                TimbraManager.renderAdminDashboard();
+            });
+            // Carica records
+            db.collection("records").orderBy("startTime", "desc").onSnapshot(snapshot => {
+                TimbraManager.localRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                TimbraManager.renderAdminHistory();
+            });
+        },
+        
+        showScreen: (screenName) => {
+            document.querySelectorAll('#view-timbrature .timbra-screen').forEach(s => s.classList.add('hidden'));
+            const screenMap = {
+                'mainMenu': 'timbraMainMenu',
+                'scannerView': 'timbraScannerView',
+                'operatorDashboard': 'timbraOperatorDashboard',
+                'adminLogin': 'timbraAdminLogin',
+                'adminDashboard': 'timbraAdminDashboard'
+            };
+            const elementId = screenMap[screenName];
+            if (elementId) {
+                document.getElementById(elementId).classList.remove('hidden');
+            }
+        },
+        
+        closeModal: (modalId) => {
+            document.getElementById(modalId).style.display = 'none';
+        },
+        
+        openModal: (modalId) => {
+            document.getElementById(modalId).style.display = 'flex';
+        },
+        
+        startScanner: (mode) => {
+            TimbraManager.currentScanMode = mode;
+            TimbraManager.showScreen('scannerView');
+            TimbraManager.html5QrCode = new Html5Qrcode("timbraReader");
+            TimbraManager.html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                TimbraManager.onScanSuccess,
+                () => {}
+            ).catch(err => {
+                UI.showToast("Errore fotocamera: " + err, 'error');
+                TimbraManager.stopScanner();
+            });
+        },
+        
+        stopScanner: () => {
+            if (TimbraManager.html5QrCode && TimbraManager.html5QrCode.isScanning) {
+                TimbraManager.html5QrCode.stop().then(() => TimbraManager.showScreen('mainMenu'));
+            } else {
+                TimbraManager.showScreen('mainMenu');
+            }
+        },
+        
+        onScanSuccess: (decodedText) => {
+            const op = TimbraManager.localOperators.find(o => o.id === decodedText);
+            if (!op) {
+                UI.showToast("QR non valido o operatore inesistente.", 'error');
+                return;
+            }
+            TimbraManager.html5QrCode.stop().then(() => {
+                if (TimbraManager.currentScanMode === 'history') {
+                    TimbraManager.showOperatorHistory(op);
+                } else {
+                    TimbraManager.handleClock(op);
+                }
+            });
+        },
+        
+        handleClock: async (op) => {
+            const now = new Date();
+            const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+            const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
+            const openSession = TimbraManager.localRecords.find(r => r.opId === op.id && r.type === 'work' && !r.endTime);
+            
+            if (openSession) {
+                // USCITA
+                const oldTotals = TimbraManager.calculateTotals(op.id);
+                await db.collection("records").doc(openSession.id).update({
+                    endTime: now.getTime(),
+                    amount: op.dailyWage
+                });
+                TimbraManager.pendingOpData = {
+                    op: op,
+                    recordId: openSession.id,
+                    oldBalance: oldTotals.balance,
+                    dailyWage: op.dailyWage
+                };
+                document.getElementById('modalWagePreview').innerText = op.dailyWage.toFixed(2) + ' €';
+                document.getElementById('modalOldBalance').innerText = oldTotals.balance.toFixed(2) + ' €';
+                document.getElementById('expenseAmountInput').value = '';
+                document.getElementById('paymentAmountInput').value = '';
+                TimbraManager.openModal('modalPayment');
+                TimbraManager.showScreen('mainMenu');
+            } else {
+                // ENTRATA
+                const entryToday = TimbraManager.localRecords.find(r =>
+                    r.opId === op.id && r.type === 'work' &&
+                    r.startTime >= todayStart.getTime() && r.startTime <= todayEnd.getTime()
+                );
+                if (entryToday) {
+                    UI.showToast("Hai già effettuato l'entrata oggi.", 'warning');
+                    TimbraManager.showScreen('mainMenu');
+                    return;
+                }
+                const exitToday = TimbraManager.localRecords.find(r =>
+                    r.opId === op.id && r.type === 'work' && r.endTime &&
+                    r.endTime >= todayStart.getTime() && r.endTime <= todayEnd.getTime()
+                );
+                if (exitToday) {
+                    UI.showToast("Hai già registrato un'uscita oggi.", 'warning');
+                    TimbraManager.showScreen('mainMenu');
+                    return;
+                }
+                if (now.getHours() < 6 || now.getHours() >= 20) {
+                    UI.showToast("Entrata consentita solo tra le 06:00 e le 20:00.", 'warning');
+                    TimbraManager.showScreen('mainMenu');
+                    return;
+                }
+                await db.collection("records").add({
+                    opId: op.id,
+                    type: 'work',
+                    startTime: now.getTime(),
+                    endTime: null,
+                    amount: 0
+                });
+                UI.showToast(`Benvenuto ${op.name}! Inizio turno registrato.`, 'success');
+                TimbraManager.showScreen('mainMenu');
+            }
+        },
+        
+        confirmExit: async (save) => {
+            if (!save) {
+                TimbraManager.closeModal('modalPayment');
+                TimbraManager.pendingOpData = null;
+                return;
+            }
+            const expenses = parseFloat(document.getElementById('expenseAmountInput').value) || 0;
+            const payments = parseFloat(document.getElementById('paymentAmountInput').value) || 0;
+            const batch = db.batch();
+            if (expenses > 0) {
+                const expRef = db.collection("records").doc();
+                batch.set(expRef, {
+                    opId: TimbraManager.pendingOpData.op.id,
+                    type: 'expense',
+                    date: Date.now(),
+                    amount: expenses,
+                    note: 'Spese giornaliere'
+                });
+            }
+            if (payments > 0) {
+                const payRef = db.collection("records").doc();
+                batch.set(payRef, {
+                    opId: TimbraManager.pendingOpData.op.id,
+                    type: 'payment',
+                    date: Date.now(),
+                    amount: payments,
+                    note: 'Pagamento riscosso'
+                });
+            }
+            await batch.commit();
+            const newBalance = TimbraManager.pendingOpData.oldBalance + TimbraManager.pendingOpData.dailyWage + expenses - payments;
+            UI.showToast(`Turno chiuso. Saldo aggiornato: ${newBalance.toFixed(2)} €`, 'success');
+            TimbraManager.closeModal('modalPayment');
+            TimbraManager.pendingOpData = null;
+        },
+        
+        calculateTotals: (opId) => {
+            let earned = 0, paid = 0, expenses = 0;
+            TimbraManager.localRecords.filter(r => r.opId === opId).forEach(r => {
+                if (r.type === 'work' && r.endTime) earned += r.amount;
+                if (r.type === 'expense') expenses += r.amount;
+                if (r.type === 'payment') paid += r.amount;
+            });
+            return { earned, paid, expenses, balance: earned + expenses - paid };
+        },
+        
+        showOperatorHistory: (op) => {
+            document.getElementById('opDashTitle').innerText = op.name;
+            document.getElementById('opDailyWageDisplay').innerText = op.dailyWage.toFixed(2) + ' €';
+            db.collection("records").where("opId", "==", op.id).orderBy("startTime", "desc").onSnapshot(snapshot => {
+                const list = document.getElementById('opHistoryList');
+                list.innerHTML = '';
+                const totals = TimbraManager.calculateTotals(op.id);
+                document.getElementById('opRemaining').innerText = totals.balance.toFixed(2) + ' €';
+                document.getElementById('opEarned').innerText = totals.earned.toFixed(2) + ' €';
+                document.getElementById('opExpenses').innerText = totals.expenses.toFixed(2) + ' €';
+                document.getElementById('opPaid').innerText = totals.paid.toFixed(2) + ' €';
+                snapshot.docs.forEach(doc => {
+                    const r = doc.data();
+                    let dateStr, desc, sign, colorClass;
+                    if (r.type === 'work') {
+                        const d = r.endTime ? new Date(r.endTime) : new Date(r.startTime);
+                        dateStr = d.toLocaleString('it-IT');
+                        desc = r.endTime ? `Lavoro (${r.amount.toFixed(2)}€)` : "🔴 In Corso...";
+                        sign = '+'; colorClass = 'work';
+                    } else if (r.type === 'expense') {
+                        dateStr = new Date(r.date).toLocaleString('it-IT');
+                        desc = "Spese"; sign = '+'; colorClass = 'expense';
+                    } else {
+                        dateStr = new Date(r.date).toLocaleString('it-IT');
+                        desc = "Pagamento"; sign = '-'; colorClass = 'payment';
+                    }
+                    list.innerHTML += `
+                        <div class="timbra-list-item ${colorClass}">
+                            <div><div style="font-weight:bold">${desc}</div><div style="font-size:11px; color:#666">${dateStr}</div></div>
+                            <div style="font-size:16px; font-weight:bold">${sign}${r.amount.toFixed(2)}€</div>
+                        </div>`;
+                });
+            });
+            TimbraManager.showScreen('operatorDashboard');
+        },
+        
+        loginAdmin: () => {
+            if (document.getElementById('adminPassInput').value === TimbraManager.ADMIN_PASS) {
+                document.getElementById('adminLoginError').style.display = 'none';
+                TimbraManager.renderAdminDashboard();
+                TimbraManager.showScreen('adminDashboard');
+            } else {
+                document.getElementById('adminLoginError').style.display = 'block';
+            }
+        },
+        
+        logoutAdmin: () => {
+            TimbraManager.showScreen('mainMenu');
+        },
+        
+        showAdminTab: (tab) => {
+            document.querySelectorAll('#view-timbrature .admin-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('adminTabOperators').classList.add('hidden');
+            document.getElementById('adminTabHistory').classList.add('hidden');
+            document.getElementById('adminTab' + (tab === 'operators' ? 'Operators' : 'History')).classList.remove('hidden');
+        },
+        
+        renderAdminDashboard: () => {
+            const list = document.getElementById('operatorsList');
+            list.innerHTML = '';
+            TimbraManager.localOperators.forEach(op => {
+                const totals = TimbraManager.calculateTotals(op.id);
+                list.innerHTML += `
+                    <div class="timbra-list-item" style="flex-direction: column; align-items: start;">
+                        <div style="width:100%; display:flex; justify-content:space-between;">
+                            <strong>${op.name}</strong>
+                            <span style="color:${totals.balance >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${totals.balance.toFixed(2)}€</span>
+                        </div>
+                        <div style="font-size:12px; color:#666;">Paga: ${op.dailyWage}€/gg</div>
+                        <div style="margin-top:10px; width:100%; display:flex; gap:5px;">
+                            <button class="btn-timbra btn-timbra-warning btn-timbra-small" onclick="TimbraManager.openOperatorModal('${op.id}')">Modifica</button>
+                            <button class="btn-timbra btn-timbra-danger btn-timbra-small" onclick="TimbraManager.deleteOperator('${op.id}')">Elimina</button>
+                        </div>
+                    </div>
+                `;
+            });
+        },
+        
+        clearSearch: () => {
+            document.getElementById('searchName').value = '';
+            document.getElementById('searchDateFrom').value = '';
+            document.getElementById('searchDateTo').value = '';
+            TimbraManager.renderAdminHistory();
+        },
+        
+        renderAdminHistory: () => {
+            const list = document.getElementById('adminGlobalHistory');
+            list.innerHTML = '';
+            const nameFilter = document.getElementById('searchName').value.toLowerCase();
+            const dateFrom = document.getElementById('searchDateFrom').value ? new Date(document.getElementById('searchDateFrom').value).getTime() : 0;
+            const dateTo = document.getElementById('searchDateTo').value ? new Date(document.getElementById('searchDateTo').value).setHours(23,59,59) : Date.now() + 999999999;
+            const filteredRecords = TimbraManager.localRecords.filter(r => {
+                const recTime = r.type === 'work' ? r.startTime : r.date;
+                if (recTime < dateFrom || recTime > dateTo) return false;
+                if (nameFilter) {
+                    const op = TimbraManager.localOperators.find(o => o.id === r.opId);
+                    if (!op || !op.name.toLowerCase().includes(nameFilter)) return false;
+                }
+                return true;
+            });
+            filteredRecords.forEach(r => {
+                const op = TimbraManager.localOperators.find(o => o.id === r.opId);
+                const opName = op ? op.name : 'Sconosciuto';
+                let dateStr, desc, sign, colorClass;
+                if (r.type === 'work') {
+                    dateStr = r.startTime ? new Date(r.startTime).toLocaleString('it-IT') : 'N/D';
+                    desc = `LAVORO (${r.amount.toFixed(2)}€)`;
+                    sign = '+'; colorClass = 'work';
+                } else if (r.type === 'expense') {
+                    dateStr = new Date(r.date).toLocaleString('it-IT');
+                    desc = "SPESA"; sign = '+'; colorClass = 'expense';
+                } else {
+                    dateStr = new Date(r.date).toLocaleString('it-IT');
+                    desc = "PAGAMENTO"; sign = '-'; colorClass = 'payment';
+                }
+                list.innerHTML += `
+                    <div class="timbra-list-item ${colorClass}" style="cursor:pointer" onclick="TimbraManager.openEditRecordModal('${r.id}')">
+                        <div style="flex:1">
+                            <div style="font-weight:bold">${opName}</div>
+                            <div style="font-size:12px">${desc}</div>
+                            <div style="font-size:11px; color:#666">${dateStr}</div>
+                        </div>
+                        <div style="font-weight:bold; font-size:16px">${sign}${r.amount.toFixed(2)}€</div>
+                    </div>
+                `;
+            });
+        },
+        
+        closeOperatorModal: () => {
+            document.getElementById('editOpId').value = '';
+            document.getElementById('modalOpName').value = '';
+            document.getElementById('modalOpWage').value = '';
+            document.getElementById('modalOpName').disabled = false;
+            document.getElementById('qrCodeContainer').innerHTML = '';
+            document.getElementById('qrInstruction').style.display = 'none';
+            TimbraManager.closeModal('modalOperator');
+        },
+        
+        openOperatorModal: (id = null) => {
+            TimbraManager.closeOperatorModal();
+            TimbraManager.openModal('modalOperator');
+            if (id) {
+                const op = TimbraManager.localOperators.find(o => o.id === id);
+                document.getElementById('modalOpTitle').innerText = "Modifica Paga";
+                document.getElementById('editOpId').value = id;
+                document.getElementById('modalOpName').value = op.name;
+                document.getElementById('modalOpName').disabled = true;
+                document.getElementById('modalOpWage').value = op.dailyWage;
+                TimbraManager.generateQR(id);
+                document.getElementById('qrInstruction').style.display = 'block';
+            }
+        },
+        
+        saveOperator: async () => {
+            const id = document.getElementById('editOpId').value;
+            const name = document.getElementById('modalOpName').value;
+            const wage = parseFloat(document.getElementById('modalOpWage').value);
+            if (!wage) { UI.showToast('Inserisci la paga', 'error'); return; }
+            if (id) {
+                await db.collection("operators").doc(id).update({ dailyWage: wage });
+                TimbraManager.closeOperatorModal();
+            } else {
+                if (!name) { UI.showToast('Inserisci il nome', 'error'); return; }
+                const docRef = await db.collection("operators").add({ name: name, dailyWage: wage });
+                document.getElementById('modalOpTitle').innerText = "Operatore Creato!";
+                TimbraManager.generateQR(docRef.id);
+                document.getElementById('qrInstruction').style.display = 'block';
+                document.getElementById('modalOpName').disabled = true;
+                document.getElementById('editOpId').value = docRef.id;
+            }
+        },
+        
+        deleteOperator: async (id) => {
+            if (confirm('Eliminare operatore e TUTTI i suoi dati?')) {
+                const batch = db.batch();
+                const records = await db.collection("records").where("opId", "==", id).get();
+                records.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                await db.collection("operators").doc(id).delete();
+            }
+        },
+        
+        generateQR: (id) => {
+            const container = document.getElementById('qrCodeContainer');
+            container.innerHTML = '';
+            new QRCode(container, { text: id, width: 150, height: 150 });
+        },
+        
+        toggleRecFields: () => {
+            const type = document.getElementById('modalRecType').value;
+            document.getElementById('recWorkFields').style.display = (type === 'work') ? 'block' : 'none';
+        },
+        
+        openAddRecordModal: () => {
+            document.getElementById('modalRecTitle').innerText = "Aggiungi Voce Manuale";
+            document.getElementById('editRecId').value = '';
+            const sel = document.getElementById('modalRecOpId');
+            sel.innerHTML = '';
+            TimbraManager.localOperators.forEach(o => sel.innerHTML += `<option value="${o.id}">${o.name}</option>`);
+            document.getElementById('modalRecType').value = 'work';
+            document.getElementById('modalRecAmount').value = '';
+            document.getElementById('recWorkFields').style.display = 'block';
+            TimbraManager.toggleRecFields();
+            TimbraManager.openModal('modalRecord');
+        },
+        
+        openEditRecordModal: (id) => {
+            const r = TimbraManager.localRecords.find(rec => rec.id === id);
+            document.getElementById('modalRecTitle').innerText = "Modifica Voce";
+            document.getElementById('editRecId').value = id;
+            const sel = document.getElementById('modalRecOpId');
+            sel.innerHTML = '';
+            TimbraManager.localOperators.forEach(o => sel.innerHTML += `<option value="${o.id}">${o.name}</option>`);
+            sel.value = r.opId;
+            document.getElementById('modalRecType').value = r.type;
+            document.getElementById('modalRecAmount').value = r.amount;
+            if (r.type === 'work') {
+                document.getElementById('recWorkFields').style.display = 'block';
+                document.getElementById('modalRecStart').value = r.startTime ? new Date(r.startTime).toISOString().slice(0, 16) : '';
+                document.getElementById('modalRecEnd').value = r.endTime ? new Date(r.endTime).toISOString().slice(0, 16) : '';
+            } else {
+                document.getElementById('recWorkFields').style.display = 'none';
+            }
+            TimbraManager.toggleRecFields();
+            TimbraManager.openModal('modalRecord');
+        },
+        
+        saveRecordAdmin: async () => {
+            const id = document.getElementById('editRecId').value;
+            const opId = document.getElementById('modalRecOpId').value;
+            const amount = parseFloat(document.getElementById('modalRecAmount').value);
+            const type = document.getElementById('modalRecType').value;
+            let data = { opId, amount, type };
+            if (type === 'work') {
+                const start = document.getElementById('modalRecStart').value;
+                const end = document.getElementById('modalRecEnd').value;
+                data.startTime = start ? new Date(start).getTime() : null;
+                data.endTime = end ? new Date(end).getTime() : null;
+            } else {
+                data.date = Date.now();
+            }
+            if (id) {
+                await db.collection("records").doc(id).update(data);
+            } else {
+                await db.collection("records").add(data);
+            }
+            TimbraManager.closeModal('modalRecord');
+        },
+        
+        deleteRecordAdmin: async () => {
+            const id = document.getElementById('editRecId').value;
+            if (confirm('Eliminare questa voce?')) {
+                await db.collection("records").doc(id).delete();
+                TimbraManager.closeModal('modalRecord');
+            }
+        }
+    };
+
     // Event Listener per chiusura dropdown materiali
     document.addEventListener('click', (e) => { const dropdown = Utils.id('materialDropdown'); const searchInput = Utils.id('materialSearch'); if (dropdown && !dropdown.contains(e.target) && e.target !== searchInput) { dropdown.classList.remove('show'); } });
 
