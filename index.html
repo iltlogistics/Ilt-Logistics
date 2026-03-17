@@ -200,6 +200,7 @@
         .dash-card.corso::before { background: linear-gradient(90deg, var(--corso), #818cf8); }
         
         .dash-icon { font-size: 3.5rem; margin-bottom: 18px; display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }
+        .dash-icon-image { width: 60px; height: 60px; margin-bottom: 18px; display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); object-fit: contain; }
         .dash-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
         .dash-card p { color: var(--text-secondary); font-size: 0.95rem; }
 
@@ -797,11 +798,275 @@
             font-size: 16px;
             grid-column: 1 / -1;
         }
+
+        /* VIRTUAL ASSISTANT STYLES */
+        .virtual-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+
+        .chat-button {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(14, 165, 233, 0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .chat-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(14, 165, 233, 0.6);
+        }
+
+        .chat-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--success);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 2px solid white;
+        }
+
+        .chat-window {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 380px;
+            height: 600px;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-header h4 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chat-status {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .chat-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .chat-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            max-width: 85%;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .user-message .message-avatar {
+            background: var(--success);
+        }
+
+        .message-content {
+            background: var(--bg-body);
+            padding: 12px 16px;
+            border-radius: 18px;
+            border: 1px solid var(--border-color);
+        }
+
+        .user-message .message-content {
+            background: var(--primary);
+            color: white;
+        }
+
+        .message-content p {
+            margin: 0;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+
+        .user-message .message-time {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .chat-input-container {
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-card);
+        }
+
+        .quick-actions {
+            padding: 15px 20px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .quick-btn {
+            background: var(--bg-body);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .quick-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .chat-input {
+            padding: 15px 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            background: var(--bg-body);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .chat-input input:focus {
+            border-color: var(--primary);
+        }
+
+        .chat-input button {
+            background: var(--primary);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .chat-input button:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Responsive per mobile */
+        @media (max-width: 480px) {
+            .chat-window {
+                width: calc(100vw - 40px);
+                right: -10px;
+                height: 500px;
+            }
+            
+            .quick-actions {
+                padding: 10px 15px;
+            }
+            
+            .quick-btn {
+                font-size: 0.75rem;
+                padding: 6px 10px;
+            }
+        }
     </style>
 </head>
-<body>
 
-    <!-- INTRO SCREEN -->
     <div id="intro-screen">
         <div class="intro-container">
             <div class="intro-logo">GIPRO</div>
@@ -1142,7 +1407,7 @@
                 
                 <!-- NUOVA CARD: COVERCARE -->
                 <div class="dash-card covercare" onclick="App.goToCovercare()">
-                    <span class="dash-icon">🛡️</span>
+                    <span class="dash-icon">🏥</span>
                     <div class="dash-title">Covercare</div>
                     <p>Modulo intervento Covercare</p>
                 </div>
@@ -4795,9 +5060,172 @@ www.iltlogistics.it`;
     // Event Listener per chiusura dropdown materiali
     document.addEventListener('click', (e) => { const dropdown = Utils.id('materialDropdown'); const searchInput = Utils.id('materialSearch'); if (dropdown && !dropdown.contains(e.target) && e.target !== searchInput) { dropdown.classList.remove('show'); } });
 
+    // VIRTUAL ASSISTANT
+    const VirtualAssistant = {
+        isOpen: false,
+        
+        toggleChat() {
+            const chatWindow = Utils.id('chatWindow');
+            const chatButton = Utils.id('chatButton');
+            
+            if (this.isOpen) {
+                chatWindow.classList.add('hidden');
+                chatButton.style.transform = 'scale(1)';
+            } else {
+                chatWindow.classList.remove('hidden');
+                chatButton.style.transform = 'scale(0.9)';
+                Utils.id('chatInput').focus();
+            }
+            this.isOpen = !this.isOpen;
+        },
+        
+        sendMessage() {
+            const input = Utils.id('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            this.addMessage(message, 'user');
+            input.value = '';
+            
+            // Simula risposta dell'assistente
+            setTimeout(() => {
+                const response = this.generateResponse(message);
+                this.addMessage(response, 'assistant');
+            }, 1000);
+        },
+        
+        sendQuickMessage(message) {
+            this.addMessage(message, 'user');
+            
+            // Simula risposta dell'assistente
+            setTimeout(() => {
+                const response = this.generateResponse(message);
+                this.addMessage(response, 'assistant');
+            }, 1000);
+        },
+        
+        addMessage(text, sender) {
+            const messagesContainer = Utils.id('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            const time = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-${sender === 'user' ? 'user' : 'robot'}"></i>
+                </div>
+                <div class="message-content">
+                    <p>${text}</p>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        },
+        
+        generateResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Risposte predefinite per domande comuni
+            if (lowerMessage.includes('refrigerazione') || lowerMessage.includes('climatizzatore') || lowerMessage.includes('frigo')) {
+                return 'Per la refrigerazione, puoi accedere al modulo specifico dalla dashboard. Lì potrai registrare interventi su climatizzatori, frigoriferi e celle frigorifere. Hai bisogno di aiuto per qualche procedura specifica?';
+            }
+            
+            if (lowerMessage.includes('domicilio') || lowerMessage.includes('consegna') || lowerMessage.includes('ticket')) {
+                return 'Per creare un ticket domicilio, vai alla sezione Domicilio dalla dashboard. Potrai inserire i dati del cliente, l\'indirizzo e assegnare l\'intervento a un operatore. Solo gli amministratori possono creare nuovi ticket.';
+            }
+            
+            if (lowerMessage.includes('timbra') || lowerMessage.includes('timbratura') || lowerMessage.includes('ingresso')) {
+                return 'Per timbrare l\'ingresso o l\'uscita, clicca sulla card "Timbra" nella dashboard. Potrai registrare automaticamente orario e data del tuo turno di lavoro.';
+            }
+            
+            if (lowerMessage.includes('covercare')) {
+                return 'Covercare è un modulo speciale per interventi specifici. Puoi accedervi dalla dashboard cliccando sulla card Covercare. Il modulo è personalizzato per le esigenze di Covercare Spa a Socio Unico.';
+            }
+            
+            if (lowerMessage.includes('admin') || lowerMessage.includes('amministratore')) {
+                return 'Le funzioni admin sono disponibili solo per utenti con privilegi di amministratore. Se sei un admin, vedrai le card aggiuntive nella dashboard per gestione magazzino, attrezzature, mezzi e pannello admin.';
+            }
+            
+            if (lowerMessage.includes('aiuto') || lowerMessage.includes('help') || lowerMessage.includes('supporto')) {
+                return 'Sono qui per aiutarti! Puoi farmi domande su: refrigerazione, riscaldamento, timbrature, ticket domicilio, covercare, o funzioni admin. Usa anche i pulsanti rapidi qui sotto per domande comuni.';
+            }
+            
+            // Risposta di default
+            return 'Capisco la tua domanda. Posso aiutarti con informazioni su refrigerazione, riscaldamento, timbrature, ticket domicilio, covercare e funzioni admin. Prova a essere più specifico o usa i pulsanti rapidi per domande comuni.';
+        },
+        
+        handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                this.sendMessage();
+            }
+        }
+    };
+
     // Inizializzazione Store e Auth
     Store.setup();
     window.onload = Auth.init;
     </script>
+<!-- VIRTUAL ASSISTANT -->
+    <div id="virtualAssistant" class="virtual-assistant">
+        <div id="chatButton" class="chat-button" onclick="VirtualAssistant.toggleChat()">
+            <i class="fas fa-robot"></i>
+            <span class="chat-badge">AI</span>
+        </div>
+        
+        <div id="chatWindow" class="chat-window hidden">
+            <div class="chat-header">
+                <div class="chat-header-content">
+                    <i class="fas fa-robot"></i>
+                    <div>
+                        <h4>Assistente ILT</h4>
+                        <span class="chat-status">Online</span>
+                    </div>
+                </div>
+                <button class="chat-close" onclick="VirtualAssistant.toggleChat()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div id="chatMessages" class="chat-messages">
+                <div class="message assistant-message">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>Ciao! Sono l'assistente virtuale di ILT Logistics. Come posso aiutarti oggi?</p>
+                        <div class="message-time">Ora</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="VirtualAssistant.sendQuickMessage('Come funziona la refrigerazione?')">
+                        <i class="fas fa-snowflake"></i> Refrigerazione
+                    </button>
+                    <button class="quick-btn" onclick="VirtualAssistant.sendQuickMessage('Come creo un ticket domicilio?')">
+                        <i class="fas fa-home"></i> Domicilio
+                    </button>
+                    <button class="quick-btn" onclick="VirtualAssistant.sendQuickMessage('Come timbro l\'ingresso?')">
+                        <i class="fas fa-clock"></i> Timbratura
+                    </button>
+                    <button class="quick-btn" onclick="VirtualAssistant.sendQuickMessage('Covercare informazioni')">
+                        <i class="fas fa-info-circle"></i> Covercare
+                    </button>
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="chatInput" placeholder="Scrivi un messaggio..." onkeypress="VirtualAssistant.handleKeyPress(event)">
+                    <button onclick="VirtualAssistant.sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
