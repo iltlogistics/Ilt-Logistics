@@ -1306,6 +1306,10 @@
                                 <input type="text" id="c_intervention_date" readonly style="background: rgba(14, 165, 233, 0.1); border-color: var(--border-color); cursor: not-allowed; color: var(--primary); font-weight: 600;">
                             </div>
                             <div class="form-group">
+                                <label>Ora Intervento</label>
+                                <input type="time" id="c_intervention_time" style="padding: 10px;">
+                            </div>
+                            <div class="form-group">
                                 <label>Telefono</label>
                                 <div style="position: relative;">
                                     <input type="tel" id="c_tel" placeholder="333 1234567">
@@ -3618,7 +3622,7 @@ www.iltlogistics.it`;
             }); 
             Utils.id('materialsTotal').innerText = total.toFixed(2); 
         },
-        updateSummary: () => { const nome = Utils.id('c_nome').value; const data = Utils.id('c_intervention_date').value; const tipo = Utils.id('i_tipo').selectedOptions[0]?.text || '-'; const op = Utils.id('op_name').value; const tot = Utils.id('materialsTotal').innerText; const summaryContent = Utils.id('summaryContent'); if (!summaryContent) return; summaryContent.innerHTML = `<div class="summary-row"><span class="summary-label">Cliente</span><span class="summary-value">${nome}</span></div><div class="summary-row"><span class="summary-label">Data Intervento</span><span class="summary-value">${data}</span></div><div class="summary-row"><span class="summary-label">Operatore</span><span class="summary-value">${op}</span></div><div class="summary-row"><span class="summary-label">Tipo Intervento</span><span class="summary-value">${tipo}</span></div><div class="summary-row"><span class="summary-label">Totale</span><span class="summary-value" style="color: var(--success); font-size: 1.2rem;">E ${tot}</span></div>`; },
+        updateSummary: () => { const nome = Utils.id('c_nome').value; const data = Utils.id('c_intervention_date').value; const ora = Utils.id('c_intervention_time').value; const tipo = Utils.id('i_tipo').selectedOptions[0]?.text || '-'; const op = Utils.id('op_name').value; const tot = Utils.id('materialsTotal').innerText; const summaryContent = Utils.id('summaryContent'); if (!summaryContent) return; summaryContent.innerHTML = `<div class="summary-row"><span class="summary-label">Cliente</span><span class="summary-value">${nome}</span></div><div class="summary-row"><span class="summary-label">Data Intervento</span><span class="summary-value">${data}</span></div><div class="summary-row"><span class="summary-label">Ora Intervento</span><span class="summary-value">${ora || '-'}</span></div><div class="summary-row"><span class="summary-label">Operatore</span><span class="summary-value">${op}</span></div><div class="summary-row"><span class="summary-label">Tipo Intervento</span><span class="summary-value">${tipo}</span></div><div class="summary-row"><span class="summary-label">Totale</span><span class="summary-value" style="color: var(--success); font-size: 1.2rem;">E ${tot}</span></div>`; },
         collectData: () => { 
             const count = parseInt(Utils.id('m_count').value) || 1; 
             const machines = []; 
@@ -3640,7 +3644,8 @@ www.iltlogistics.it`;
                 client: { 
                     nome: Utils.id('c_nome').value, 
                     indirizzo: Utils.id('c_indirizzo').value, 
-                    dataIntervento: Utils.id('c_intervention_date').value, 
+                    dataIntervento: Utils.id('c_intervention_date').value,
+                    oraIntervento: Utils.id('c_intervention_time').value,
                     date: Utils.id('c_date').value, 
                     tel: Utils.id('c_tel').value, 
                     email: Utils.id('c_email').value, 
