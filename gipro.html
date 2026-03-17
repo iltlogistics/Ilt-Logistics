@@ -1384,6 +1384,12 @@
                     <p>Caldaie, termosifoni, pompe di calore</p>
                 </div>
 
+                <div class="dash-card" onclick="App.goToInterventi()" style="--primary: #8b5cf6; --primary-dark: #7c3aed;">
+                    <span class="dash-icon">🔧</span>
+                    <div class="dash-title">Interventi</div>
+                    <p>Gestione completa interventi e ticket</p>
+                </div>
+
                 <div class="dash-card timbra" onclick="App.goToTimbratura()">
                     <span class="dash-icon">🕐</span>
                     <div class="dash-title">Timbra</div>
@@ -1398,7 +1404,7 @@
                 
                 <!-- NUOVA CARD: COVERCARE -->
                 <div class="dash-card covercare" onclick="App.goToCovercare()">
-                    <span class="dash-icon">🏥</span>
+                    <span class="dash-icon">🛡️</span>
                     <div class="dash-title">Covercare</div>
                     <p>Modulo intervento Covercare</p>
                 </div>
@@ -1410,12 +1416,6 @@
                     <p>Messaggi diretti e avvisi team</p>
                 </div>
 
-                <div class="dash-card" onclick="App.goToHistory()">
-                    <span class="dash-icon">📂</span>
-                    <div class="dash-title">Storico</div>
-                    <p>Visualizza e scarica interventi passati</p>
-                </div>
-                
                 <div id="adminQuickLink" class="hidden">
                     <div class="dash-card warehouse" onclick="App.goToWarehouse()">
                         <span class="dash-icon">📦</span>
@@ -1516,7 +1516,7 @@
             <!-- TABELLA TICKET DOMICILIO -->
             <div class="table-responsive">
                 <table>
-                    <thead><tr><th style="width: 30px;"></th><th>Data</th><th>Cliente</th><th>Indirizzo</th><th>Tipo</th><th>Operatore</th><th>Stato</th><th>Azioni</th></tr></thead>
+                    <thead><tr><th style="width: 30px;"></th><th>Data/Ora</th><th>Cliente</th><th>Indirizzo</th><th>Tipo</th><th>Operatore</th><th>Stato</th><th>Azioni</th></tr></thead>
                     <tbody id="domicileTableBody"></tbody>
                 </table>
             </div>
@@ -1607,6 +1607,9 @@
             </div>
             <div class="card">
                 <h3 style="margin:0 0 20px; font-size: 1.2rem; color: var(--text-secondary);">Messaggi Ricevuti</h3>
+                <div id="messagesContainer" style="max-height: 400px; overflow-y: auto; padding: 10px 0;">
+                    <!-- I messaggi verranno caricati qui dinamicamente -->
+                </div>
             </div>
         </div>
     </div>
@@ -2095,20 +2098,6 @@
         </div>
     </div>
 
-    <!-- VIEW: HISTORY -->
-    <div id="view-history" class="view">
-        <div class="container">
-            <div class="card">
-                <div class="flex-between mb-2">
-                    <h2 style="margin:0;">Storico Interventi</h2>
-                    <button class="btn btn-primary" onclick="App.goToDashboard()">Torna alla Home</button>
-                </div>
-                <input type="text" id="searchHistory" placeholder="Cerca cliente..." onkeyup="HistoryManager.render()" style="margin-bottom:20px; padding:14px 18px; border-radius:30px; width:100%; max-width:350px;">
-                <div class="table-responsive"><table><thead><tr><th>Data</th><th>Ora</th><th>Cliente</th><th>Cat</th><th>Tipo</th><th>Importo</th><th>Autore</th><th>Azioni</th></tr></thead><tbody id="historyBody"></tbody></table></div>
-            </div>
-        </div>
-    </div>
-
     <!-- VIEW: WAREHOUSE -->
     <div id="view-warehouse" class="view">
                 <div class="category-filter" id="locationFilter" style="margin-bottom: 10px;">
@@ -2182,6 +2171,82 @@
         </div>
     </div>
 
+    <!-- VIEW: INTERVENTI -->
+    <div id="view-interventi" class="view">
+        <div class="container">
+            <div class="card">
+                <div class="flex-between mb-2">
+                    <h2 style="margin:0; color: var(--primary);">🔧 Gestione Interventi</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-secondary" onclick="App.goToDashboard()">Torna alla Home</button>
+                    </div>
+                </div>
+
+                <!-- STATISTICHE INTERVENTI -->
+                <div class="warehouse-stats" style="margin-bottom: 25px;">
+                    <div class="stat-card" style="border-left-color: var(--primary);">
+                        <div class="stat-value" id="interventiTotali">0</div>
+                        <div class="stat-label">Totali</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: var(--success);">
+                        <div class="stat-value" id="interventiCompletati">0</div>
+                        <div class="stat-label">Completati</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: var(--warning);">
+                        <div class="stat-value" id="interventiInCorso">0</div>
+                        <div class="stat-label">In Corso</div>
+                    </div>
+                    <div class="stat-card" style="border-left-color: var(--danger);">
+                        <div class="stat-value" id="interventiAssegnati">0</div>
+                        <div class="stat-label">Assegnati</div>
+                    </div>
+                </div>
+
+                <!-- FILTRI -->
+                <div class="flex-between mb-2" style="flex-wrap: wrap; gap: 15px; align-items: center;">
+                    <input type="text" id="searchInterventi" placeholder="Cerca cliente, indirizzo o tipo intervento..." onkeyup="InterventiManager.render()" style="padding:12px 16px; border-radius:30px; border: 2px solid var(--border-color); background: var(--bg-body); width: 100%; max-width: 400px; color: var(--text-primary);">
+                    
+                    <div class="action-group" style="flex-wrap: wrap;">
+                        <div class="category-filter" id="interventiStatusFilter" style="margin-bottom: 0; margin-right: 10px;">
+                            <button class="category-btn active" onclick="InterventiManager.filterStatus('')">Tutti</button>
+                            <button class="category-btn" onclick="InterventiManager.filterStatus('completato')">Completati</button>
+                            <button class="category-btn" onclick="InterventiManager.filterStatus('in corso')">In Corso</button>
+                            <button class="category-btn" onclick="InterventiManager.filterStatus('assegnato')">Assegnati</button>
+                        </div>
+                        <select id="filterInterventiCategory" onchange="InterventiManager.render()" style="padding: 8px 12px; border-radius: 20px; border: 2px solid var(--border-color); background: var(--bg-body); color: var(--text-primary);">
+                            <option value="">Tutte le Categorie</option>
+                            <option value="refrigerazione">Refrigerazione</option>
+                            <option value="riscaldamento">Riscaldamento</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- TABELLA INTERVENTI -->
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data</th>
+                                <th>Cliente</th>
+                                <th>Indirizzo</th>
+                                <th>Tipo</th>
+                                <th>Categoria</th>
+                                <th>Operatore</th>
+                                <th>Stato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="interventiTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="text-right mt-2">
+                <button class="btn btn-success" onclick="InterventiManager.saveOrder()"><i class="fas fa-save"></i> Salva Ordine Commesse</button>
+            </div>
+        </div>
+    </div>
+
     <!-- VIEW: EXTERNAL IFRAME -->
     <div id="view-external" class="view external-view-container">
         <button id="closeIframeBtn" class="close-iframe-btn" onclick="App.closeExternalView()">
@@ -2226,7 +2291,16 @@
             confirm: (title, msg, callback) => { Utils.id('modalTitle').innerText = title; Utils.id('modalMessage').innerText = msg; const btn = Utils.id('modalConfirmBtn'); UI.openModal('confirmModal'); const newBtn = btn.cloneNode(true); btn.parentNode.replaceChild(newBtn, btn); newBtn.onclick = () => { UI.closeModal('confirmModal'); callback(); }; },
             openModal: (id) => { Utils.id(id).style.display = 'flex'; document.body.classList.add('modal-open'); },
             closeModal: (id) => { Utils.id(id).style.display = 'none'; document.body.classList.remove('modal-open'); },
-            showView: (id) => { document.querySelectorAll('.view').forEach(el => el.classList.remove('active')); Utils.id(id).classList.add('active'); window.scrollTo(0, 0); }
+            showView: (id) => { 
+                const viewElement = Utils.id(id);
+                if (!viewElement) {
+                    console.error(`View element with id '${id}' not found`);
+                    return;
+                }
+                document.querySelectorAll('.view').forEach(el => el.classList.remove('active')); 
+                viewElement.classList.add('active'); 
+                window.scrollTo(0, 0); 
+            }
         };
 
         // ========== AUTH ==========
@@ -2289,11 +2363,38 @@
             localInterventions: [], localUsers: [], localLogs: [], localWarehouse: [], localMaterialHistory: [], localMessages: [], localDomicileTickets: [],
             setup: () => {
                 if (!firebaseReady || !db) return;
-                db.collection("interventions").orderBy("client.date", "desc").onSnapshot(snapshot => { Store.localInterventions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); if (Utils.id('view-history').classList.contains('active')) HistoryManager.render(); }, err => console.error(err));
+                db.collection("interventions").orderBy("client.dataIntervento", "desc").onSnapshot(snapshot => { 
+    Store.localInterventions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
+    
+    // Controllo automatico: cambia stato da 'assegnato' a 'in corso' se la data è odierna
+    const today = new Date().toLocaleDateString('it-IT');
+    Store.localInterventions.forEach(intervention => {
+        if (intervention.status === 'assegnato' && intervention.client?.dataIntervento) {
+            const interventionDate = new Date(intervention.client.dataIntervento.split('/').reverse().join('-')).toLocaleDateString('it-IT');
+            if (interventionDate === today) {
+                // Cambia stato automaticamente
+                db.collection("interventions").doc(intervention.id).update({
+                    status: 'in corso'
+                }).then(() => {
+                    console.log(`Commessa ${intervention.id} passata automaticamente in 'In Corso' - Data: ${intervention.client.dataIntervento}`);
+                }).catch(err => {
+                    console.error('Errore aggiornamento stato automatico:', err);
+                });
+            }
+        }
+    });
+    
+    const interventiView = Utils.id('view-interventi');
+    if (interventiView && interventiView.classList.contains('active')) InterventiManager.render(); 
+}, err => console.error(err));
                 db.collection("warehouse").onSnapshot(snapshot => { Store.localWarehouse = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); if (Utils.id('view-warehouse').classList.contains('active')) Warehouse.render(); }, err => console.error(err));
                 db.collection("logs").orderBy("time", "desc").limit(200).onSnapshot(snapshot => { Store.localLogs = snapshot.docs.map(doc => doc.data()); if (Auth.currentUser?.role === 'admin') Admin.renderLogs(); }, err => console.error(err));
                 db.collection("material_history").orderBy("time", "desc").limit(500).onSnapshot(snapshot => { Store.localMaterialHistory = snapshot.docs.map(doc => doc.data()); }, err => console.error(err));
                 db.collection("messages").orderBy("timestamp", "desc").limit(50).onSnapshot(snapshot => { Store.localMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); if (Utils.id('view-communication').classList.contains('active')) CommunicationManager.render(); CommunicationManager.updateNotificationBadge(); }, err => console.error(err));
+                db.collection("users").onSnapshot(snapshot => { 
+                    Store.localUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
+                    console.log('DEBUG: Utenti caricati da Firebase:', Store.localUsers.length, Store.localUsers); 
+                }, err => console.error('DEBUG: Errore caricamento utenti:', err));
                 db.collection("domicile_tickets").orderBy("date", "desc").onSnapshot(snapshot => { 
                     console.log('[STORE] onSnapshot domicile_tickets - changes:', snapshot.docChanges().length, 'docs:', snapshot.docs.length);
                     Store.localDomicileTickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
@@ -2327,14 +2428,31 @@
             init: () => { FormManager.reset(); if (Auth.currentUser?.role === 'admin') { Admin.renderUsers(); Warehouse.render(); } CommunicationManager.updateNotificationBadge(); CallManager.init(); },
             goToDashboard: () => UI.showView('view-dashboard'),
             goToForm: (category) => { FormManager.reset(); FormManager.setCategory(category); FormManager.renderMachines(); UI.showView('view-form'); },
-            goToHistory: () => { HistoryManager.render(); UI.showView('view-history'); },
             goToAdmin: () => { Admin.renderUsers(); Admin.renderLogs(); UI.showView('view-admin'); },
             goToWarehouse: () => { Warehouse.render(); UI.showView('view-warehouse'); },
-            goToCommunication: () => { CommunicationManager.render(); UI.showView('view-communication'); },
+            goToCommunication: () => { 
+                // Forza ricaricamento utenti sempre per debug
+                db.collection("users").get().then(snapshot => {
+                    Store.localUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    console.log('DEBUG: Utenti ricaricati manualmente:', Store.localUsers.length, Store.localUsers);
+                    CommunicationManager.render(); 
+                    UI.showView('view-communication');
+                }).catch(err => {
+                    console.error('DEBUG: Errore ricaricamento utenti:', err);
+                    CommunicationManager.render(); 
+                    UI.showView('view-communication');
+                });
+            },
             goToDomicile: () => { DomicileManager.init(); DomicileManager.render(); UI.showView('view-domicile'); },
             goToTimbratura: () => { 
                 UI.showView('view-timbrature'); 
                 TimbraManager.init();
+            },
+            goToInterventi: () => { 
+                UI.showView('view-interventi'); 
+                InterventiManager.init();
+                // Forza render immediato per mostrare subito le commesse
+                setTimeout(() => InterventiManager.render(), 100);
             },
             
             goToEquipment: () => { App.openExternalView('attrezzatura.html'); },
@@ -2374,7 +2492,14 @@
             finalizeSave: (status) => {
                 UI.closeModal('statusModal'); 
                 const data = FormManager.collectData(); 
-                data.status = status;
+                
+                // Mappa degli stati
+                const statusMap = {
+                    'chiuso': 'completato',
+                    'sospeso': 'da programmare'
+                };
+                
+                data.status = statusMap[status] || status;
 
                 const materialsToConsume = data.materials.filter(m => m.fromWarehouse);
 
@@ -2426,10 +2551,15 @@
                 Utils.id('c_date').value = data.client.date || Utils.today(); Utils.id('c_tel').value = data.client.tel || ''; Utils.id('c_email').value = data.client.email || ''; Utils.id('c_fiscal').value = data.client.fiscal || ''; Utils.id('c_receipt_no').value = data.client.receipt_no || '';
                 Utils.id('op_name').value = data.author || ''; Utils.id('i_tipo').value = data.intervention.tipo; Utils.id('i_note').value = data.intervention.note || '';
                 FormManager.toggleTypeFields();
-                setTimeout(() => { Object.entries(data.intervention.techData).forEach(([k, v]) => { const el = Utils.id(k); if (el) el.value = v; }); }, 100);
-                Utils.id('m_count').value = data.machines.length || (data.intervention && data.intervention.machineCount) || 1; FormManager.renderMachines();
                 setTimeout(() => { 
-                    data.machines.forEach((m, i) => { 
+                    if (data.intervention && data.intervention.techData) {
+                        Object.entries(data.intervention.techData).forEach(([k, v]) => { const el = Utils.id(k); if (el) el.value = v; }); 
+                    } 
+                }, 100);
+                Utils.id('m_count').value = (data.machines && data.machines.length) || (data.intervention && data.intervention.machineCount) || 1; FormManager.renderMachines();
+                setTimeout(() => { 
+                    if (data.machines && Array.isArray(data.machines)) {
+                        data.machines.forEach((m, i) => { 
                         const idx = i + 1; 
                         const setVal = (name, val) => { const el = document.querySelector(`[name="m_${idx}_${name}"]`); if (el) el.value = val || ''; }; 
                         setVal('brand', m.brand); 
@@ -2444,7 +2574,7 @@
                         setVal('room', m.room); 
                         FormManager.calcEmissions(idx); 
                     }); 
-                }, 100);
+                }}, 100);
                 FormManager.materials = data.materials || []; FormManager.renderMaterials();
             },
             downloadPDF: (id) => { const data = Store.getById(id); if (data) PDF.generate(data); },
@@ -2469,6 +2599,23 @@
                     Store.addLog(`Intervento eliminato da ${Auth.currentUser.username}`); 
                     UI.showToast('Intervento eliminato', 'info'); 
                 }); 
+            },
+
+            executeIntervention: (id) => {
+                const item = Store.getById(id);
+                if(!item) return;
+                
+                // Cambia stato da 'assegnato' a 'in corso' se necessario
+                if (item.status === 'assegnato') {
+                    item.status = 'in corso';
+                    item.author = Auth.currentUser.username;
+                    Store.save(item);
+                    UI.showToast('Intervento avviato! Stato cambiato in "In Corso"', 'success');
+                }
+                
+                // Carica il form di modifica con i dati precompilati
+                App.loadEdit(id);
+                UI.showToast('Compila i dati tecnici e firma per chiudere la commessa', 'info');
             },
 
             callPhone: () => {
@@ -2521,6 +2668,15 @@
             acceptAssignment: () => {
                 const id = Utils.id('assignment_id').value;
                 UI.closeModal('assignmentModal');
+                
+                // Cambia stato da 'assegnato' a 'in corso'
+                const item = Store.getById(id);
+                if (item && item.status === 'assegnato') {
+                    item.status = 'in corso';
+                    item.author = Auth.currentUser.username; // Imposta l'operatore corrente come autore
+                    Store.save(item);
+                    UI.showToast('Commessa accettata! Stato cambiato in "In Corso"', 'success');
+                }
                 
                 App.loadEdit(id); 
                 
@@ -3793,7 +3949,7 @@ www.iltlogistics.it`;
         const CommunicationManager = {
             currentAttachment: null,
             updateNotificationBadge: () => { const badge = Utils.id('commBadge'); if (!badge || !Auth.currentUser) return; const currentUser = Auth.currentUser; const messages = Store.getMessages(); const unreadCount = messages.filter(msg => { const isAddressedToMe = (msg.recipient === 'all') || (msg.recipient === currentUser.username) || (currentUser.role === 'admin' && msg.recipient === 'admin'); const isRead = msg.read === true; if (msg.author === currentUser.username) return false; return isAddressedToMe && !isRead; }).length; if (unreadCount > 0) { badge.innerText = unreadCount; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); } },
-            render: () => { const container = Utils.id('messagesContainer'); const recipientSelect = Utils.id('msgRecipient'); if (!container || !recipientSelect) return; const currentUser = Auth.currentUser; const currentVal = recipientSelect.value; recipientSelect.innerHTML = '<option value="all">📢 A Tutti (Bacheca Generale)</option>'; if (currentUser.role === 'admin') { Store.getUsers().forEach(u => { if (u.username !== currentUser.username) { recipientSelect.innerHTML += `<option value="${u.username}">👤 A ${u.username}</option>`; } }); } else { recipientSelect.innerHTML += '<option value="admin">👔 All\'Amministratore</option>'; } recipientSelect.value = currentVal || 'all'; const allMessages = Store.getMessages(); const visibleMessages = allMessages.filter(msg => { const isAdmin = currentUser.role === 'admin'; const isSender = msg.author === currentUser.username; const isBroadcast = msg.recipient === 'all'; if (isSender) return true; if (isBroadcast) return true; if (msg.recipient === currentUser.username) return true; if (isAdmin && msg.recipient === 'admin') return true; return false; }); if (visibleMessages.length === 0) { container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-secondary);">Nessun messaggio presente.</div>'; return; } container.innerHTML = visibleMessages.map(m => { let recipientLabel = m.recipient !== 'all' ? `<span class="message-to">(Privato per: ${m.recipient})</span>` : ''; const isRead = m.read === true; if (!isRead && m.author !== currentUser.username) Store.markMessageRead(m.id); let attachmentHtml = ''; if(m.attachment) { attachmentHtml = `<img src="${m.attachment}" class="message-attachment-img" alt="Allegato">`; } return `<div class="message-bubble ${isRead ? '' : 'unread'}"><div class="message-meta"><div><span class="message-author">${m.author}</span>${recipientLabel}</div><span>${m.time}</span></div><div class="message-content">${m.content.replace(/\n/g, '<br>')}</div>${attachmentHtml}${Auth.currentUser.role === 'admin' || Auth.currentUser.username === m.author ? `<div class="text-right" style="margin-top:10px;"><button class="btn btn-sm btn-danger" onclick="CommunicationManager.delete('${m.id}')">Elimina</button></div>` : ''}</div>`; }).join(''); },
+            render: () => { const container = Utils.id('messagesContainer'); const recipientSelect = Utils.id('msgRecipient'); if (!container || !recipientSelect) return; const currentUser = Auth.currentUser; const currentVal = recipientSelect.value; recipientSelect.innerHTML = '<option value="all">📢 A Tutti (Bacheca Generale)</option>'; if (currentUser.role === 'admin') { const users = Store.getUsers(); console.log('DEBUG: Utenti caricati:', users); users.forEach(u => { if (u.username !== currentUser.username) { recipientSelect.innerHTML += `<option value="${u.username}">👤 A ${u.username}</option>`; } }); } else { recipientSelect.innerHTML += '<option value="admin">👔 All\'Amministratore</option>'; } recipientSelect.value = currentVal || 'all'; const allMessages = Store.getMessages(); const visibleMessages = allMessages.filter(msg => { const isAdmin = currentUser.role === 'admin'; const isSender = msg.author === currentUser.username; const isBroadcast = msg.recipient === 'all'; if (isSender) return true; if (isBroadcast) return true; if (msg.recipient === currentUser.username) return true; if (isAdmin && msg.recipient === 'admin') return true; return false; }); if (visibleMessages.length === 0) { container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-secondary);">Nessun messaggio presente.</div>'; return; } container.innerHTML = visibleMessages.map(m => { let recipientLabel = m.recipient !== 'all' ? `<span class="message-to">(Privato per: ${m.recipient})</span>` : ''; const isRead = m.read === true; if (!isRead && m.author !== currentUser.username) Store.markMessageRead(m.id); let attachmentHtml = ''; if(m.attachment) { attachmentHtml = `<img src="${m.attachment}" class="message-attachment-img" alt="Allegato">`; } return `<div class="message-bubble ${isRead ? '' : 'unread'}"><div class="message-meta"><div><span class="message-author">${m.author}</span>${recipientLabel}</div><span>${m.time}</span></div><div class="message-content">${m.content.replace(/\n/g, '<br>')}</div>${attachmentHtml}${Auth.currentUser.role === 'admin' || Auth.currentUser.username === m.author ? `<div class="text-right" style="margin-top:10px;"><button class="btn btn-sm btn-danger" onclick="CommunicationManager.delete('${m.id}')">Elimina</button></div>` : ''}</div>`; }).join(''); },
             sendMessage: () => { const content = Utils.id('newMessageContent').value.trim(); const recipient = Utils.id('msgRecipient').value; if (!content) { UI.showToast('Scrivi un messaggio', 'error'); return; } const msg = { content: content, author: Auth.currentUser.username, recipient: recipient, time: new Date().toLocaleString('it-IT'), timestamp: firebase.firestore.FieldValue.serverTimestamp(), read: false }; if (CommunicationManager.currentAttachment) { msg.attachment = CommunicationManager.currentAttachment; } Store.saveMessage(msg); Store.addLog(`Messaggio inviato da ${Auth.currentUser.username} a ${recipient}`); Utils.id('newMessageContent').value = ''; CommunicationManager.clearAttachment(); UI.showToast('Messaggio inviato', 'success'); },
             previewAttachment: (event) => {
                 const file = event.target.files[0];
@@ -4682,97 +4838,7 @@ www.iltlogistics.it`;
         }
     };
 
-    // ========== HISTORY MANAGER ==========
-    const HistoryManager = {
-        render: () => { 
-            const tbody = Utils.id('historyBody'); 
-            if (!tbody) return; 
             
-            const filter = Utils.id('searchHistory')?.value?.toLowerCase() || ''; 
-            tbody.innerHTML = ''; 
-            
-            let items = Store.getAll();
-
-            // Filtro per utente (non admin)
-            if (Auth.currentUser && Auth.currentUser.role !== 'admin') {
-                items = items.filter(i => i.author === Auth.currentUser.username || i.assignedTo === Auth.currentUser.username);
-            }
-
-            items = items.filter(i => i.client.nome.toLowerCase().includes(filter));
-
-            // Ordinamento per data intervento decrescente (più recente prima)
-            items.sort((a, b) => {
-                const dateA = a.client?.dataIntervento ? new Date(a.client.dataIntervento.split('/').reverse().join('-')) : new Date(0);
-                const dateB = b.client?.dataIntervento ? new Date(b.client.dataIntervento.split('/').reverse().join('-')) : new Date(0);
-                return dateB - dateA;
-            });
-
-            if (items.length === 0) { 
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">Nessun intervento trovato</td></tr>'; 
-                return; 
-            } 
-            
-            items.forEach(item => { 
-                const badge = item.category === 'riscaldamento' ? '<span class="badge badge-hot">Caldo</span>' : '<span class="badge badge-cold">Freddo</span>'; 
-                
-                let rowClass = '';
-                let actions = '';
-
-                // Gestione Visuale Commesse Assegnate
-                if (item.status === 'assegnato') {
-                    rowClass = 'row-assigned';
-                    
-                    // Logica permessi per commesse assegnate
-                    if (Auth.currentUser && Auth.currentUser.role === 'admin') {
-                        // L'admin può visualizzare, modificare ed eliminare commesse assegnate
-                        actions = `
-                            <button class="btn btn-sm btn-warning" onclick="App.openAssignmentDetails('${item.id}')"><i class="fas fa-eye"></i> Visualizza Commessa</button>
-                            <button class="btn btn-sm btn-primary" onclick="App.loadEdit('${item.id}')">Modifica</button>
-                            <button class="btn btn-sm btn-danger" onclick="App.deleteItem('${item.id}')">Elimina</button>
-                        `;
-                    } else {
-                        // Gli utenti standard possono solo visualizzare le proprie commesse
-                        if (item.assignedTo === Auth.currentUser.username || item.author === Auth.currentUser.username) {
-                            actions = `
-                                <button class="btn btn-sm btn-warning" onclick="App.openAssignmentDetails('${item.id}')"><i class="fas fa-eye"></i> Visualizza Commessa</button>
-                                <button class="btn btn-sm btn-primary" onclick="App.loadEdit('${item.id}')">Modifica</button>
-                            `;
-                        } else {
-                            // Commesse assegnate ad altri operatori - solo visualizzazione
-                            actions = `<button class="btn btn-sm btn-warning" onclick="App.openAssignmentDetails('${item.id}')"><i class="fas fa-eye"></i> Visualizza Commessa</button>`;
-                        }
-                    }
-                } else {
-                    rowClass = item.status === 'chiuso' ? 'row-closed' : 'row-suspended';
-                    
-                    // MODIFICA: Logica permessi admin
-                    if (Auth.currentUser && Auth.currentUser.role === 'admin') {
-                        // L'admin può sempre modificare ed eliminare
-                        actions = `
-                            <button class="btn btn-sm btn-primary" onclick="App.loadEdit('${item.id}')">Modifica</button>
-                            <button class="btn btn-sm btn-success" onclick="App.downloadPDF('${item.id}')">PDF</button>
-                            <button class="btn btn-sm btn-danger" onclick="App.deleteItem('${item.id}')">Elimina</button>
-                        `;
-                    } else {
-                        // Gli utenti standard vedono solo PDF
-                        actions = `<button class="btn btn-sm btn-success" onclick="App.downloadPDF('${item.id}')">PDF</button>`;
-                    }
-                }
-
-                tbody.innerHTML += `<tr class="${rowClass}">
-                    <td>${item.client.date}</td>
-                    <td>${item.client.oraIntervento || '-'}</td>
-                    <td><strong>${item.client.nome}</strong></td>
-                    <td>${badge}</td>
-                    <td>${item.intervention.tipo_label || '-'}</td>
-                    <td>E ${item.total}</td>
-                    <td>${item.author || '-'}</td>
-                    <td>${actions}</td>
-                </tr>`; 
-            }); 
-        }
-    };
-        
     // ========== TIMBRA MANAGER ==========
     const TimbraManager = {
         html5QrCode: null,
@@ -5337,67 +5403,461 @@ www.iltlogistics.it`;
         }
     };
 
+    // ========== INTERVENTI MANAGER ==========
+    const InterventiManager = {
+        currentStatusFilter: '',
+        currentCategoryFilter: '',
+        
+        init: () => {
+            InterventiManager.updateStats();
+            InterventiManager.render();
+        },
+        
+        updateStats: () => {
+            const interventions = Store.getAll();
+            const total = interventions.length;
+            const completati = interventions.filter(i => i.status === 'completato' || i.status === 'chiuso').length;
+            const inCorso = interventions.filter(i => i.status === 'in corso').length;
+            const assegnati = interventions.filter(i => i.status === 'assegnato').length;
+            
+            Utils.id('interventiTotali').innerText = total;
+            Utils.id('interventiCompletati').innerText = completati;
+            Utils.id('interventiInCorso').innerText = inCorso;
+            Utils.id('interventiAssegnati').innerText = assegnati;
+        },
+        
+        filterStatus: (status) => {
+            InterventiManager.currentStatusFilter = status;
+            
+            // Aggiorna l'aspetto dei pulsanti
+            document.querySelectorAll('#interventiStatusFilter .category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            InterventiManager.render();
+        },
+        
+        getInterventiFiltrati: () => {
+            let interventions = Store.getAll();
+            
+            // Filtra per stato
+            if (InterventiManager.currentStatusFilter) {
+                interventions = interventions.filter(i => i.status === InterventiManager.currentStatusFilter);
+            }
+            
+            // Filtra per categoria
+            const categoryFilter = Utils.id('filterInterventiCategory').value;
+            if (categoryFilter) {
+                interventions = interventions.filter(i => i.category === categoryFilter);
+            }
+            
+            // Filtra per testo di ricerca
+            const searchText = Utils.id('searchInterventi').value.toLowerCase();
+            if (searchText) {
+                interventions = interventions.filter(i => 
+                    (i.client && i.client.nome && i.client.nome.toLowerCase().includes(searchText)) ||
+                    (i.client && i.client.indirizzo && i.client.indirizzo.toLowerCase().includes(searchText)) ||
+                    (i.intervention && i.intervention.tipo && i.intervention.tipo.toLowerCase().includes(searchText)) ||
+                    (i.author && i.author.toLowerCase().includes(searchText))
+                );
+            }
+            
+            // Filtra per utente se non è admin
+            if (Auth.currentUser && Auth.currentUser.role !== 'admin') {
+                interventions = interventions.filter(i => 
+                    (i.author === Auth.currentUser.username) || 
+                    (i.assignedTo === Auth.currentUser.username)
+                );
+                
+                // Nasconde le commesse completate/chiusure agli operatori standard
+                interventions = interventions.filter(i => 
+                    i.status !== 'completato' && i.status !== 'chiuso'
+                );
+            }
+            
+            return interventions.sort((a, b) => {
+                const dateA = a.client?.dataIntervento ? new Date(a.client.dataIntervento.split('/').reverse().join('-')) : new Date(0);
+                const dateB = b.client?.dataIntervento ? new Date(b.client.dataIntervento.split('/').reverse().join('-')) : new Date(0);
+                return dateB - dateA;
+            });
+        },
+        
+        render: () => {
+            const tbody = Utils.id('interventiTableBody');
+            const interventions = InterventiManager.getInterventiFiltrati();
+            
+            if (interventions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-secondary);">Nessun intervento trovato</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = interventions.map(item => {
+                const statusBadge = InterventiManager.getStatusBadge(item.status);
+                const categoryBadge = InterventiManager.getCategoryBadge(item.category);
+                const date = item.client?.dataIntervento ? new Date(item.client.dataIntervento.split('/').reverse().join('-')).toLocaleDateString('it-IT') : 'N/D';
+                const time = item.client?.oraIntervento || 'N/D';
+                const isToday = item.client?.dataIntervento ? 
+                    new Date(item.client.dataIntervento.split('/').reverse().join('-')).toLocaleDateString('it-IT') === new Date().toLocaleDateString('it-IT') : false;
+                
+                return `
+                    <tr data-id="${item.id}">
+                        <td>${date} ${time !== 'N/D' ? `<br><small style="color: var(--text-secondary);">${time}</small>` : ''}</td>
+                        <td>${item.client.nome || 'N/D'}</td>
+                        <td>${item.client.indirizzo || 'N/D'}</td>
+                        <td>${item.intervention.tipo || 'N/D'}</td>
+                        <td>${categoryBadge}</td>
+                        <td>${item.author || 'N/D'}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                ${Auth.currentUser && Auth.currentUser.role === 'admin' ? `
+                                    <button class="btn btn-sm btn-outline" onclick="App.downloadPDF('${item.id}')" title="Scarica PDF">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline" onclick="App.loadEdit('${item.id}')" title="Modifica">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="App.deleteItem('${item.id}')" title="Elimina">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-sm ${isToday ? 'btn-primary' : 'btn-secondary'}" 
+                                            onclick="${isToday ? `App.executeIntervention('${item.id}')` : ''}" 
+                                            title="${isToday ? 'Esegui Intervento' : 'Non eseguibile: non è oggi'}"
+                                            ${!isToday ? 'disabled' : ''}>
+                                        <i class="fas fa-${isToday ? 'play' : 'lock'}"></i> ${isToday ? 'Esegui' : time}
+                                    </button>
+                                `}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Aggiorna le statistiche
+        },
+        
+        getCategoryBadge: (category) => {
+            const badges = {
+                'refrigerazione': '<span class="badge badge-cold">❄️ Refrigerazione</span>',
+                'riscaldamento': '<span class="badge badge-hot">🔥 Riscaldamento</span>',
+                'default': '<span class="badge badge-secondary">' + (category || 'N/D') + '</span>'
+            };
+            return badges[category] || badges.default;
+        },
+        
+        getStatusBadge: (status) => {
+            const badges = {
+                'completato': '<span class="badge badge-success">Completato</span>',
+                'chiuso': '<span class="badge badge-success">Completato</span>',
+                'in corso': '<span class="badge badge-warning">In Corso</span>',
+                'assegnato': '<span class="badge badge-danger">Assegnato</span>',
+                'default': '<span class="badge badge-secondary">' + (status || 'N/D') + '</span>'
+            };
+
+            return badges[status] || badges.default;
+        },
+        
+        saveOrder: () => {
+            const rows = Utils.id('interventiTableBody').querySelectorAll('tr');
+            if (rows.length === 0) return;
+
+            const today = Utils.today();
+            const batch = db.batch();
+            let count = 0;
+
+            rows.forEach((row, index) => {
+                const id = row.getAttribute('data-id');
+                if (!id) return;
+                
+                // Recupera l'intervento per verificare la data
+                const intervention = Store.getById(id);
+                if (!intervention) return;
+                
+                // Salva l'ordine solo per le commesse di oggi
+                if (intervention.client?.dataIntervento === today) {
+                    const ref = db.collection("interventions").doc(id);
+                    batch.update(ref, { 
+                        orderNumber: index + 1,
+                        orderIndex: index 
+                    });
+                    count++;
+                }
+            });
+
+            if (count === 0) {
+                UI.showToast('Nessuna commessa di oggi da ordinare', 'warning');
+                return;
+            }
+
+            batch.commit().then(() => {
+                UI.showToast(`Ordine salvato per ${count} commesse di oggi!`, 'success');
+                Store.addLog(`Ordine commesse aggiornato per ${count} commesse del ${today}`);
+                InterventiManager.render();
+            }).catch(err => {
+                console.error("Errore batch:", err);
+                UI.showToast('Errore critico salvataggio ordine', 'error');
+            });
+        },
+        
+        generateDailyReport: () => {
+            const today = Utils.today();
+            const interventions = Store.getAll().filter(i => 
+                i.client?.dataIntervento === today && 
+                (i.status === 'completato' || i.status === 'chiuso')
+            );
+
+            if (interventions.length === 0) {
+                UI.showToast('Nessun intervento completato oggi', 'warning');
+                return;
+            }
+
+            // Mostra dialog per inserire dati manuali
+            InterventiManager.showReportDataDialog(interventions);
+        },
+
+        showReportDataDialog: (interventions) => {
+            const dialogHtml = `
+                <div style="max-width: 600px; padding: 20px;">
+                    <h3 style="margin: 0 0 20px 0; color: var(--primary);">Dati Report Giornaliero</h3>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Veicoli Utilizzati</label>
+                        <input type="text" id="reportVehicles" placeholder="Esempio: AA123BB Fiat Ducato, CC456DD Iveco Daily" style="width: 100%; padding: 8px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Operatori Coinvolti</label>
+                        <input type="text" id="reportOperators" placeholder="Esempio: Mario Rossi, Luca Bianchi, Paolo Verdi" style="width: 100%; padding: 8px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Rifornimento Carburante (€)</label>
+                        <input type="number" id="reportFuel" placeholder="0.00" step="0.01" style="width: 100%; padding: 8px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Pedaggi (€)</label>
+                        <input type="number" id="reportTolls" placeholder="0.00" step="0.01" style="width: 100%; padding: 8px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Altre Spese (€)</label>
+                        <input type="number" id="reportOther" placeholder="0.00" step="0.01" style="width: 100%; padding: 8px;">
+                        <small style="color: var(--text-secondary);">Esempio: pranzi, parcheggi, ecc.</small>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 30px;">
+                        <button class="btn btn-secondary" onclick="UI.closeModal('reportDataModal')" style="margin-right: 10px;">Annulla</button>
+                        <button class="btn btn-primary" onclick="InterventiManager.generateCompleteReport(${JSON.stringify(interventions).replace(/"/g, '&quot;')})">Genera Report</button>
+                    </div>
+                </div>
+            `;
+
+            // Crea modal temporaneo
+            const modal = document.createElement('div');
+            modal.id = 'reportDataModal';
+            modal.className = 'modal';
+            modal.innerHTML = dialogHtml;
+            modal.style.display = 'flex';
+            document.body.appendChild(modal);
+            document.body.classList.add('modal-open');
+        },
+
+        generateCompleteReport: (interventions) => {
+            // Recupera dati dal form
+            const vehicles = Utils.id('reportVehicles').value;
+            const operators = Utils.id('reportOperators').value;
+            const fuelCost = parseFloat(Utils.id('reportFuel').value) || 0;
+            const tollsCost = parseFloat(Utils.id('reportTolls').value) || 0;
+            const otherCost = parseFloat(Utils.id('reportOther').value) || 0;
+            const totalExpenses = fuelCost + tollsCost + otherCost;
+
+            // Chiudi modal
+            UI.closeModal('reportDataModal');
+            const modal = Utils.id('reportDataModal');
+            if (modal) modal.remove();
+
+            // Ordina per ora di intervento
+            interventions.sort((a, b) => {
+                const timeA = a.client?.oraIntervento || '00:00';
+                const timeB = b.client?.oraIntervento || '00:00';
+                return timeA.localeCompare(timeB);
+            });
+
+            // Calcola statistiche finanziarie
+            const totalRevenue = interventions.reduce((sum, i) => sum + (parseFloat(i.total) || 0), 0);
+            const totalMaterials = interventions.reduce((sum, i) => {
+                const materials = i.materials || [];
+                return sum + materials.reduce((matSum, m) => matSum + (parseFloat(m.total) || 0), 0);
+            }, 0);
+            const totalLabor = totalRevenue - totalMaterials;
+            const netProfit = totalLabor - totalExpenses;
+
+            // Genera HTML del report esteso
+            const reportHtml = `
+                <div style="font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px;">
+                    <div style="text-align: center; border-bottom: 3px solid #007bff; padding-bottom: 20px; margin-bottom: 30px;">
+                        <h1 style="color: #007bff; margin: 0;">REPORT GIORNALIERO INTERVENTI COMPLETO</h1>
+                        <h2 style="color: #333; margin: 10px 0;">Data: ${new Date().toLocaleDateString('it-IT')}</h2>
+                        <p style="color: #666; margin: 5px 0;">Generato da: ${Auth.currentUser.username}</p>
+                        <p style="color: #666; margin: 5px 0;">Ora generazione: ${new Date().toLocaleTimeString('it-IT')}</p>
+                    </div>
+                    
+                    <!-- Riepilogo Finanziario -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                            <h3 style="color: #333; margin: 0 0 15px 0;">Riepilogo Interventi</h3>
+                            <p style="margin: 5px 0;"><strong>Totale interventi:</strong> ${interventions.length}</p>
+                            <p style="margin: 5px 0;"><strong>Operatori coinvolti:</strong> ${operators || 'N/D'}</p>
+                            <p style="margin: 5px 0;"><strong>Veicoli utilizzati:</strong> ${vehicles || 'N/D'}</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff;">
+                            <h3 style="color: #333; margin: 0 0 15px 0;">Riepilogo Finanziario</h3>
+                            <p style="margin: 5px 0;"><strong>Fatturato totale:</strong> <span style="color: #28a745;">€ ${totalRevenue.toFixed(2)}</span></p>
+                            <p style="margin: 5px 0;"><strong>Costo materiali:</strong> <span style="color: #dc3545;">€ ${totalMaterials.toFixed(2)}</span></p>
+                            <p style="margin: 5px 0;"><strong>Manodopera netta:</strong> <span style="color: #007bff;">€ ${totalLabor.toFixed(2)}</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Tabella Interventi Dettagliata -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background: #007bff; color: white;">
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">#</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Ora</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Cliente</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Indirizzo</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Telefono</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Tipo Intervento</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Operatore</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Incassato</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${interventions.map((intervention, index) => {
+                                const payment = parseFloat(intervention.total) || 0;
+                                return `
+                                    <tr style="${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${index + 1}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${intervention.client?.oraIntervento || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">${intervention.client?.nome || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${intervention.client?.indirizzo || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${intervention.client?.telefono || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${intervention.intervention?.tipo || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${intervention.author || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #28a745;">€ ${payment.toFixed(2)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+
+                    <!-- Dettaglio Materiali -->
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #333; margin: 0 0 15px 0; border-bottom: 2px solid #007bff; padding-bottom: 5px;">Dettaglio Materiali Utilizzati</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #6c757d; color: white;">
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Intervento</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Materiale</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Quantità</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Prezzo Unit.</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Totale</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${interventions.flatMap((intervention, idx) => {
+                                    const materials = intervention.materials || [];
+                                    if (materials.length === 0) return [];
+                                    return materials.map((material, matIdx) => `
+                                        <tr style="${(idx + matIdx) % 2 === 0 ? 'background: #f8f9fa;' : ''}">
+                                            <td style="padding: 8px; border: 1px solid #ddd;">${intervention.client?.nome || 'N/D'}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">${material.desc || 'N/D'}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">${material.qta || 0}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">€ ${(material.price || 0).toFixed(2)}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">€ ${(material.total || 0).toFixed(2)}</td>
+                                        </tr>
+                                    `);
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Spese Extra -->
+                    <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545; margin-bottom: 30px;">
+                        <h3 style="color: #721c24; margin: 0 0 15px 0;">Spese Extra del Giorno</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                            <div><strong>Rifornimenti:</strong> <span style="color: #dc3545;">€ ${fuelCost.toFixed(2)}</span></div>
+                            <div><strong>Pedaggi:</strong> <span style="color: #dc3545;">€ ${tollsCost.toFixed(2)}</span></div>
+                            <div><strong>Altre spese:</strong> <span style="color: #dc3545;">€ ${otherCost.toFixed(2)}</span></div>
+                        </div>
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #dc3545;">
+                            <strong>Totale spese:</strong> <span style="color: #dc3545; font-weight: bold;">€ ${totalExpenses.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    <!-- Riepilogo Finale -->
+                    <div style="background: #d4edda; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin-bottom: 20px;">
+                        <h3 style="color: #155724; margin: 0 0 15px 0;">Riepilogo Economico Finale</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                            <div>
+                                <p style="margin: 5px 0;"><strong>Fatturato:</strong> € ${totalRevenue.toFixed(2)}</p>
+                                <p style="margin: 5px 0;"><strong>Costo materiali:</strong> € ${totalMaterials.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p style="margin: 5px 0;"><strong>Spese veicolo:</strong> € ${totalExpenses.toFixed(2)}</p>
+                                <p style="margin: 5px 0;"><strong>Costi totali:</strong> € ${(totalMaterials + totalExpenses).toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p style="margin: 5px 0;"><strong>Manodopera:</strong> € ${totalLabor.toFixed(2)}</p>
+                                <p style="margin: 5px 0;"><strong>Guadagno netto:</strong> <span style="color: #28a745; font-weight: bold;">€ ${netProfit.toFixed(2)}</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; text-align: center; color: #666; font-size: 12px;">
+                        <p>Report generato automaticamente dal sistema GIPRO</p>
+                        <p>Tutti i dati sono relativi agli interventi completati in data ${new Date().toLocaleDateString('it-IT')}</p>
+                    </div>
+                </div>
+            `;
+
+            // Crea una finestra temporanea per il report
+            const reportWindow = window.open('', '_blank');
+            reportWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Report Giornaliero Interventi - ${new Date().toLocaleDateString('it-IT')}</title>
+                    <style>
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${reportHtml}
+                    <div class="no-print" style="text-align: center; margin: 20px 0;">
+                        <button onclick="window.print()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-right: 10px;">Stampa Report</button>
+                        <button onclick="window.close()" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Chiudi</button>
+                    </div>
+                </body>
+                </html>
+            `);
+            reportWindow.document.close();
+
+            UI.showToast(`Report completo generato per ${interventions.length} interventi! Fatturato: € ${totalRevenue.toFixed(2)}, Guadagno netto: € ${netProfit.toFixed(2)}`, 'success');
+            Store.addLog(`Report giornaliero completo generato da ${Auth.currentUser.username} - ${interventions.length} interventi, fatturato € ${totalRevenue.toFixed(2)}, guadagno € ${netProfit.toFixed(2)} del ${Utils.today()}`);
+        }
+    };
+
     // Inizializzazione Store e Auth
     Store.setup();
     window.onload = Auth.init;
-    </script>
+</script>
 <!-- VIRTUAL ASSISTANT -->
-    <div id="virtualAssistant" class="virtual-assistant">
-        <div id="chatButton" class="chat-button" onclick="VirtualAssistant.toggleChat()">
-            <i class="fas fa-robot"></i>
-            <span class="chat-badge">AI</span>
-        </div>
-        
-        <div id="chatWindow" class="chat-window hidden">
-            <div class="chat-header">
-                <div class="chat-header-content">
-                    <i class="fas fa-robot"></i>
-                    <div>
-                        <h4>Assistente ILT</h4>
-                        <span class="chat-status">Online</span>
-                    </div>
-                </div>
-                <button class="chat-close" onclick="VirtualAssistant.toggleChat()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            
-            <div id="chatMessages" class="chat-messages">
-                <div class="message assistant-message">
-                    <div class="message-avatar">
-                        <i class="fas fa-robot"></i>
-                    </div>
-                    <div class="message-content">
-                        <p>Ciao! Sono l'assistente virtuale di ILT Logistics. Come posso aiutarti oggi?</p>
-                        <div class="message-time">Ora</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="chat-input-container">
-                <div class="quick-actions">
-                    <button class="quick-btn" onclick="VirtualAssistant.sendQuickMessage('Come funziona la refrigerazione?')">
-                        <i class="fas fa-snowflake"></i> Refrigerazione
-                    </button>
-                    <button class="quick-btn" onclick="VirtualAssistant.sendQuickMessage('Come creo un ticket domicilio?')">
-                        <i class="fas fa-home"></i> Domicilio
-                    </button>
-                    <button class="quick-btn" onclick="VirtualAssistant.sendQuickMessage('Come timbro l\'ingresso?')">
-                        <i class="fas fa-clock"></i> Timbratura
-                    </button>
-                    <button class="quick-btn" onclick="VirtualAssistant.sendQuickMessage('Covercare informazioni')">
-                        <i class="fas fa-info-circle"></i> Covercare
-                    </button>
-                </div>
-                <div class="chat-input">
-                    <input type="text" id="chatInput" placeholder="Scrivi un messaggio..." onkeypress="VirtualAssistant.handleKeyPress(event)">
-                    <button onclick="VirtualAssistant.sendMessage()">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </body>
 </html>
