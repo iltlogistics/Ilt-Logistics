@@ -1067,12 +1067,6 @@
                     <p>Messaggi diretti e avvisi team</p>
                 </div>
 
-                <div class="dash-card corso" onclick="App.goToCorso()">
-                    <span class="dash-icon">📚</span>
-                    <div class="dash-title">Corso</div>
-                    <p>Formazione e aggiornamento operatori</p>
-                </div>
-
                 <div class="dash-card" onclick="App.goToHistory()">
                     <span class="dash-icon">📂</span>
                     <div class="dash-title">Storico</div>
@@ -1270,58 +1264,6 @@
             </div>
             <div class="card">
                 <h3 style="margin:0 0 20px; font-size: 1.2rem; color: var(--text-secondary);">Messaggi Ricevuti</h3>
-                <div id="messagesContainer"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- VIEW: CORSO -->
-    <div id="view-corso" class="view">
-        <div class="container">
-            <div class="card">
-                <div class="flex-between mb-2">
-                    <h2 style="margin:0; color: var(--corso);"><i class="fas fa-graduation-cap" style="margin-right: 10px;"></i>Corso</h2>
-                    <button class="btn btn-secondary" onclick="App.goToDashboard()">Torna alla Home</button>
-                </div>
-                <p style="color: var(--text-secondary); margin-bottom: 28px; font-size: 1rem;">Formazione e corsi di aggiornamento per operatori: installazioni clima, caldaie e molto altro.</p>
-            </div>
-
-            <div class="card" style="border-left: 4px solid var(--cold);">
-                <h3 style="margin:0 0 20px; font-size: 1.2rem; color: var(--cold);"><i class="fas fa-book-open" style="margin-right: 8px;"></i>Corsi di formazione</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.95rem;">Corsi base per acquisire le competenze necessarie alle installazioni e manutenzioni.</p>
-                <div id="corsoFormazioneGrid" class="dashboard-grid" style="gap: 16px;">
-                    <div class="dash-card cold" style="cursor: pointer; padding: 24px;" onclick="CourseManager.openCategory('clima')">
-                        <span class="dash-icon" style="font-size: 2.5rem;">❄️</span>
-                        <div class="dash-title" style="font-size: 1.1rem;">Climatizzazione</div>
-                        <p style="font-size: 0.85rem;">Installazione e manutenzione climatizzatori, split, VRF</p>
-                    </div>
-                    <div class="dash-card hot" style="cursor: pointer; padding: 24px;" onclick="CourseManager.openCategory('caldaia')">
-                        <span class="dash-icon" style="font-size: 2.5rem;">🔥</span>
-                        <div class="dash-title" style="font-size: 1.1rem;">Caldaie</div>
-                        <p style="font-size: 0.85rem;">Installazione e manutenzione caldaie, pompe di calore</p>
-                    </div>
-                    <div class="dash-card" style="cursor: pointer; padding: 24px; border-left: 4px solid var(--primary);" onclick="CourseManager.openCategory('frigo')">
-                        <span class="dash-icon" style="font-size: 2.5rem;">🧊</span>
-                        <div class="dash-title" style="font-size: 1.1rem;">Refrigerazione</div>
-                        <p style="font-size: 0.85rem;">Frigoriferi, celle frigorifere, catena del freddo</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card" style="border-left: 4px solid var(--corso);">
-                <h3 style="margin:0 0 20px; font-size: 1.2rem; color: var(--corso);"><i class="fas fa-sync-alt" style="margin-right: 8px;"></i>Corsi di aggiornamento</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.95rem;">Corsi di aggiornamento su normative, nuove tecnologie e buone pratiche.</p>
-                <div id="corsoAggiornamentoList" class="log-container" style="max-height: 280px;">
-                    <div class="log-entry"><span class="log-time">Clima</span> Aggiornamento gas refrigeranti e normative F-Gas</div>
-                    <div class="log-entry"><span class="log-time">Caldaia</span> Normativa condensazione e rendimenti</div>
-                    <div class="log-entry"><span class="log-time">Sicurezza</span> DPI e sicurezza in cantiere</div>
-                    <div class="log-entry"><span class="log-time">Elettrico</span> Impianti elettrici e certificazioni</div>
-                </div>
-            </div>
-
-            <div class="card" style="background: rgba(99, 102, 241, 0.06); border-color: rgba(99, 102, 241, 0.25);">
-                <h3 style="margin:0 0 12px; font-size: 1.1rem; color: var(--corso);"><i class="fas fa-info-circle" style="margin-right: 8px;"></i>Informazioni</h3>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">I materiali e le date dei corsi saranno pubblicati qui e potranno essere comunicati anche tramite la sezione Comunicazione Interna. Per richieste specifiche contatta l’amministratore.</p>
             </div>
         </div>
     </div>
@@ -1696,7 +1638,6 @@
             goToAdmin: () => { Admin.renderUsers(); Admin.renderLogs(); UI.showView('view-admin'); },
             goToWarehouse: () => { Warehouse.render(); UI.showView('view-warehouse'); },
             goToCommunication: () => { CommunicationManager.render(); UI.showView('view-communication'); },
-            goToCorso: () => { if (typeof CourseManager !== 'undefined' && CourseManager.render) CourseManager.render(); UI.showView('view-corso'); },
             goToDomicile: () => { DomicileManager.init(); DomicileManager.render(); UI.showView('view-domicile'); },
             goToTimbratura: () => { window.open('https://gestionetimbrature.netlify.app/', '_blank'); },
             
@@ -3167,15 +3108,6 @@ www.iltlogistics.it`;
             delete: (id) => { UI.confirm('Elimina Messaggio', 'Vuoi eliminare questo messaggio?', () => { Store.deleteMessage(id); UI.showToast('Messaggio eliminato', 'info'); }); }
         };
 
-        // ========== COURSE MANAGER (CORSO) ==========
-        const CourseManager = {
-            render: () => { /* eventuale caricamento corsi da Firestore */ },
-            openCategory: (category) => {
-                const labels = { clima: 'Climatizzazione', caldaia: 'Caldaie', frigo: 'Refrigerazione' };
-                UI.showToast(`Sezione "${labels[category] || category}" – I materiali del corso saranno disponibili qui.`, 'info');
-            }
-        };
-
         // ========== WAREHOUSE MANAGER ==========
         const Warehouse = {
             currentFilter: '',
@@ -3320,7 +3252,7 @@ www.iltlogistics.it`;
             Store.getUsers().forEach(u => { 
                 const isMe = Auth.currentUser?.id === u.id; 
                 const locationBadge = u.location ? `<span class="badge badge-domicile" style="margin-left: 8px;">${u.location}</span>` : '<span style="color: var(--text-secondary); font-size: 0.8rem; margin-left: 8px;">Nessuna sede</span>';
-                tbody.innerHTML += `<tr><td>${u.username} ${isMe ? '<small>(tu)</small>' : ''}</td><td><span class="badge ${u.username === 'admin' ? 'badge-admin' : 'badge-cold'}">${u.role}</span></td><td>${locationBadge}</td><td><button class="btn btn-sm btn-warning" onclick="Admin.openUserModal('${u.id}')" ${isMe ? 'disabled' : ''}>Modifica</button></td></tr>`; 
+                tbody.innerHTML += `<tr><td>${u.username} ${isMe ? '<small>(tu)</small>' : ''}</td><td><span class="badge ${u.username === 'admin' ? 'badge-admin' : 'badge-cold'}">${u.role}</span></td><td>${locationBadge}</td><td><button class="btn btn-sm btn-warning" onclick="Admin.openUserModal('${u.id}')" ${isMe ? 'disabled' : ''}>Modifica</button> <button class="btn btn-sm btn-danger" onclick="Admin.deleteUser('${u.id}')" ${isMe ? 'disabled' : ''}>Elimina</button></td></tr>`; 
             }); 
         },
         renderLogs: () => { const logContainer = Utils.id('activityLog'); if (logContainer) { logContainer.innerHTML = Store.localLogs.map(l => `<div class="log-entry"><span class="log-time">[${l.time}]</span>${l.msg}</div>`).join(''); } },
@@ -3369,8 +3301,29 @@ www.iltlogistics.it`;
             } 
             UI.closeModal('userModal'); 
         },
-        exportAllData: () => { const backup = { interventions: Store.localInterventions, warehouse: Store.localWarehouse, users: Store.localUsers, logs: Store.localLogs, materialHistory: Store.localMaterialHistory, messages: Store.localMessages, domicileTickets: Store.localDomicileTickets, exportDate: new Date().toISOString() }; const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `backup_completo_gipro_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); UI.showToast('Backup completato', 'success'); },
+        deleteUser: (id) => {
+            const u = Store.getUsers().find(x => x.id === id);
+            if (!u) return;
+            
+            // Blocca l'eliminazione dell'utente Master Admin hardcoded 'admin'
+            if (u.username === 'admin') {
+                UI.showToast('Non è possibile eliminare l\'amministratore principale', 'error');
+                return;
+            }
 
+            UI.confirm('Elimina Operatore', `Sei sicuro di voler eliminare l'utente ${u.username}? Questo lo disabiliterà permanentemente.`, () => {
+                db.collection("users").doc(id).delete()
+                    .then(() => {
+                        Store.addLog(`Admin ha eliminato l'utente ${u.username}`);
+                        UI.showToast('Operatore eliminato con successo', 'success');
+                        // La lista si aggiornerà automaticamente grazie al listener onSnapshot
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        UI.showToast('Errore durante l\'eliminazione', 'error');
+                    });
+            });
+        },
         openAssignmentModal: () => {
             const currentName = Utils.id('c_nome').value;
             const currentAddress = Utils.id('c_indirizzo').value;
@@ -3429,7 +3382,6 @@ www.iltlogistics.it`;
             
             document.body.insertAdjacentHTML('beforeend', modalContent);
         },
-
         saveCommessa: () => {
             const client = Utils.id('comm_client').value;
             const address = Utils.id('comm_address').value;
@@ -3474,7 +3426,7 @@ www.iltlogistics.it`;
                 },
                 materials: [],
                 total: '0.00',
-                category: type.toLowerCase(), // Usa il tipo specifico di intervento
+                category: type.toLowerCase(),
                 createdAt: new Date().toLocaleString('it-IT')
             };
 
