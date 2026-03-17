@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ILT Logistics - Installazione Caldaie</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS VARIABLES & RESET */
+        :root {
+            --primary: #2c3e50; /* Blu scuro industriale */
+            --secondary: #c0392b; /* Rosso caldaia */
+            --accent: #d35400; /* Arancione fiamma */
+            --highlight: #e67e22; /* Arancione vivo */
+            --text-light: #f5f5f5;
+            --text-dark: #333333;
+            --white: #ffffff;
+            --gray-light: #f4f7f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--gray-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+        }
+
+        a { text-decoration: none; color: inherit; transition: 0.3s; }
+
+        /* HERO SECTION (Senza immagine di sfondo, solo gradiente) */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            height: 70vh; /* Altezza ridotta per focus sul testo */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--white);
+            padding: 1rem;
+            position: relative;
+        }
+
+        /* Icona grande centrale al posto dell'immagine */
+        .hero-icon-large {
+            width: 100px;
+            height: 100px;
+            fill: rgba(255,255,255,0.2);
+            margin-bottom: 2rem;
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.1); opacity: 0.4; }
+            100% { transform: scale(1); opacity: 0.2; }
+        }
+
+        .hero-content h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0.9;
+        }
+
+        .btn {
+            background-color: var(--highlight);
+            color: var(--white);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(230, 126, 34, 0.4);
+            cursor: pointer;
+            border: 2px solid var(--highlight);
+        }
+
+        .btn:hover {
+            background-color: transparent;
+            color: var(--white);
+            border-color: var(--white);
+        }
+
+        /* SECTIONS GENERAL */
+        section { padding: 5rem 1rem; margin-bottom: 2rem; }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .section-title .line {
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary);
+            margin: 0 auto;
+        }
+
+        /* CHI SIAMO CON SLIDE */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .about-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .about-content h3 {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        /* SLIDE NELLA SEZIONE CHI SIAMO */
+        .slide-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 1.5rem;
+            padding: 0.5rem;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .slide-card {
+            min-width: 260px;
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--secondary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slide-icon {
+            width: 50px;
+            height: 50px;
+            fill: var(--secondary);
+            flex-shrink: 0;
+        }
+
+        .slide-text strong {
+            display: block;
+            color: var(--primary);
+            margin-bottom: 0.2rem;
+            font-size: 1rem;
+        }
+        
+        .slide-text span {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* Placeholder Iconico al posto dell'immagine */
+        .about-graphic {
+            width: 100%;
+            height: 400px;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ccc;
+        }
+
+        .about-graphic svg {
+            width: 120px;
+            height: 120px;
+            fill: #ddd;
+        }
+
+        /* CORE BUSINESS */
+        .services {
+            background-color: var(--white);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background: var(--gray-light);
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: 0.3s;
+            border-bottom: 4px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .service-card:hover {
+            background: var(--white);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-bottom: 4px solid var(--secondary);
+            transform: translateY(-5px);
+        }
+
+        .icon-box {
+            font-size: 3.5rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+
+        /* TECNOLOGIA (ICONE & SLIDE) */
+        .tech-section {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .tech-section .section-title h2 { color: var(--white); }
+        .tech-section .section-title .line { background-color: var(--highlight); }
+
+        .tech-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 colonne su desktop */
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .tech-item {
+            background: rgba(255,255,255,0.05);
+            padding: 2rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .tech-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* STILE ICONE SVG */
+        .tech-icon-svg {
+            width: 60px;
+            height: 60px;
+            fill: var(--highlight);
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-item h4 {
+            color: var(--highlight);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .tech-item p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        /* CTA SECTION */
+        .cta-box {
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-radius: 20px;
+            margin-top: 2rem;
+        }
+
+        .cta-box .btn {
+            background-color: var(--white);
+            color: var(--secondary);
+            border-color: var(--white);
+            box-shadow: none;
+        }
+        
+        .cta-box .btn:hover {
+            background-color: transparent;
+            color: var(--white);
+        }
+
+        /* FOOTER */
+        footer {
+            background-color: var(--primary);
+            color: #8892b0;
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero-content h1 { font-size: 2.2rem; }
+            .about-grid { grid-template-columns: 1fr; }
+            .about-graphic { height: 250px; order: -1; margin-bottom: 2rem; }
+            .services-grid { grid-template-columns: 1fr; max-width: 100%; }
+
+            /* Slide Tech Section */
+            .tech-container {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                padding-bottom: 1rem;
+            }
+
+            .tech-item {
+                min-width: 280px;
+                scroll-snap-align: center;
+                margin-right: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO SECTION (Senza immagine) -->
+    <header class="hero">
+        <div class="hero-content">
+            <!-- Icona caldaia stilizzata grande -->
+            <svg class="hero-icon-large" viewBox="0 0 24 24">
+                <path d="M7,2H17V13H20L16,17L12,13H15V4H9V13H12L8,17L4,13H7V2M7,18H17V20H7V18M7,22H17V24H7V22Z" />
+            </svg>
+            <h1>ILT Logistics</h1>
+            <p>Eccellenza nella <strong>Sostituzione</strong> e nella <strong>Nuova Installazione</strong> di caldaie.</p>
+            <a href="#servizi" class="btn">Scopri i Nostri Servizi</a>
+        </div>
+    </header>
+
+    <!-- CHI SIAMO CON SLIDE E GRAFICA VETTORIALE -->
+    <section class="container">
+        <div class="about-grid">
+            <div class="about-text">
+                <div class="about-content">
+                    <h2>Il Partner per il Tuo Calore</h2>
+                    <div class="line" style="margin: 0 0 1rem 0;"></div>
+                    <p style="margin-top: 1.5rem;">
+                        <strong>ILT Logistics</strong> è il punto di riferimento per la moderna termoidraulica. Ci occupiamo della sostituzione delle vecchie caldaie con modelli a condensazione ad alta efficienza e dell'installazione di nuovi impianti.
+                    </p>
+                    <p style="margin-top: 1rem;">
+                        Il nostro focus è garantire un montaggio sicuro, a norma e conforme alle detrazioni fiscali, assicurandoti un sistema di riscaldamento affidabile.
+                    </p>
+                </div>
+
+                <!-- SLIDE ORIZZONTALE ICONE -->
+                <div class="slide-container">
+                    <!-- Card 1 -->
+                    <div class="slide-card">
+                        <svg class="slide-icon" viewBox="0 0 24 24">
+                            <path d="M15,13V5A3,3 0 0,0 12,2A3,3 0 0,0 9,5V13A5,5 0 1,0 15,13M12,4A1,1 0 0,1 13,5V8H11V5A1,1 0 0,1 12,4Z" />
+                        </svg>
+                        <div class="slide-text">
+                            <strong>Efficienza</strong>
+                            <span>Classe A++ e risparmio.</span>
+                        </div>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="slide-card">
+                        <svg class="slide-icon" viewBox="0 0 24 24">
+                            <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.82 8.71,12.47 12,12.47C15.29,12.47 18,13.79 18,15.47C17.76,16 17.47,16.5 17.13,17Z" />
+                        </svg>
+                        <div class="slide-text">
+                            <strong>Sicurezza</strong>
+                            <span>Impianti a norma.</span>
+                        </div>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="slide-card">
+                        <svg class="slide-icon" viewBox="0 0 24 24">
+                            <path d="M12,3C7.58,3 4,4.79 4,7C4,9.21 7.59,11 12,11C16.41,11 20,9.21 20,7C20,4.79 16.41,3 12,3M4,9V12C4,14.21 7.59,16 12,16C16.41,16 20,14.21 20,12V9C20,11.21 16.41,13 12,13C7.59,13 4,11.21 4,9M4,14V17C4,19.21 7.59,21 12,21C16.41,21 20,19.21 20,17V14C20,16.21 16.41,18 12,18C7.59,18 4,16.21 4,14Z" />
+                        </svg>
+                        <div class="slide-text">
+                            <strong>Detrazioni</strong>
+                            <span>Pratiche fiscali gestite.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRAFICA VETTORIALE AL POSTO DELL'IMMAGINE -->
+            <div class="about-graphic">
+                <!-- Icona Impianto Termico Astratta -->
+                <svg viewBox="0 0 24 24">
+                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12C20,14.4 18.95,16.55 17.29,18H6.71C5.05,16.55 4,14.4 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12C6,13.5 6.6,14.86 7.56,15.91L16.44,7.03C15.39,6.22 14.06,5.75 12.66,5.91L12,6M12,18A6,6 0 0,0 18,12C18,10.5 17.4,9.14 16.44,8.09L7.56,16.97C8.61,17.78 9.94,18.25 11.34,18.09L12,18Z" style="display:none;"/>
+                    <path d="M17,16V14H7V16H17M17,12V10H7V12H17M17,8V6H7V8H17M3,20A2,2 0 0,1 1,18V6A2,2 0 0,1 3,4H21A2,2 0 0,1 23,6V18A2,2 0 0,1 21,20H3Z" />
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVIZI -->
+    <section id="servizi" class="services">
+        <div class="container">
+            <div class="section-title">
+                <h2>Cosa Facciamo</h2>
+                <div class="line"></div>
+                <p style="margin-top: 1rem; color: #666;">Dalla dismissione della vecchia caldaia all'accensione della nuova.</p>
+            </div>
+
+            <div class="services-grid">
+                <!-- Card 1: SOSTITUZIONE -->
+                <div class="service-card">
+                    <div class="icon-box">🔄</div>
+                    <h3>Sostituzione Caldaie</h3>
+                    <p>Smontaggio e dismissione dell'impianto obsoleto. Installazione di caldaie a condensazione di ultima generazione, ottimizzando i spazi e le canalizzazioni esistenti.</p>
+                </div>
+
+                <!-- Card 2: NUOVA INSTALLAZIONE -->
+                <div class="service-card">
+                    <div class="icon-box">🔥</div>
+                    <h3>Nuova Installazione</h3>
+                    <p>Creazione ex-novo dell'impianto termico. Collegamenti idraulici, scarichi fumi a norma (tenuta dei fumi), e configurazione del sistema per il massimo rendimento.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TECNOLOGIA E SISTEMA (CICLO ACQUA CALDA) -->
+    <section class="tech-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Il Ciclo Termico</h2>
+                <div class="line"></div>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">Come funziona l'impianto che installiamo per te</p>
+            </div>
+
+            <div class="tech-container">
+                <!-- Step 1: Combustione -->
+                <div class="tech-item">
+                    <!-- Icona SVG Fuoco -->
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M17.66,11.2C17.43,10.9 17.15,10.64 16.89,10.38C16.22,9.78 15.46,9.35 14.82,8.72C13.33,7.26 13,4.85 13.95,3C13,3.23 12.17,3.75 11.46,4.32C8.96,6.4 7.92,10.07 9.12,13.22C9.13,13.26 9.16,13.27 9.19,13.27C9.25,13.27 9.28,13.25 9.29,13.18C9.53,12.18 10.36,11.29 11.36,11.23C11.4,11.22 11.4,11.18 11.38,11.17C10.65,10.73 10.19,9.9 10.23,9C10.29,7.65 11.4,6.54 12.75,6.47C14.1,6.4 15.32,7.41 15.47,8.75C15.5,9 15.47,9.27 15.41,9.5C15.32,9.9 15.14,10.27 14.89,10.59C14.7,10.84 14.5,11.08 14.28,11.3C13.8,11.77 13.2,12.06 12.55,12.15C12.5,12.16 12.5,12.24 12.55,12.25C13.96,12.7 15.22,13.58 16.14,14.75C16.95,15.78 17.5,17.08 17.5,18.5C17.5,19.75 17.1,20.9 16.42,21.84C16.31,22 16.13,22 16,21.91C14.97,21.19 14.2,20.1 13.92,18.84C13.87,18.61 13.83,18.37 13.8,18.13C13.73,17.65 13.61,17.18 13.42,16.73C13.2,16.21 12.86,15.75 12.42,15.39C12.29,15.29 12.31,15.08 12.46,15C12.63,14.91 12.82,14.85 13,14.81C13.33,14.73 13.65,14.6 13.95,14.44C14.5,14.14 14.93,13.67 15.2,13.1C15.3,12.88 15.37,12.64 15.4,12.4C15.42,12.2 15.5,12.05 15.58,11.87C15.83,11.42 16.29,11.08 16.83,11.03C17.14,11 17.41,11.07 17.66,11.2M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2Z" />
+                    </svg>
+                    <h4>1. Combustione</h4>
+                    <p>Il bruciatore accende la miscela gas-aria. Il calore generato viene trasferito all'acqua circolante nei circuiti della caldaia.</p>
+                </div>
+
+                <!-- Step 2: Circolazione -->
+                <div class="tech-item">
+                    <!-- Icona SVG Circolazione -->
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2C14.4,2 16.56,2.89 18.22,4.34L16.78,5.78C15.5,4.66 13.83,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.31,20 18.12,17.78 19,14.8L20.9,15.5C19.76,19.25 16.2,22 12,22M17,12V7H15V12H10V14H17V12Z" transform="rotate(45 12 12)"/>
+                    </svg>
+                    <h4>2. Circolazione</h4>
+                    <p>La pompa di circolazione spinge l'acqua calda verso i radiatori o il pavimento riscaldato, diffondendo il calore in casa.</p>
+                </div>
+
+                <!-- Step 3: ACS -->
+                <div class="tech-item">
+                    <!-- Icona SVG Rubinetto/ACS -->
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M21,16.5C21,16.88 20.79,17.21 20.47,17.38L12.57,21.82C12.41,21.94 12.21,22 12,22C11.79,22 11.59,21.94 11.43,21.82L3.53,17.38C3.21,17.21 3,16.88 3,16.5V7.5C3,7.12 3.21,6.79 3.53,6.62L11.43,2.18C11.59,2.06 11.79,2 12,2C12.21,2 12.41,2.06 12.57,2.18L20.47,6.62C20.79,6.79 21,7.12 21,7.5V16.5M12,4.15L6.04,7.5L12,10.85L17.96,7.5L12,4.15M5,8.13V15.87L11,19.24V11.5L5,8.13M13,19.24L19,15.87V8.13L13,11.5V19.24Z" />
+                    </svg>
+                    <h4>3. Produzione ACS</h4>
+                    <p>Attraverso uno scambiatore a piastre, la caldaia riscalda istantaneamente l'acqua sanitaria per docce e rubinetti.</p>
+                </div>
+
+                <!-- Step 4: Scarico Fumi -->
+                <div class="tech-item">
+                    <!-- Icona SVG Fumo/Vento -->
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M16.5,13C15.12,13 14,14.12 14,15.5C14,16.88 15.12,18 16.5,18C17.88,18 19,16.88 19,15.5C19,14.12 17.88,13 16.5,13M16.5,16.5C15.95,16.5 15.5,16.05 15.5,15.5C15.5,14.95 15.95,14.5 16.5,14.5C17.05,14.5 17.5,14.95 17.5,15.5C17.5,16.05 17.05,16.5 16.5,16.5M6.5,6C5.12,6 4,7.12 4,8.5C4,9.88 5.12,11 6.5,11C7.88,11 9,9.88 9,8.5C9,7.12 7.88,6 6.5,6M6.5,9.5C5.95,9.5 5.5,9.05 5.5,8.5C5.5,7.95 5.95,7.5 6.5,7.5C7.05,7.5 7.5,7.95 7.5,8.5C7.5,9.05 7.05,9.5 6.5,9.5Z" />
+                    </svg>
+                    <h4>4. Scarico Fumi</h4>
+                    <p>I fumi di scarico, raffreddati per recuperare il calore, vengono espulsi all'esterno tramite canna fumaria a norma.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA FINALE CON WHATSAPP -->
+    <section class="container">
+        <div class="cta-box">
+            <h2>Sostituzione e Nuova Installazione</h2>
+            <p style="margin: 1.5rem 0; font-size: 1.1rem;">Affida il tuo impianto a chi lo installa per durare.</p>
+            
+            <!-- Link WhatsApp API -->
+            <a href="https://wa.me/393311640977?text=Buongiorno%2C%20vorrei%20richiedere%20un%20preventivo%20per%20la%20sostituzione%20o%20nuova%20installazione%20della%20caldaia." class="btn">
+                Richiedi un Preventivo
+            </a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2023 ILT Logistics. Installazione e Manutenzione Caldaie.</p>
+        <p style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.6;">Non si effettua assistenza tecnica straordinaria</p>
+    </footer>
+
+</body>
+</html>

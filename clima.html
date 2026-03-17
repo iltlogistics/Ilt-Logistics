@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ILT Logistics - Installazione e Manutenzione Clima</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS VARIABLES & RESET */
+        :root {
+            --primary: #0f2027; /* Blu notte profondo */
+            --secondary: #203a43; /* Verde/Azzurro scuro */
+            --accent: #2c5364; /* Accento freddo */
+            --highlight: #00d2ff; /* Ciano elettrico */
+            --text-light: #f5f5f5;
+            --text-dark: #333333;
+            --white: #ffffff;
+            --gray-light: #f4f7f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--gray-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+        }
+
+        a { text-decoration: none; color: inherit; transition: 0.3s; }
+
+        /* HERO SECTION */
+        .hero {
+            background: linear-gradient(rgba(15, 32, 39, 0.85), rgba(44, 83, 100, 0.85)), 
+                        url('https://images.unsplash.com/photo-1520699722854-691c7f5a9d52?q=80&w=1920&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            height: 85vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--white);
+            padding: 1rem;
+        }
+
+        .hero-content h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .hero-content p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0.9;
+        }
+
+        .btn {
+            background-color: var(--highlight);
+            color: var(--primary);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.4);
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            background-color: var(--white);
+        }
+
+        /* SECTIONS GENERAL */
+        section { padding: 5rem 1rem; margin-bottom: 2rem; }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .section-title .line {
+            width: 80px;
+            height: 4px;
+            background-color: var(--highlight);
+            margin: 0 auto;
+        }
+
+        /* CHI SIAMO */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .about-text h3 {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        .about-img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        /* CORE BUSINESS */
+        .services {
+            background-color: var(--white);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background: var(--gray-light);
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: 0.3s;
+            border-bottom: 4px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .service-card:hover {
+            background: var(--white);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-bottom: 4px solid var(--highlight);
+            transform: translateY(-5px);
+        }
+
+        .icon-box {
+            font-size: 3.5rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+
+        /* TECNOLOGIA (ICONE & SLIDE) */
+        .tech-section {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .tech-section .section-title h2 { color: var(--white); }
+        .tech-section .section-title .line { background-color: var(--highlight); }
+
+        .tech-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4 colonne su desktop */
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .tech-item {
+            background: rgba(255,255,255,0.05);
+            padding: 2rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .tech-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* STILE ICONE SVG */
+        .tech-icon-svg {
+            width: 60px;
+            height: 60px;
+            fill: var(--highlight);
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-item h4 {
+            color: var(--highlight);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .tech-item p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        /* CTA SECTION */
+        .cta-box {
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-radius: 20px;
+            margin-top: 2rem;
+        }
+
+        /* FOOTER */
+        footer {
+            background-color: var(--primary);
+            color: #8892b0;
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero-content h1 { font-size: 2.2rem; }
+            .about-grid { grid-template-columns: 1fr; }
+            .about-img { order: -1; margin-bottom: 2rem; }
+            .services-grid { grid-template-columns: 1fr; max-width: 100%; }
+
+            /* MODIFICA MOBILE: SLIDE ORIZZONTALE */
+            .tech-container {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                padding-bottom: 1rem;
+                -webkit-overflow-scrolling: touch; /* Smooth scroll su iOS */
+            }
+
+            .tech-item {
+                min-width: 280px; /* Larghezza fissa per ogni slide */
+                scroll-snap-align: center;
+                margin-right: 1rem;
+            }
+        }
+
+        /* --- ASSISTENTE VIRTUALE GIPRO --- */
+        .gipro-assistant {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9999;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        .gipro-bubble {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2);
+            transition: all 0.3s ease;
+            animation: gipro-pulse 2s infinite;
+        }
+        
+        @keyframes gipro-pulse {
+            0% { transform: scale(1); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2); }
+            50% { transform: scale(1.05); box-shadow: 0 12px 35px rgba(99, 102, 241, 0.2); }
+            100% { transform: scale(1); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2); }
+        }
+        
+        .gipro-bubble:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.3);
+        }
+        
+        .gipro-bubble i {
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .gipro-bubble.minimized i::before {
+            content: "\f00d";
+        }
+        
+        .gipro-chat {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 380px;
+            height: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: gipro-slide-up 0.3s ease;
+        }
+        
+        @keyframes gipro-slide-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .gipro-chat.active {
+            display: flex;
+        }
+        
+        .gipro-header {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .gipro-header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .gipro-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .gipro-name h3 {
+            font-size: 1rem;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .gipro-name p {
+            font-size: 0.8rem;
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .gipro-minimize {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+        
+        .gipro-minimize:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .gipro-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .gipro-message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .gipro-message.assistant {
+            flex-direction: row;
+        }
+        
+        .gipro-message.user {
+            flex-direction: row-reverse;
+        }
+        
+        .gipro-message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .gipro-message.assistant .gipro-message-content {
+            background: white;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .gipro-message.user .gipro-message-content {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .gipro-message-time {
+            font-size: 0.7rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .gipro-message.assistant .gipro-message-time {
+            text-align: left;
+        }
+        
+        .gipro-message.user .gipro-message-time {
+            text-align: right;
+        }
+        
+        .gipro-quick-actions {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .gipro-quick-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .gipro-quick-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .gipro-quick-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .gipro-input-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .gipro-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .gipro-input:focus {
+            border-color: #6366f1;
+        }
+        
+        .gipro-send {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .gipro-send:hover {
+            transform: scale(1.1);
+        }
+        
+        .gipro-typing {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 18px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .gipro-typing.show {
+            display: flex;
+        }
+        
+        .gipro-typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #6b7280;
+            border-radius: 50%;
+            animation: gipro-typing 1.4s infinite;
+        }
+        
+        .gipro-typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .gipro-typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes gipro-typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        
+        /* Responsive per mobile */
+        @media (max-width: 480px) {
+            .gipro-chat {
+                width: calc(100vw - 40px);
+                right: -10px;
+                height: 600px;
+            }
+            
+            .gipro-assistant {
+                bottom: 20px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO SECTION -->
+    <header class="hero">
+        <div class="hero-content">
+            <h1>ILT Logistics</h1>
+            <p>Eccellenza nell'<strong>Installazione</strong> e nella <strong>Manutenzione</strong> di impianti di climatizzazione.</p>
+            <!-- Link alla sezione servizi -->
+            <a href="#servizi" class="btn">Scopri i Nostri Servizi</a>
+        </div>
+    </header>
+
+    <!-- CHI SIAMO -->
+    <section class="container">
+        <div class="about-grid">
+            <div class="about-text">
+                <div class="section-title" style="text-align: left;">
+                    <h2>Il Partner per il Tuo Clima</h2>
+                    <div class="line" style="margin: 0;"></div>
+                </div>
+                <p style="margin-top: 1.5rem;">
+                    <strong>ILT Logistics</strong> è l'azienda specializzata nella posa in opera e nella cura periodica dei sistemi di climatizzazione.
+                </p>
+                <p style="margin-top: 1rem;">
+                    Non effettuiamo riparazioni straordinarie o assistenza guasti: il nostro core business è garantire un <strong>montaggio a regola d'arte</strong> e una <strong>manutenzione preventiva</strong> impeccabile.
+                </p>
+            </div>
+            <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?q=80&w=800&auto=format&fit=crop" alt="Installazione professionale tubi rame" class="about-img">
+        </div>
+    </section>
+
+    <!-- SERVIZI -->
+    <section id="servizi" class="services">
+        <div class="container">
+            <div class="section-title">
+                <h2>Cosa Facciamo</h2>
+                <div class="line"></div>
+                <p style="margin-top: 1rem; color: #666;">Dall'installazione iniziale alla manutenzione periodica.</p>
+            </div>
+
+            <div class="services-grid">
+                <!-- Card 1: INSTALLAZIONE -->
+                <div class="service-card">
+                    <div class="icon-box">⚙️</div>
+                    <h3>Installazione a Regola d'Arte</h3>
+                    <p>Montaggio preciso di split, multi-split e sistemi VRF. Eseguiamo il vuoto tecnico, la brasatura dei tubi di rame con lega d'argento e il carico corretto del gas refrigerante per garantire l'efficienza immediata.</p>
+                </div>
+
+                <!-- Card 2: MANUTENZIONE -->
+                <div class="service-card">
+                    <div class="icon-box">🧼</div>
+                    <h3>Manutenzione Ordinaria</h3>
+                    <p>Programmi di pulizia programmata: lavaggio batterie, sanificazione unità interna e verifica dei livelli di gas. Preveniamo l'usura per mantenere l'impianto come nuovo nel tempo.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TECNOLOGIA E SISTEMA (ICONE SVG E SLIDE) -->
+    <section class="tech-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Il Ciclo Refrigerante</h2>
+                <div class="line"></div>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">La tecnologia che curiamo durante ogni intervento</p>
+            </div>
+
+            <div class="tech-container">
+                <!-- Step 1: Compressione -->
+                <div class="tech-item">
+                    <!-- Icona SVG Compressione -->
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12C20,14.4 18.95,16.55 17.29,18H6.71C5.05,16.55 4,14.4 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12C6,13.5 6.6,14.86 7.56,15.91L16.44,7.03C15.39,6.22 14.06,5.75 12.66,5.91L12,6M12,18A6,6 0 0,0 18,12C18,10.5 17.4,9.14 16.44,8.09L7.56,16.97C8.61,17.78 9.94,18.25 11.34,18.09L12,18Z" style="display:none;"/> 
+                        <!-- Icona fulmine/compressione -->
+                        <path d="M7,2V13H10V22L17,10H14L17,2H7Z" transform="scale(0.8) translate(3,3)"/>
+                    </svg>
+                    <h4>1. Compressione</h4>
+                    <p>Il compressore aspira il gas refrigerante a bassa pressione e lo comprime, aumentandone temperatura e pressione.</p>
+                </div>
+
+                <!-- Step 2: Condensazione -->
+                <div class="tech-item">
+                    <!-- Icona SVG Condensazione (Calore verso l'alto) -->
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <!-- Icona freccia su calore -->
+                        <path d="M7,2H17V13L12,18L7,13V2M9,4V12L12,15L15,12V4H9Z" />
+                        <path d="M12,20V22M8,20V22M16,20V22" stroke="currentColor" stroke-width="2" />
+                    </svg>
+                    <h4>2. Condensazione</h4>
+                    <p>Il gas caldo cede calore all'ambiente esterno attraverso il condensatore e si trasforma in liquido.</p>
+                </div>
+
+                <!-- Step 3: Espansione -->
+                <div class="tech-item">
+                    <!-- Icona SVG Espansione (Valvola/Riduzione) -->
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M12,2L17.5,8H13V13H16L12,18L8,13H11V8H6.5L12,2M6,20H18V22H6V20Z" transform="rotate(180 12 12)"/>
+                    </svg>
+                    <h4>3. Espansione</h4>
+                    <p>Il fluido passa attraverso la valvola di espansione, riducendo drasticamente pressione e temperatura.</p>
+                </div>
+
+                <!-- Step 4: Evaporazione -->
+                <div class="tech-item">
+                    <!-- Icona SVG Evaporazione (Vento/Freddo) -->
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M16.18,7.76L15.12,8.82L14.06,7.76L15.12,6.7L16.18,7.76M13.06,10.88L12,11.94L10.94,10.88L12,9.82L13.06,10.88M9.94,14L8.88,15.06L7.82,14L8.88,12.94L9.94,14M7.76,10.88L6.7,11.94L5.64,10.88L6.7,9.82L7.76,10.88M18.3,12.7L17.24,13.76L16.18,12.7L17.24,11.64L18.3,12.7Z" />
+                    </svg>
+                    <h4>4. Evaporazione</h4>
+                    <p>Il fluido gelido assorbe il calore dall'ambiente interno (evaporazione), tornando gassoso e ricominciando il ciclo.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA FINALE CON WHATSAPP CORRETTO -->
+    <section class="container">
+        <div class="cta-box">
+            <h2>Installazione e Pulizia Professionale</h2>
+            <p style="margin: 1.5rem 0; font-size: 1.1rem;">Affida il tuo impianto a chi lo installa per durare.</p>
+            
+            <!-- Link WhatsApp API CORRETTO -->
+            <!-- Nota: Ho usato l'encoding %20 per gli spazi e rimosso l'apostrofo per sicurezza -->
+            <a href="https://wa.me/393311640977?text=Buongiorno%2C%20vorrei%20richiedere%20un%20preventivo%20per%20l%27installazione%20o%20manutenzione%20di%20un%20condizionatore." class="btn" style="background: white; color: var(--primary);">
+                Richiedi un Preventivo
+            </a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <!-- Assistente Virtuale GIPRO -->
+    <div class="gipro-assistant">
+        <div class="gipro-chat">
+            <div class="gipro-header">
+                <div class="gipro-header-info">
+                    <div class="gipro-avatar">G</div>
+                    <div class="gipro-name">
+                        <h3>GIPRO</h3>
+                        <p>Assistente Virtuale</p>
+                    </div>
+                </div>
+                <button class="gipro-minimize" onclick="toggleGipro()">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+            
+            <div class="gipro-messages" id="giproMessages">
+                <div class="gipro-message assistant">
+                    <div class="gipro-message-content">
+                        <div>Ciao! Sono GIPRO, il tuo assistente virtuale ILT Logistics. Come posso aiutarti oggi?</div>
+                        <div class="gipro-message-time">Ora</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="gipro-typing" id="giproTyping">
+                <div class="gipro-typing-dot"></div>
+                <div class="gipro-typing-dot"></div>
+                <div class="gipro-typing-dot"></div>
+            </div>
+            
+            <div class="gipro-quick-actions">
+                <div class="gipro-quick-buttons">
+                    <button class="gipro-quick-btn" onclick="giproQuickAction('phone')">📞 Telefono</button>
+                    <button class="gipro-quick-btn" onclick="giproQuickAction('email')">📧 Email</button>
+                    <button class="gipro-quick-btn" onclick="giproQuickAction('whatsapp')">💬 WhatsApp</button>
+                </div>
+                <div class="gipro-input-area">
+                    <input type="text" class="gipro-input" id="giproInput" placeholder="Scrivi un messaggio..." onkeypress="handleGiproInput(event)">
+                    <button class="gipro-send" onclick="sendGiproMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="gipro-bubble" onclick="toggleGipro()">
+            <i class="fas fa-comments"></i>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2023 ILT Logistics. Installazione e Manutenzione Climatizzatori.</p>
+        <p style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.6;">Non si effettua assistenza tecnica straordinaria</p>
+    </footer>
+
+    <script>
+        // --- Logica Assistente Virtuale GIPRO ---
+        let giproOpen = false;
+        
+        function toggleGipro() {
+            const chat = document.querySelector('.gipro-chat');
+            const bubble = document.querySelector('.gipro-bubble');
+            
+            giproOpen = !giproOpen;
+            
+            if (giproOpen) {
+                chat.classList.add('active');
+                bubble.innerHTML = '<i class="fas fa-times"></i>';
+            } else {
+                chat.classList.remove('active');
+                bubble.innerHTML = '<i class="fas fa-comments"></i>';
+            }
+        }
+        
+        function giproQuickAction(action) {
+            const messages = document.getElementById('giproMessages');
+            
+            // Aggiungi messaggio utente
+            addGiproMessage('user', getActionText(action));
+            
+            // Mostra typing
+            showGiproTyping();
+            
+            // Simula risposta dopo 1.5 secondi
+            setTimeout(() => {
+                hideGiproTyping();
+                const response = getActionResponse(action);
+                addGiproMessage('assistant', response);
+                
+                // Esegui l'azione
+                executeGiproAction(action);
+            }, 1500);
+        }
+        
+        function getActionText(action) {
+            const actions = {
+                'phone': 'Vorrei il numero di telefono',
+                'email': 'Vorrei l\'indirizzo email',
+                'whatsapp': 'Vorrei contattarvi su WhatsApp'
+            };
+            return actions[action] || 'Aiuto';
+        }
+        
+        function getActionResponse(action) {
+            const responses = {
+                'phone': 'Ecco i nostri numeri di telefono:<br><br>📞 <strong>+39 389 873 5341</strong><br>📞 <strong>+39 331 164 0977</strong><br><br>Siamo disponibili Lun - Ven: 08:00 - 18:00',
+                'email': 'Il nostro indirizzo email è:<br><br>📧 <strong>iltlogistics@pec.it</strong><br><br>Invia una email per richiedere informazioni o preventivi.',
+                'whatsapp': 'Puoi contattarci direttamente su WhatsApp:<br><br>💬 <a href="https://wa.me/393898735341?text=Salve,%20vorrei%20richiedere%20un%20intervento." target="_blank" style="color: #25D366; text-decoration: none; font-weight: bold;">Clicca qui per avviare la chat</a><br><br>Ti risponderemo il prima possibile!'
+            };
+            return responses[action] || 'Come posso aiutarti?';
+        }
+        
+        function executeGiproAction(action) {
+            switch(action) {
+                case 'phone':
+                    // Non fare nulla, l'utente ha già i numeri
+                    break;
+                case 'email':
+                    // Non fare nulla, l'utente ha già l'email
+                    break;
+                case 'whatsapp':
+                    // Potrebbe aprire WhatsApp automaticamente
+                    setTimeout(() => {
+                        window.open('https://wa.me/393898735341?text=Salve,%20vorrei%20richiedere%20un%20intervento.', '_blank');
+                    }, 2000);
+                    break;
+            }
+        }
+        
+        function sendGiproMessage() {
+            const input = document.getElementById('giproInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Aggiungi messaggio utente
+            addGiproMessage('user', message);
+            
+            // Svuota input
+            input.value = '';
+            
+            // Mostra typing
+            showGiproTyping();
+            
+            // Simula risposta dopo 1.5 secondi
+            setTimeout(() => {
+                hideGiproTyping();
+                const response = generateGiproResponse(message);
+                addGiproMessage('assistant', response);
+            }, 1500);
+        }
+        
+        function handleGiproInput(event) {
+            if (event.key === 'Enter') {
+                sendGiproMessage();
+            }
+        }
+        
+        function addGiproMessage(sender, message) {
+            const messages = document.getElementById('giproMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `gipro-message ${sender}`;
+            
+            const time = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="gipro-message-content">
+                    <div>${message}</div>
+                    <div class="gipro-message-time">${time}</div>
+                </div>
+            `;
+            
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        function showGiproTyping() {
+            document.getElementById('giproTyping').classList.add('show');
+            const messages = document.getElementById('giproMessages');
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        function hideGiproTyping() {
+            document.getElementById('giproTyping').classList.remove('show');
+        }
+        
+        function generateGiproResponse(userMessage) {
+            const message = userMessage.toLowerCase();
+            
+            if (message.includes('ciao') || message.includes('salve')) {
+                return 'Ciao! Sono GIPRO, come posso aiutarti con i servizi ILT Logistics? Posso fornirti informazioni su installazioni, consegne o contatti.';
+            } else if (message.includes('installazione') || message.includes('clima') || message.includes('caldaia')) {
+                return 'Offriamo servizi di installazione professionale per:<br><br>🔹 Climatizzatori (split e multi-split)<br>🔹 Caldaie (sostituzione e nuova installazione)<br>🔹 Elettrodomestici (collegamento idrico ed elettrico)<br><br>Vuoi un preventivo? Contattaci ai numeri mostrati sopra!';
+            } else if (message.includes('consegna') || message.includes('trasporto')) {
+                return 'Effettuiamo consegne rapide e sicure di elettrodomestici:<br><br>🚚 Consegna standard<br>⚡ Consegne rapide (entro 3 ore)<br>📍 Tracciabilità in tempo reale<br><br>Hai bisogno di una consegna urgente? Chiamaci subito!';
+            } else if (message.includes('preventivo') || message.includes('costo') || message.includes('prezzo')) {
+                return 'Per un preventivo personalizzato, ti consiglio di:<br><br>📞 Chiamarci al +39 389 873 5341<br>📧 Scrivere a iltlogistics@pec.it<br>💬 Contattarci su WhatsApp<br><br>Valuteremo subito le tue esigenze!';
+            } else if (message.includes('contatto') || message.includes('telefono') || message.includes('email')) {
+                return 'Ecco i nostri contatti:<br><br>📞 <strong>+39 389 873 5341</strong><br>📞 <strong>+39 331 164 0977</strong><br>📧 <strong>iltlogistics@pec.it</strong><br><br>Lun - Ven: 08:00 - 18:00';
+            } else if (message.includes('grazie')) {
+                return 'Di nulla! Sono qui per aiutarti. Se hai altre domande sui nostri servizi di installazione e consegna, chiedi pure!';
+            } else {
+                return 'Sono GIPRO, l\'assistente virtuale di ILT Logistics. Posso aiutarti con:<br><br>🔹 Installazioni (clima, caldaie, elettrodomestici)<br>🔹 Consegne e trasporti<br>🔹 Preventivi e contatti<br>🔹 Orari e servizi<br><br>Cosa desideri sapere?';
+            }
+        }
+    </script>
+</body>
+</html>

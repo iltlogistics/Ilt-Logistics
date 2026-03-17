@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ILT Logistics - Installazione Elettrodomestici</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* CSS VARIABLES & RESET */
+        :root {
+            --primary: #2c3e50; /* Grigio scuro tecnico */
+            --secondary: #00897b; /* Verde Menta/Tiffany */
+            --accent: #26a69a; /* Verde acqua */
+            --highlight: #4db6ac; /* Verde chiaro */
+            --text-light: #f5f5f5;
+            --text-dark: #333333;
+            --white: #ffffff;
+            --gray-light: #f4f7f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--gray-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+        }
+
+        a { text-decoration: none; color: inherit; transition: 0.3s; }
+
+        /* HERO SECTION (Senza immagine, gradiente) */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--white);
+            padding: 1rem;
+            position: relative;
+        }
+
+        .hero-icon-large {
+            width: 100px;
+            height: 100px;
+            fill: rgba(255,255,255,0.2);
+            margin-bottom: 2rem;
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.1); opacity: 0.4; }
+            100% { transform: scale(1); opacity: 0.2; }
+        }
+
+        .hero-content h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0.9;
+        }
+
+        .btn {
+            background-color: var(--highlight);
+            color: var(--white);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(77, 182, 172, 0.4);
+            cursor: pointer;
+            border: 2px solid var(--highlight);
+        }
+
+        .btn:hover {
+            background-color: transparent;
+            color: var(--white);
+            border-color: var(--white);
+        }
+
+        /* SECTIONS GENERAL */
+        section { padding: 5rem 1rem; margin-bottom: 2rem; }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .section-title .line {
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary);
+            margin: 0 auto;
+        }
+
+        /* CHI SIAMO CON SLIDE */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .about-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .about-content h3 {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+        }
+
+        /* SLIDE NELLA SEZIONE CHI SIAMO */
+        .slide-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 1.5rem;
+            padding: 0.5rem;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .slide-card {
+            min-width: 260px;
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--secondary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slide-icon {
+            width: 50px;
+            height: 50px;
+            fill: var(--secondary);
+            flex-shrink: 0;
+        }
+
+        .slide-text strong {
+            display: block;
+            color: var(--primary);
+            margin-bottom: 0.2rem;
+            font-size: 1rem;
+        }
+        
+        .slide-text span {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* Placeholder Iconico al posto dell'immagine */
+        .about-graphic {
+            width: 100%;
+            height: 400px;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ccc;
+        }
+
+        .about-graphic svg {
+            width: 120px;
+            height: 120px;
+            fill: #ddd;
+        }
+
+        /* CORE BUSINESS */
+        .services {
+            background-color: var(--white);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background: var(--gray-light);
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: 0.3s;
+            border-bottom: 4px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .service-card:hover {
+            background: var(--white);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-bottom: 4px solid var(--secondary);
+            transform: translateY(-5px);
+        }
+
+        .icon-box {
+            font-size: 3.5rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+
+        /* TECNOLOGIA (ICONE & SLIDE) */
+        .tech-section {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .tech-section .section-title h2 { color: var(--white); }
+        .tech-section .section-title .line { background-color: var(--highlight); }
+
+        .tech-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .tech-item {
+            background: rgba(255,255,255,0.05);
+            padding: 2rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .tech-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* STILE ICONE SVG */
+        .tech-icon-svg {
+            width: 60px;
+            height: 60px;
+            fill: var(--highlight);
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-item h4 {
+            color: var(--highlight);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .tech-item p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        /* CTA SECTION */
+        .cta-box {
+            background: linear-gradient(45deg, var(--secondary), var(--accent));
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-radius: 20px;
+            margin-top: 2rem;
+        }
+
+        .cta-box .btn {
+            background-color: var(--white);
+            color: var(--secondary);
+            border-color: var(--white);
+            box-shadow: none;
+        }
+        
+        .cta-box .btn:hover {
+            background-color: transparent;
+            color: var(--white);
+        }
+
+        /* FOOTER */
+        footer {
+            background-color: var(--primary);
+            color: #8892b0;
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero-content h1 { font-size: 2.2rem; }
+            .about-grid { grid-template-columns: 1fr; }
+            .about-graphic { height: 250px; order: -1; margin-bottom: 2rem; }
+            .services-grid { grid-template-columns: 1fr; max-width: 100%; }
+
+            /* Slide Tech Section */
+            .tech-container {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                padding-bottom: 1rem;
+            }
+
+            .tech-item {
+                min-width: 280px;
+                scroll-snap-align: center;
+                margin-right: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO SECTION -->
+    <header class="hero">
+        <div class="hero-content">
+            <!-- Icona Elettrodomestico (Spina) -->
+            <svg class="hero-icon-large" viewBox="0 0 24 24">
+                <path d="M16,9V19H8V9H16M14.5,3H9.5L8.5,4H5V6H19V4H15.5L14.5,3M18,7H6V19C6,20.1 6.9,21 8,21H16C17.1,21 18,20.1 18,19V7Z" />
+            </svg>
+            <h1>ILT Logistics</h1>
+            <p>Eccellenza nell'<strong>Installazione</strong> e nel <strong>Collegamento</strong> di elettrodomestici.</p>
+            <a href="#servizi" class="btn">Scopri i Nostri Servizi</a>
+        </div>
+    </header>
+
+    <!-- CHI SIAMO CON SLIDE -->
+    <section class="container">
+        <div class="about-grid">
+            <div class="about-text">
+                <div class="about-content">
+                    <h2>Il Partner per i Tuoi Elettrodomestici</h2>
+                    <div class="line" style="margin: 0 0 1rem 0;"></div>
+                    <p style="margin-top: 1.5rem;">
+                        <strong>ILT Logistics</strong> garantisce un'installazione a regola d'arte per ogni tipo di elettrodomestico. Ci occupiamo del collegamento idrico ed elettrico nel pieno rispetto delle normative di sicurezza.
+                    </p>
+                    <p style="margin-top: 1rem;">
+                        Che sia una lavatrice, una lavastoviglie o un complesso sistema di cottura, ci assicuriamo che tutto sia perfettamente funzionante e sicuro dal primo giorno.
+                    </p>
+                </div>
+
+                <!-- SLIDE ORIZZONTALE ICONE -->
+                <div class="slide-container">
+                    <!-- Card 1 -->
+                    <div class="slide-card">
+                        <svg class="slide-icon" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12C20,14.4 18.95,16.55 17.29,18H6.71C5.05,16.55 4,14.4 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12C6,13.5 6.6,14.86 7.56,15.91L16.44,7.03C15.39,6.22 14.06,5.75 12.66,5.91L12,6M12,18A6,6 0 0,0 18,12C18,10.5 17.4,9.14 16.44,8.09L7.56,16.97C8.61,17.78 9.94,18.25 11.34,18.09L12,18Z" style="display:none;"/>
+                            <path d="M7,2V13H10V22L17,10H14L17,2H7Z" transform="scale(0.8) translate(3,3)"/>
+                        </svg>
+                        <div class="slide-text">
+                            <strong>Elettrico</strong>
+                            <span>Allacciamenti a norma.</span>
+                        </div>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="slide-card">
+                        <svg class="slide-icon" viewBox="0 0 24 24">
+                            <path d="M12,2C12,2 11,2.19 11,2.5V11.5C11,11.81 12,12 12,12C12,12 13,11.81 13,11.5V2.5C13,2.19 12,2 12,2M7,4C7,4 6,4.19 6,4.5V11.5C6,11.81 7,12 7,12C7,12 8,11.81 8,11.5V4.5C8,4.19 7,4 7,4M17,4C17,4 16,4.19 16,4.5V11.5C16,11.81 17,12 17,12C17,12 18,11.81 18,11.5V4.5C18,4.19 17,4 17,4M2,14H22V22H2V14M4,16V20H20V16H4Z" />
+                        </svg>
+                        <div class="slide-text">
+                            <strong>Idrico</strong>
+                            <span>Raccordi senza perdite.</span>
+                        </div>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="slide-card">
+                        <svg class="slide-icon" viewBox="0 0 24 24">
+                            <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M17.13,17C15.92,18.85 14.11,20.24 12,20.92C9.89,20.24 8.08,18.85 6.87,17C6.53,16.5 6.24,16 6,15.47C6,13.82 8.71,12.47 12,12.47C15.29,12.47 18,13.79 18,15.47C17.76,16 17.47,16.5 17.13,17Z" />
+                        </svg>
+                        <div class="slide-text">
+                            <strong>Sicurezza</strong>
+                            <span>Verifica messa a terra.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRAFICA VETTORIALE -->
+            <div class="about-graphic">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12C20,14.4 18.95,16.55 17.29,18H6.71C5.05,16.55 4,14.4 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12C6,13.5 6.6,14.86 7.56,15.91L16.44,7.03C15.39,6.22 14.06,5.75 12.66,5.91L12,6M12,18A6,6 0 0,0 18,12C18,10.5 17.4,9.14 16.44,8.09L7.56,16.97C8.61,17.78 9.94,18.25 11.34,18.09L12,18Z" style="display:none;"/>
+                    <path d="M21,16.5C21,16.88 20.79,17.21 20.47,17.38L12.57,21.82C12.41,21.94 12.21,22 12,22C11.79,22 11.59,21.94 11.43,21.82L3.53,17.38C3.21,17.21 3,16.88 3,16.5V7.5C3,7.12 3.21,6.79 3.53,6.62L11.43,2.18C11.59,2.06 11.79,2 12,2C12.21,2 12.41,2.06 12.57,2.18L20.47,6.62C20.79,6.79 21,7.12 21,7.5V16.5M12,4.15L6.04,7.5L12,10.85L17.96,7.5L12,4.15M5,8.13V15.87L11,19.24V11.5L5,8.13M13,19.24L19,15.87V8.13L13,11.5V19.24Z" />
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVIZI -->
+    <section id="servizi" class="services">
+        <div class="container">
+            <div class="section-title">
+                <h2>Cosa Facciamo</h2>
+                <div class="line"></div>
+                <p style="margin-top: 1rem; color: #666;">Installazione completa e collegamenti.</p>
+            </div>
+
+            <div class="services-grid">
+                <!-- Card 1: COLLEGAMENTO IDRICO -->
+                <div class="service-card">
+                    <div class="icon-box">💧</div>
+                    <h3>Collegamento Idrico</h3>
+                    <p>Installazione tubazioni flessibili di alimentazione e scarico per lavatrici e lavastoviglie. Verifica tenuta e corretto posizionamento dello scarico per evitare perdite d'acqua.</p>
+                </div>
+
+                <!-- Card 2: COLLEGAMENTO ELETTRICO -->
+                <div class="service-card">
+                    <div class="icon-box">⚡</div>
+                    <h3>Collegamento Elettrico</h3>
+                    <p>Allacciamento alla rete elettrica con spine dedicate o cablaggio fisso. Verifica della messa a terra e della differenziale per la massima sicurezza.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TECNOLOGIA E SISTEMA (FUNZIONAMENTO) -->
+    <section class="tech-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Come Funziona</h2>
+                <div class="line"></div>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">Il sistema che connettiamo e testiamo</p>
+            </div>
+
+            <div class="tech-container">
+                <!-- Step 1: Alimentazione -->
+                <div class="tech-item">
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M7,2V13H10V22L17,10H14L17,2H7Z" transform="scale(0.8) translate(3,3)"/>
+                    </svg>
+                    <h4>1. Alimentazione</h4>
+                    <p>L'elettrodomestico riceve corrente elettrica. La scheda elettronica si attiva e prepara il ciclo selezionato.</p>
+                </div>
+
+                <!-- Step 2: Elettrovalvola -->
+                <div class="tech-item">
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M2,6V20H22V6H2M20,18H4V8H20V18M15,10H17V12H15V10M11,10H13V12H11V10M7,10H9V12H7V10Z" />
+                    </svg>
+                    <h4>2. Elettrovalvola</h4>
+                    <p>Si apre permettendo l'ingresso dell'acqua dalla rete idrica nella vasca o nella lavastoviglie.</p>
+                </div>
+
+                <!-- Step 3: Resistenza -->
+                <div class="tech-item">
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M13.5,2H10.5V5H13.5V2M19,8H5V10H19V8M19,12H5V14H19V12M19,16H5V18H19V16M21,4H15V6H21V4M9,4H3V6H9V4Z" />
+                    </svg>
+                    <h4>3. Riscaldamento</h4>
+                    <p>La resistenza elettrica si attiva, portando l'acqua alla temperatura necessaria per il lavaggio o l'asciugatura.</p>
+                </div>
+
+                <!-- Step 4: Scarico -->
+                <div class="tech-item">
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12C20,14.4 18.95,16.55 17.29,18H6.71C5.05,16.55 4,14.4 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12C6,13.5 6.6,14.86 7.56,15.91L16.44,7.03C15.39,6.22 14.06,5.75 12.66,5.91L12,6M12,18A6,6 0 0,0 18,12C18,10.5 17.4,9.14 16.44,8.09L7.56,16.97C8.61,17.78 9.94,18.25 11.34,18.09L12,18Z" style="display:none;"/>
+                        <path d="M2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12H20A8,8 0 0,1 12,20A8,8 0 0,1 4,12H2M12,6A6,6 0 0,1 18,12H20A8,8 0 0,0 12,4A8,8 0 0,0 4,12H6A6,6 0 0,1 12,6M7,13H17V15H7V13Z" transform="rotate(180 12 12)"/>
+                    </svg>
+                    <h4>4. Scarico</h4>
+                    <p>La pompa di scarico espelle l'acqua sporca verso il tubo di scarico, completando il ciclo.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA FINALE CON WHATSAPP -->
+    <section class="container">
+        <div class="cta-box">
+            <h2>Installazione Professionale</h2>
+            <p style="margin: 1.5rem 0; font-size: 1.1rem;">Affida i tuoi elettrodomestici a mani esperte.</p>
+            
+            <!-- Link WhatsApp API -->
+            <a href="https://wa.me/393311640977?text=Buongiorno%2C%20vorrei%20richiedere%20un%20preventivo%20per%20l%27installazione%20e%20collegamento%20di%20elettrodomestici." class="btn">
+                Richiedi un Preventivo
+            </a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2023 ILT Logistics. Installazione Elettrodomestici.</p>
+        <p style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.6;">Non si effettua assistenza tecnica straordinaria</p>
+    </footer>
+
+</body>
+</html>

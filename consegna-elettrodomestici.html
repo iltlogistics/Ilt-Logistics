@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ILT Logistics - Consegna Elettrodomestici</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* CSS VARIABLES & RESET */
+        :root {
+            --primary: #1a237e; /* Blu Navy profondo */
+            --secondary: #fbc02d; /* Giallo Ocra per avviso/trasporto */
+            --accent: #fdd835; /* Giallo più chiaro */
+            --highlight: #ffb300; /* Arancione dorato */
+            --text-light: #f5f5f5;
+            --text-dark: #333333;
+            --white: #ffffff;
+            --gray-light: #f4f7f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            color: var(--text-dark);
+            background-color: var(--gray-light);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+        }
+
+        a { text-decoration: none; color: inherit; transition: 0.3s; }
+
+        /* HERO SECTION (Senza immagine, gradiente) */
+        .hero {
+            background: linear-gradient(135deg, var(--primary) 0%, #283593 100%);
+            height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: var(--white);
+            padding: 1rem;
+            position: relative;
+        }
+
+        .hero-icon-large {
+            width: 100px;
+            height: 100px;
+            fill: rgba(255,255,255,0.2);
+            margin-bottom: 2rem;
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.2; }
+            50% { transform: scale(1.1); opacity: 0.4; }
+            100% { transform: scale(1); opacity: 0.2; }
+        }
+
+        .hero-content h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .hero-content p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            opacity: 0.9;
+        }
+
+        .btn {
+            background-color: var(--secondary);
+            color: var(--primary);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(251, 192, 45, 0.4);
+            cursor: pointer;
+            border: 2px solid var(--secondary);
+        }
+
+        .btn:hover {
+            background-color: transparent;
+            color: var(--secondary);
+            border-color: var(--secondary);
+        }
+
+        /* SECTIONS GENERAL */
+        section { padding: 5rem 1rem; margin-bottom: 2rem; }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .section-title .line {
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary);
+            margin: 0 auto;
+        }
+
+        /* CHI SIAMO CON SLIDE */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .about-text {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .about-content h3 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        /* SLIDE NELLA SEZIONE CHI SIAMO */
+        .slide-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 1.5rem;
+            padding: 0.5rem;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .slide-card {
+            min-width: 260px;
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+            background: var(--white);
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid var(--secondary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .slide-card.featured {
+            border-left: 4px solid var(--highlight);
+            background: #fffde7; /* Giallo very light */
+        }
+
+        .slide-icon {
+            width: 50px;
+            height: 50px;
+            fill: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .slide-text strong {
+            display: block;
+            color: var(--primary);
+            margin-bottom: 0.2rem;
+            font-size: 1rem;
+        }
+        
+        .slide-text span {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* Placeholder Iconico al posto dell'immagine */
+        .about-graphic {
+            width: 100%;
+            height: 400px;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ccc;
+        }
+
+        .about-graphic svg {
+            width: 120px;
+            height: 120px;
+            fill: #ddd;
+        }
+
+        /* CORE BUSINESS */
+        .services {
+            background-color: var(--white);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 3rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            background: var(--gray-light);
+            padding: 3rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+            transition: 0.3s;
+            border-bottom: 4px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .service-card:hover {
+            background: var(--white);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-bottom: 4px solid var(--secondary);
+            transform: translateY(-5px);
+        }
+
+        .icon-box {
+            font-size: 3.5rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+        }
+
+        /* TECNOLOGIA (ICONE & SLIDE) */
+        .tech-section {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .tech-section .section-title h2 { color: var(--white); }
+        .tech-section .section-title .line { background-color: var(--secondary); }
+
+        .tech-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .tech-item {
+            background: rgba(255,255,255,0.05);
+            padding: 2rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .tech-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.1);
+        }
+
+        /* STILE ICONE SVG */
+        .tech-icon-svg {
+            width: 60px;
+            height: 60px;
+            fill: var(--secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .tech-item h4 {
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .tech-item p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        /* CTA SECTION */
+        .cta-box {
+            background: linear-gradient(45deg, #283593, var(--primary));
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            border-radius: 20px;
+            margin-top: 2rem;
+        }
+
+        .cta-box .btn {
+            background-color: var(--secondary);
+            color: var(--primary);
+            border-color: var(--secondary);
+            box-shadow: none;
+        }
+        
+        .cta-box .btn:hover {
+            background-color: transparent;
+            color: var(--secondary);
+        }
+
+        /* FOOTER */
+        footer {
+            background-color: var(--primary);
+            color: #8892b0;
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .hero-content h1 { font-size: 2.2rem; }
+            .about-grid { grid-template-columns: 1fr; }
+            .about-graphic { height: 250px; order: -1; margin-bottom: 2rem; }
+            .services-grid { grid-template-columns: 1fr; max-width: 100%; }
+
+            /* Slide Tech Section */
+            .tech-container {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                padding-bottom: 1rem;
+            }
+
+            .tech-item {
+                min-width: 280px;
+                scroll-snap-align: center;
+                margin-right: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO SECTION -->
+    <header class="hero">
+        <div class="hero-content">
+            <!-- Icona Camion/Consegna -->
+            <svg class="hero-icon-large" viewBox="0 0 24 24">
+                <path d="M20,8H17V4H3C1.9,4 1,4.9 1,6V17H3A3,3 0 0,0 6,20A3,3 0 0,0 9,17H15A3,3 0 0,0 18,20A3,3 0 0,0 21,17H23V12L20,8M6,18.5A1.5,1.5 0 0,1 4.5,17A1.5,1.5 0 0,1 6,15.5A1.5,1.5 0 0,1 7.5,17A1.5,1.5 0 0,1 6,18.5M18,18.5A1.5,1.5 0 0,1 16.5,17A1.5,1.5 0 0,1 18,15.5A1.5,1.5 0 0,1 19.5,17A1.5,1.5 0 0,1 18,18.5M17,12V9.5H19.5L21.46,12H17Z" />
+            </svg>
+            <h1>ILT Logistics</h1>
+            <p><strong>Consegna Elettrodomestici</strong>. Trasporto sicuro della merce acquistata direttamente a casa tua.</p>
+            <a href="#servizi" class="btn">Scopri i Nostri Servizi</a>
+        </div>
+    </header>
+
+    <!-- CHI SIAMO CON SLIDE -->
+    <section class="container">
+        <div class="about-grid">
+            <div class="about-text">
+                <div class="about-content">
+                    <h2>Il Tuo Partner di Fiducia</h2>
+                    <div class="line" style="margin: 0 0 1rem 0;"></div>
+                    <p style="margin-top: 1.5rem;">
+                        <strong>ILT Logistics</strong> garantisce un servizio di trasporto e consegna impeccabile per i tuoi nuovi elettrodomestici. Ci occupiamo di spostare la merce dal punto vendita fino alla tua abitazione.
+                    </p>
+                    <p style="margin-top: 1rem;">
+                        Utilizziamo mezzi idonei e personale esperto per evitare qualsiasi danno durante il trasporto. Siamo <strong>l'unica azienda sul territorio</strong> ad offrirti la <strong>tracciabilità della merce in tempo reale</strong>, così sai sempre dove si trova il tuo acquisto.
+                    </p>
+                </div>
+
+                <!-- SLIDE ORIZZONTALE ICONE -->
+                <div class="slide-container">
+                    <!-- Card 1 -->
+                    <div class="slide-card">
+                        <svg class="slide-icon" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12C4,14.4 18,14.4 18,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12C18,12 18,12 18,12A6,6 0 0,0 12,6Z" style="display:none;"/>
+                            <path d="M21,16.5C21,16.88 20.79,17.21 20.47,17.38L12.57,21.82C12.41,21.94 12.21,22 12,22C11.79,22 11.59,21.94 11.43,21.82L3.53,17.38C3.21,17.21 3,16.88 3,16.5V7.5C3,7.12 3.21,6.79 3.53,6.62L11.43,2.18C11.59,2.06 11.79,2 12,2C12.21,2 12.41,2.06 12.57,2.18L20.47,6.62C20.79,6.79 21,7.12 21,7.5V16.5M12,4.15L6.04,7.5L12,10.85L17.96,7.5L12,4.15M5,8.13V15.87L11,19.24V11.5L5,8.13M13,19.24L19,15.87V8.13L13,11.5V19.24Z" />
+                        </svg>
+                        <div class="slide-text">
+                            <strong>Imballo Protetto</strong>
+                            <span>Materiali anti-urto.</span>
+                        </div>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="slide-card">
+                        <svg class="slide-icon" viewBox="0 0 24 24">
+                            <path d="M18,18.5A1.5,1.5 0 0,1 16.5,17A1.5,1.5 0 0,1 18,15.5A1.5,1.5 0 0,1 19.5,17A1.5,1.5 0 0,1 18,18.5M19.5,9.5H17V12H21.46L19.5,9.5M20,8H17V4H3C1.89,4 1,4.89 1,6V17H3A3,3 0 0,0 6,20A3,3 0 0,0 9,17H15A3,3 0 0,0 18,20A3,3 0 0,0 21,17H23V12L20,8M6,18.5A1.5,1.5 0 0,1 4.5,17A1.5,1.5 0 0,1 6,15.5A1.5,1.5 0 0,1 7.5,17A1.5,1.5 0 0,1 6,18.5Z" />
+                        </svg>
+                        <div class="slide-text">
+                            <strong>Mezzi Idonei</strong>
+                            <span>Furgoni attrezzati.</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Card 3: TRACCIABILITA' (EVIDENZIATA) -->
+                    <div class="slide-card featured">
+                        <svg class="slide-icon" viewBox="0 0 24 24" style="fill: var(--secondary);">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12C20,14.4 18.95,16.55 17.29,18H6.71C5.05,16.55 4,14.4 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12C6,13.5 6.6,14.86 7.56,15.91L16.44,7.03C15.39,6.22 14.06,5.75 12.66,5.91L12,6M12,18A6,6 0 0,0 18,12C18,10.5 17.4,9.14 16.44,8.09L7.56,16.97C8.61,17.78 9.94,18.25 11.34,18.09L12,18Z" style="display:none;"/>
+                            <path d="M12,8L13,7L14,8L13,10L11,10L12,8M15.5,7L16.5,6L17.5,7L16.5,9L14.5,9L15.5,7M8.5,7L9.5,6L10.5,7L9.5,9L7.5,9L8.5,7M12,16A4,4 0 0,0 16,12C16,10.5 15.2,9.2 14,8.6V6H10V8.6C8.8,9.2 8,10.5 8,12A4,4 0 0,0 12,16M12,18A6,6 0 0,1 6,12C6,11 6.25,10.03 6.7,9.2L5.24,7.74C4.46,8.97 4,10.43 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12C20,10.43 19.54,8.97 18.76,7.74L17.3,9.2C17.75,10.03 18,11 18,12A6,6 0 0,1 12,18Z" />
+                        </svg>
+                        <div class="slide-text">
+                            <strong style="color: var(--primary);">Tracciabilità Reale</strong>
+                            <span style="font-weight: 600; color: var(--primary);">Esclusiva ILT Logistics.</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- GRAFICA VETTORIALE -->
+            <div class="about-graphic">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20,8H17V4H3C1.9,4 1,4.9 1,6V17H3A3,3 0 0,0 6,20A3,3 0 0,0 9,17H15A3,3 0 0,0 18,20A3,3 0 0,0 21,17H23V12L20,8M6,18.5A1.5,1.5 0 0,1 4.5,17A1.5,1.5 0 0,1 6,15.5A1.5,1.5 0 0,1 7.5,17A1.5,1.5 0 0,1 6,18.5M18,18.5A1.5,1.5 0 0,1 16.5,17A1.5,1.5 0 0,1 18,15.5A1.5,1.5 0 0,1 19.5,17A1.5,1.5 0 0,1 18,18.5M17,12V9.5H19.5L21.46,12H17Z" />
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVIZI -->
+    <section id="Ritiro e Consegna" class="services">
+        <div class="container">
+            <div class="section-title">
+                <h2>Cosa Facciamo</h2>
+                <div class="line"></div>
+                <p style="margin-top: 1rem; color: #666;">Ci occupiamo di tutto il processo logistico.</p>
+            </div>
+
+            <div class="services-grid">
+                <!-- Card 1: TRASPORTO SICURO -->
+                <div class="service-card">
+                    <div class="icon-box">🚚</div>
+                    <h3>Trasporto Sicuro</h3>
+                    <p>Utilizziamo furgoni dotati di fissaggi specifici per evitare vibrazioni e urti durante il viaggio. La merce viaggia sempre in posizione corretta.</p>
+                </div>
+
+                <!-- Card 2: CONSEGNA AL PIANO -->
+                <div class="service-card">
+                    <div class="icon-box">📦</div>
+                    <h3>Consegna al Piano</h3>
+                    <p>Non ci fermiamo al piano strada. Il nostro staff provvede allo scarico e alla consegna della merce all'interno dell'abitazione, posizionando l'elettrodomestico nella stanza desiderata.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TECNOLOGIA E SISTEMA (PROCESSO LOGISTICO) -->
+    <section class="tech-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Il Processo di Consegna</h2>
+                <div class="line"></div>
+                <p style="color: rgba(255,255,255,0.8); margin-top: 1rem;">Dalla presa in carico all'arrivo a casa</p>
+            </div>
+
+            <div class="tech-container">
+                <!-- Step 1: Preparazione -->
+                <div class="tech-item">
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M21,16.5C21,16.88 20.79,17.21 20.47,17.38L12.57,21.82C12.41,21.94 12.21,22 12,22C11.79,22 11.59,21.94 11.43,21.82L3.53,17.38C3.21,17.21 3,16.88 3,16.5V7.5C3,7.12 3.21,6.79 3.53,6.62L11.43,2.18C11.59,2.06 11.79,2 12,2C12.21,2 12.41,2.06 12.57,2.18L20.47,6.62C20.79,6.79 21,7.12 21,7.5V16.5M12,4.15L6.04,7.5L12,10.85L17.96,7.5L12,4.15M5,8.13V15.87L11,19.24V11.5L5,8.13M13,19.24L19,15.87V8.13L13,11.5V19.24Z" />
+                    </svg>
+                    <h4>1. Preparazione</h4>
+                    <p>Verifica dell'integrità dell'imballo e fissaggio sicuro nel vano di carico del mezzo.</p>
+                </div>
+
+                <!-- Step 2: Trasporto -->
+                <div class="tech-item">
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M18,18.5A1.5,1.5 0 0,1 16.5,17A1.5,1.5 0 0,1 18,15.5A1.5,1.5 0 0,1 19.5,17A1.5,1.5 0 0,1 18,18.5M19.5,9.5H17V12H21.46L19.5,9.5M20,8H17V4H3C1.89,4 1,4.89 1,6V17H3A3,3 0 0,0 6,20A3,3 0 0,0 9,17H15A3,3 0 0,0 18,20A3,3 0 0,0 21,17H23V12L20,8M6,18.5A1.5,1.5 0 0,1 4.5,17A1.5,1.5 0 0,1 6,15.5A1.5,1.5 0 0,1 7.5,17A1.5,1.5 0 0,1 6,18.5Z" />
+                    </svg>
+                    <h4>2. Trasporto</h4>
+                    <p>Percorso ottimizzato. La flotta è costantemente monitorata tramite GPS per garantire puntualità.</p>
+                </div>
+
+                <!-- Step 3: Scarico -->
+                <div class="tech-item">
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M13,2H3V22H13V2M11,20H5V4H11V20M15,12H17V14H15V12M19,12H21V14H19V12M15,16H17V18H15V16M19,16H21V18H19V16Z" />
+                    </svg>
+                    <h4>3. Scarico</h4>
+                    <p>Manipolazione attenta con l'uso di carrelli o tecniche di sollevamento per gli oggetti pesanti.</p>
+                </div>
+
+                <!-- Step 4: Consegna -->
+                <div class="tech-item">
+                    <svg class="tech-icon-svg" viewBox="0 0 24 24">
+                        <path d="M20,6H16V4C16,2.89 15.1,2 14,2H8C6.89,2 6,2.89 6,4V6H2V8H4V19A2,2 0 0,0 6,21H18A2,2 0 0,0 20,19V8H22V6M18,19H6V8H18V19M8,4H14V6H8V4Z" />
+                    </svg>
+                    <h4>4. Consegna</h4>
+                    <p>Posizionamento nella stanza designata e verifica finale dell'integrità del collo con il cliente.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA FINALE CON WHATSAPP -->
+    <section class="container">
+        <div class="cta-box">
+            <h2>Trasporto e Consegna</h2>
+            <p style="margin: 1.5rem 0; font-size: 1.1rem;">Affida la tua merce a logisti esperti.</p>
+            
+            <!-- Link WhatsApp API -->
+            <a href="https://wa.me/393311640977?text=Buongiorno%2C%20vorrei%20richiedere%20un%20preventivo%20per%20il%20trasporto%20e%20la%20consegna%20di%20un%20elettrodomestico." class="btn">
+                Richiedi un Preventivo
+            </a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; 2023 ILT Logistics. Consegna Elettrodomestici.</p>
+        <p style="font-size: 0.8rem; margin-top: 0.5rem; opacity: 0.6;">Non si effettua assistenza tecnica straordinaria</p>
+    </footer>
+
+</body>
+</html>
