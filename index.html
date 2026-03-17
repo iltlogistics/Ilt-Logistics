@@ -1423,7 +1423,7 @@
                     <button class="btn btn-primary" onclick="App.goToDashboard()">Torna alla Home</button>
                 </div>
                 <input type="text" id="searchHistory" placeholder="Cerca cliente..." onkeyup="HistoryManager.render()" style="margin-bottom:20px; padding:14px 18px; border-radius:30px; width:100%; max-width:350px;">
-                <div class="table-responsive"><table><thead><tr><th>Data</th><th>Cliente</th><th>Cat</th><th>Tipo</th><th>Importo</th><th>Autore</th><th>Azioni</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+                <div class="table-responsive"><table><thead><tr><th>Data</th><th>Ora</th><th>Cliente</th><th>Cat</th><th>Tipo</th><th>Importo</th><th>Autore</th><th>Azioni</th></tr></thead><tbody id="historyBody"></tbody></table></div>
             </div>
         </div>
     </div>
@@ -3371,6 +3371,10 @@ www.iltlogistics.it`;
                             <label>Data Intervento *</label>
                             <input type="date" id="comm_intervention_date" value="${Utils.today()}" required>
                         </div>
+                        <div class="form-group">
+                            <label>Ora Intervento</label>
+                            <input type="time" id="comm_intervention_time" style="padding: 10px;">
+                        </div>
                         <div class="form-group"><label>Note / Pagamento</label><textarea id="comm_notes" rows="3" placeholder="Es. Pagamento in contanti, dettagli extra..."></textarea></div>
 
                         <div class="modal-actions row">
@@ -3396,11 +3400,24 @@ www.iltlogistics.it`;
             const machineType = Utils.id('comm_machine_type').value.trim();
             const machineCount = parseInt(Utils.id('comm_machine_count').value, 10) || 1;
             const interventionDate = Utils.id('comm_intervention_date').value;
+            const interventionTime = Utils.id('comm_intervention_time').value;
             const notes = Utils.id('comm_notes').value;
 
             if(!client || !operator || !interventionDate) {
                 UI.showToast('Cliente, Operatore e Data Intervento sono obbligatori', 'error');
                 return;
+            }
+
+            // Determina categoria automaticamente in base al tipo macchina
+            let category = 'refrigerazione';
+            const machineLower = machineType.toLowerCase();
+            const heatingKeywords = ['caldaia', 'caldaie', 'scaldabagno', 'scaldacqua', 'riscaldamento', 'pompa di calore', 'pdc', 'termosifone', 'radiatore', 'stufa', 'termo', 'boiler'];
+            const coolingKeywords = ['climatizzatore', 'climatizzatori', 'condizionatore', 'condizionatori', 'split', 'multi-split', 'cassette', 'canalizzato', 'vr', 'refrigerazione', 'frigorifero', 'cella frigorifera', 'chiller'];
+            
+            if (heatingKeywords.some(k => machineLower.includes(k))) {
+                category = 'riscaldamento';
+            } else if (coolingKeywords.some(k => machineLower.includes(k))) {
+                category = 'refrigerazione';
             }
 
             let noteText = notes;
@@ -3419,7 +3436,8 @@ www.iltlogistics.it`;
                     tel: phone,
                     email: email || undefined,
                     date: Utils.today(),
-                    dataIntervento: interventionDate
+                    dataIntervento: interventionDate,
+                    oraIntervento: interventionTime
                 },
                 intervention: {
                     tipo: type.toLowerCase(),
@@ -3430,13 +3448,13 @@ www.iltlogistics.it`;
                 },
                 materials: [],
                 total: '0.00',
-                category: type.toLowerCase(),
+                category: category,
                 createdAt: new Date().toLocaleString('it-IT')
             };
 
             Store.save(data);
-            Store.addLog(`Commessa creata per ${operator} - Cliente: ${client} - Data Intervento: ${interventionDate}`);
-            UI.showToast('Commessa assegnata con successo!', 'success');
+            Store.addLog(`Commessa creata per ${operator} - Cliente: ${client} - Data: ${interventionDate} ${interventionTime || ''}`);
+            UI.showToast(`Commessa assegnata con successo! Categoria: ${category === 'refrigerazione' ? 'Refrigerazione ❄️' : 'Riscaldamento 🔥'}`, 'success');
             
             Utils.id('createCommessaModal').remove();
             App.goToDashboard();
@@ -3473,7 +3491,7 @@ www.iltlogistics.it`;
     const FormManager = {
         materials: [], currentStep: 1, category: 'refrigerazione',
         setCategory: (cat) => { FormManager.category = cat; const header = Utils.id('formHeader'); if (header) header.innerHTML = `Nuovo Intervento ${cat === 'refrigerazione' ? '❄️' : '🔥'}`; FormManager.updateTipoOptions(); },
-        updateTipoOptions: () => { const select = Utils.id('i_tipo'); if (!select) return; select.innerHTML = '<option value="" disabled selected>-- Seleziona --</option>'; const options = FormManager.category === 'refrigerazione' ? [{ val: 'installazione', text: 'Installazione' }, { val: 'manutenzione', text: 'Manutenzione Ordinaria' }, { val: 'riparazione', text: 'Riparazione Guasto' }, { val: 'ricariga', text: 'Ricarica Gas Refrigerante' }, { val: 'sopralluogo', text: 'Sopralluogo' }] : [{ val: 'installazione', text: 'Installazione Caldaia' }, { val: 'manutenzione', text: 'Manutenzione Caldaia' }, { val: 'riparazione', text: 'Riparazione Guasto' }, { val: 'sopralluogo', text: 'Sopralluogo' }]; options.forEach(o => { const opt = document.createElement('option'); opt.value = o.val; opt.textContent = o.text; select.appendChild(opt); }); },
+        updateTipoOptions: () => { const select = Utils.id('i_tipo'); if (!select) return; select.innerHTML = '<option value="" disabled selected>-- Seleziona --</option>'; const options = FormManager.category === 'refrigerazione' ? [{ val: 'installazione', text: 'Installazione' }, { val: 'manutenzione', text: 'Manutenzione Ordinaria' }, { val: 'riparazione', text: 'Riparazione Guasto' }, { val: 'ricariga', text: 'Ricarica Gas Refrigerante' }, { val: 'sopralluogo', text: 'Sopralluogo' }] : [{ val: 'installazione', text: 'Installazione Caldaia' }, { val: 'installazione_scaldino_gas', text: 'Installazione Scaldino a Gas' }, { val: 'installazione_scaldabagno_elettrico', text: 'Installazione Scaldabagno Elettrico' }, { val: 'installazione_stufa_pellet', text: 'Installazione Stufa Pellet' }, { val: 'manutenzione', text: 'Manutenzione Caldaia' }, { val: 'riparazione', text: 'Riparazione Guasto' }, { val: 'sopralluogo', text: 'Sopralluogo' }]; options.forEach(o => { const opt = document.createElement('option'); opt.value = o.val; opt.textContent = o.text; select.appendChild(opt); }); },
         reset: () => { 
             const form = Utils.id('interventionForm'); 
             if (form) form.reset(); 
@@ -3783,7 +3801,7 @@ www.iltlogistics.it`;
             items = items.filter(i => i.client.nome.toLowerCase().includes(filter));
 
             if (items.length === 0) { 
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">Nessun intervento trovato</td></tr>'; 
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">Nessun intervento trovato</td></tr>'; 
                 return; 
             } 
             
@@ -3836,6 +3854,7 @@ www.iltlogistics.it`;
 
                 tbody.innerHTML += `<tr class="${rowClass}">
                     <td>${item.client.date}</td>
+                    <td>${item.client.oraIntervento || '-'}</td>
                     <td><strong>${item.client.nome}</strong></td>
                     <td>${badge}</td>
                     <td>${item.intervention.tipo_label || '-'}</td>
