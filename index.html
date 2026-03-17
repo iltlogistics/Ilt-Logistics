@@ -701,14 +701,101 @@
             animation: notificationSlideIn 0.3s ease-out;
         }
 
-        /* Stili per preview allegati */
-        .attachment-preview {
-            border: 2px solid var(--success);
-            background: rgba(16, 185, 129, 0.05);
+        /* Stili per Operatività Consegne - Operatori */
+        .operator-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
         }
-        .attachment-preview:hover {
-            border-color: var(--primary);
-            background: rgba(14, 165, 233, 0.05);
+        
+        .operator-card {
+            background: var(--bg-body);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        .operator-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            border-color: var(--success);
+        }
+        
+        .operator-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .operator-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .operator-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--success), var(--primary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: white;
+        }
+        
+        .operator-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        
+        .progress-container {
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .empty-overview {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 16px;
+            grid-column: 1 / -1;
         }
     </style>
 </head>
@@ -1943,7 +2030,15 @@
                 db.collection("logs").orderBy("time", "desc").limit(200).onSnapshot(snapshot => { Store.localLogs = snapshot.docs.map(doc => doc.data()); if (Auth.currentUser?.role === 'admin') Admin.renderLogs(); }, err => console.error(err));
                 db.collection("material_history").orderBy("time", "desc").limit(500).onSnapshot(snapshot => { Store.localMaterialHistory = snapshot.docs.map(doc => doc.data()); }, err => console.error(err));
                 db.collection("messages").orderBy("timestamp", "desc").limit(50).onSnapshot(snapshot => { Store.localMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); if (Utils.id('view-communication').classList.contains('active')) CommunicationManager.render(); CommunicationManager.updateNotificationBadge(); }, err => console.error(err));
-                db.collection("domicile_tickets").orderBy("date", "desc").onSnapshot(snapshot => { Store.localDomicileTickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); if (Utils.id('view-domicile').classList.contains('active')) DomicileManager.render(); }, err => console.error(err));
+                db.collection("domicile_tickets").orderBy("date", "desc").onSnapshot(snapshot => { 
+                    console.log('[STORE] onSnapshot domicile_tickets - changes:', snapshot.docChanges().length, 'docs:', snapshot.docs.length);
+                    Store.localDomicileTickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
+                    // Forza sempre il render se siamo nella view domicilio
+                    if (Utils.id('view-domicile') && Utils.id('view-domicile').offsetParent !== null) {
+                        DomicileManager.render();
+                        DomicileManager.renderDailyOverview();
+                    }
+                }, err => console.error('[STORE] Errore onSnapshot domicile_tickets:', err));
             },
             getUsers: () => Store.localUsers,
             addLog: (msg) => { if (!db) return; const entry = { time: new Date().toLocaleString('it-IT'), msg }; db.collection("logs").add(entry).catch(err => console.error(err)); },
@@ -2428,28 +2523,31 @@ www.iltlogistics.it`;
                 const today = Utils.today();
                 const allTickets = Store.getDomicileTickets();
                 
-                // Mostra solo i ticket di oggi non completati
-                let todayTickets = allTickets.filter(t => t.date === today && t.status !== 'completato');
+                // Prendi TUTTI i ticket di oggi (anche completati) per calcolare le statistiche
+                let todayAllTickets = allTickets.filter(t => t.date === today);
 
                 if (Auth.currentUser.role !== 'admin') {
-                    todayTickets = todayTickets.filter(t => t.operator === Auth.currentUser.username);
+                    todayAllTickets = todayAllTickets.filter(t => t.operator === Auth.currentUser.username);
                 }
                 
-                if (todayTickets.length === 0) {
-                    container.innerHTML = `<div class="empty-overview">Nessuna consegna programmata per oggi.</div>`;
+                if (todayAllTickets.length === 0) {
+                    container.innerHTML = `<div class="empty-overview"><i class="fas fa-check-circle" style="font-size: 48px; color: var(--success); margin-bottom: 15px; display: block;"></i>Nessuna consegna programmata per oggi.</div>`;
                     return;
                 }
 
                 const operatorStats = {};
 
-                todayTickets.forEach(t => {
+                todayAllTickets.forEach(t => {
                     const opName = t.operator || 'Non Assegnato';
                     if (!operatorStats[opName]) {
                         operatorStats[opName] = { total: 0, done: 0, pending: 0 };
                     }
                     operatorStats[opName].total++;
-                    // I ticket in questa vista sono solo quelli non completati, quindi sono tutti pending
-                    operatorStats[opName].pending++;
+                    if (t.status === 'completato') {
+                        operatorStats[opName].done++;
+                    } else {
+                        operatorStats[opName].pending++;
+                    }
                 });
 
                 container.innerHTML = '';
@@ -2600,7 +2698,8 @@ www.iltlogistics.it`;
                 const searchText = Utils.id('searchDomicile')?.value?.toLowerCase() || '';
                 const operatorFilter = Utils.id('filterDomicileOperator')?.value || '';
                 const statusFilter = DomicileManager.currentStatusFilter;
-                const tickets = Store.getDomicileTickets(); 
+                const tickets = Store.getDomicileTickets();
+                console.log('[RENDER] Ticket totali in store:', tickets.length, 'IDs:', tickets.map(t => t.id.substring(0,8)));
                 tbody.innerHTML = ''; 
                 
                 let filteredTickets = tickets.filter(t => {
@@ -2617,6 +2716,7 @@ www.iltlogistics.it`;
                     const matchOperator = !operatorFilter || t.operator === operatorFilter;
                     return matchSearch && matchStatus && matchOperator;
                 });
+                console.log('[RENDER] Ticket filtrati:', filteredTickets.length, 'IDs:', filteredTickets.map(t => t.id.substring(0,8)));
 
                 // Ordina i ticket per data
                 filteredTickets.sort((a, b) => {
@@ -2660,10 +2760,13 @@ www.iltlogistics.it`;
                         // Determina se la riga è trascinabile (solo consegne di oggi)
                         const isDraggable = ticketDate === today;
                         const draggableAttr = isDraggable ? 'true' : 'false';
-                        const dragHandle = isDraggable ? '<i class="fas fa-grip-vertical drag-handle"></i>' : '<i class="fas fa-lock" style="color: var(--text-secondary); opacity: 0.5;"></i>';
+                        // Icone drag/puntina visibili solo agli utenti (non admin) per evitare errori
+                        const dragHandle = Auth.currentUser.role === 'admin' ? '' : 
+                            (isDraggable ? '<i class="fas fa-grip-vertical drag-handle"></i>' : '<i class="fas fa-thumbtack" style="color: var(--text-secondary); opacity: 0.3;"></i>');
                         
-                        // Determina se l'utente può eseguire la consegna (solo oggi)
-                        const canExecute = ticketDate === today;
+                        // Determina se l'utente può eseguire la consegna
+                        // Admin: qualsiasi ticket | Utenti: solo ticket odierni
+                        const canExecute = Auth.currentUser.role === 'admin' ? true : (ticketDate === today);
                         let actions = '';
                         
                         if (t.status === 'assegnato') {
@@ -3119,7 +3222,34 @@ www.iltlogistics.it`;
                     }).catch(err => { console.error(err); UI.showToast('Errore aggiornamento', 'error'); }); 
                 } 
             },
-            deleteTicket: (id) => { UI.confirm('Elimina Ticket', 'Sei sicuro di voler eliminare questo ticket?', () => { if (db) { db.collection("domicile_tickets").doc(id).delete().then(() => { UI.showToast('Ticket eliminato', 'info'); Store.addLog(`Admin ha eliminato il ticket domicilio ${id}`); }).catch(err => { console.error(err); UI.showToast('Errore eliminazione', 'error'); }); } }); }
+            deleteTicket: (id) => { 
+                UI.confirm('Elimina Ticket', `Sei sicuro di voler eliminare il ticket #${id.substring(0,8)}?`, () => { 
+                    console.log('[DELETE] Tentativo eliminazione ticket ID:', id);
+                    if (db) { 
+                        db.collection("domicile_tickets").doc(id).delete()
+                            .then(() => { 
+                                console.log('[DELETE] Successo - ticket eliminato da Firestore');
+                                UI.showToast('Ticket eliminato', 'success'); 
+                                Store.addLog(`Admin ha eliminato il ticket domicilio ${id}`);
+                                // Attendi che onSnapshot aggiorni i dati, poi forza il render
+                                setTimeout(() => {
+                                    console.log('[DELETE] Forzo render dopo eliminazione');
+                                    DomicileManager.render();
+                                    DomicileManager.renderDailyOverview();
+                                }, 500);
+                            })
+                            .catch(err => { 
+                                console.error('[DELETE] Errore Firestore:', err);
+                                console.error('[DELETE] Codice errore:', err.code);
+                                console.error('[DELETE] Messaggio:', err.message);
+                                UI.showToast(`Errore eliminazione: ${err.message}`, 'error'); 
+                            }); 
+                    } else {
+                        console.error('[DELETE] Database non inizializzato');
+                        UI.showToast('Errore: Database non disponibile', 'error');
+                    }
+                }); 
+            }
         };
 
         // ========== DOMICILE PDF GENERATOR ==========
