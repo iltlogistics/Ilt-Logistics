@@ -70,10 +70,11 @@
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
         .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .grid-7 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 
         @media (max-width: 768px) {
             .screen-layout { padding: 20px; }
-            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .grid-2, .grid-3, .grid-4, .grid-7 { grid-template-columns: 1fr; }
             header { padding-bottom: 10px; }
         }
 
@@ -90,6 +91,7 @@
             transition: all 0.2s ease;
             background-color: var(--input-bg);
             color: #1a202c;
+            min-height: 44px;
         }
 
         input:focus, select:focus, textarea:focus {
@@ -159,6 +161,170 @@
         }
         .btn-clear:hover { background: #fff5f5; }
 
+        .admin-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--accent-red);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .admin-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+        .admin-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        .admin-modal.active {
+            display: flex;
+        }
+        .admin-modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+        .admin-modal h3 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+        .admin-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        .admin-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .admin-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .admin-login-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+        .admin-cancel-btn {
+            background: var(--border-color);
+            color: var(--text-color);
+        }
+        .storico-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 10001;
+        }
+        .storico-container.active {
+            display: block;
+        }
+        .storico-content {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            right: 50px;
+            bottom: 50px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .storico-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .storico-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .storico-item {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: var(--input-bg);
+        }
+        .storico-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .storico-item-title {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .storico-item-date {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        .storico-item-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .storico-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .storico-view-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+        .storico-download-btn {
+            background: var(--success-color);
+            color: white;
+        }
+        .storico-delete-btn {
+            background: var(--accent-red);
+            color: white;
+        }
+        .tech-specs input[type="text"] {
+            min-height: 48px;
+            font-size: 14px;
+            padding: 10px 8px;
+        }
+
         /* =========================================================================
            LAYOUT DI STAMPA (CSS PRINT)
            ========================================================================= */
@@ -212,10 +378,10 @@
 
             .f1-title-center { text-align: center; font-weight: bold; font-size: 12pt; margin: 25px 0 15px 0; text-decoration: underline; }
 
-            .f1-tech-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 9pt; }
-            .f1-tech-table th { border: 1px solid #000; padding: 6px; background: #eee !important; font-weight: bold; font-size: 8pt; }
-            .f1-tech-table td { border: 1px solid #000; padding: 4px; height: 25px; }
-            .f1-tech-table input { border: none; width: 100%; font-size: 9pt; background: transparent; padding: 0; margin: 0; }
+            .f1-tech-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 8pt; }
+            .f1-tech-table th { border: 1px solid #000; padding: 4px; background: #eee !important; font-weight: bold; font-size: 7pt; text-align: center; }
+            .f1-tech-table td { border: 1px solid #000; padding: 3px; height: auto; min-height: 20px; }
+            .f1-tech-table input { border: none; width: 100%; font-size: 8pt; background: transparent; padding: 2px; margin: 0; box-sizing: border-box; }
 
             .row-header-1 { background-color: #e0f7fa !important; }
             .row-header-2 { background-color: #fff3e0 !important; }
@@ -277,7 +443,12 @@
             P.IVA: 02427340183 | R.E.A.: 1995374<br>
             <small>Soggetta a Direzione e Coordinamento di Unieuro Spa</small>
         </div>
-        <div class="page-title">Modulo Intervento</div>
+        <div class="page-title">
+            Modulo Intervento
+            <button type="button" id="adminBtn" class="admin-btn" onclick="showAdminLogin()" style="display: none;">
+                <i class="fas fa-user-shield"></i> Admin
+            </button>
+        </div>
     </header>
 
     <form id="mainForm" onsubmit="return false;">
@@ -326,7 +497,7 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Tipologia (Mono/Dual/Trial)</label>
-                        <select id="clima_tipo" name="clima_tipo">
+                        <select id="clima_tipo" name="clima_tipo" onchange="gestisciUnitaClima()">
                             <option value="">Seleziona...</option>
                             <option value="Mono">Mono</option>
                             <option value="Dual">Dual</option>
@@ -338,12 +509,18 @@
                         <input type="text" id="clima_marca" placeholder="Es. Daikin">
                     </div>
                 </div>
-                <div class="grid-4">
+                <div class="grid-4" id="clima_unita_1">
                     <input type="text" id="clima_tipo_ue" placeholder="Tipo U.E./U.I.">
-                    <input type="text" id="clima_modello" placeholder="Modello">
-                    <input type="text" id="clima_matricola" placeholder="Matricola">
+                    <input type="text" id="clima_modello_1" placeholder="Modello 1">
+                    <input type="text" id="clima_matricola_1" placeholder="Matricola 1">
+                </div>
+                <div class="grid-4" id="clima_unita_1_b">
+                    <input type="text" id="clima_modello_2" placeholder="Modello 2">
+                    <input type="text" id="clima_matricola_2" placeholder="Matricola 2">
+                    <div></div>
                     <div></div>
                 </div>
+                <div id="clima_unita_aggiuntive"></div>
             </div>
             <div class="tech-specs">
                 <h4>🔥 Nuova Caldaia</h4>
@@ -431,6 +608,41 @@
     </form>
 </div>
 
+<!-- Modal Login Admin -->
+<div id="adminModal" class="admin-modal">
+    <div class="admin-modal-content">
+        <h3><i class="fas fa-user-shield"></i> Accesso Amministratore</h3>
+        <input type="password" id="adminPassword" class="admin-input" placeholder="Password Admin" onkeypress="if(event.key==='Enter') adminLogin()">
+        <div class="admin-buttons">
+            <button class="admin-login-btn" onclick="adminLogin()">Accedi</button>
+            <button class="admin-cancel-btn" onclick="hideAdminLogin()">Annulla</button>
+        </div>
+    </div>
+</div>
+
+<!-- Container Storico PDF -->
+<div id="storicoContainer" class="storico-container">
+    <div class="storico-content">
+        <div class="storico-header">
+            <h2><i class="fas fa-archive"></i> Storico PDF Covercare</h2>
+            <div>
+                <button class="storico-btn storico-download-btn" onclick="scaricaTuttiPDF()">
+                    <i class="fas fa-download"></i> Scarica Tutti
+                </button>
+                <button class="storico-btn storico-delete-btn" onclick="svuotaStorico()">
+                    <i class="fas fa-trash"></i> Svuota Storico
+                </button>
+                <button class="storico-btn storico-view-btn" onclick="hideStorico()">
+                    <i class="fas fa-times"></i> Chiudi
+                </button>
+            </div>
+        </div>
+        <div class="storico-body" id="storicoBody">
+            <!-- Gli elementi dello storico verranno inseriti qui -->
+        </div>
+    </div>
+</div>
+
 <!-- LAYOUT STAMPA -->
 <div class="print-layout">
     <!-- FOGLIO 1 -->
@@ -494,34 +706,38 @@
 
         <div class="f1-title-center">DESCRIZIONE ATTIVITÀ</div>
 
-        <table class="f1-tech-table">
+        <table class="f1-tech-table" id="print_clima_table">
             <tr>
-                <th style="width: 15%;">Tipologia</th>
-                <th style="width: 20%;">Marca</th>
-                <th style="width: 20%;">Tipologia U.E. / U.I.</th>
-                <th style="width: 25%;">Modello</th>
-                <th style="width: 20%;">Matricola</th>
+                <th style="width: 10%;">Tipologia</th>
+                <th style="width: 12%;">Marca</th>
+                <th style="width: 12%;">Tipo U.E. / U.I.</th>
+                <th style="width: 18%;">Modello 1</th>
+                <th style="width: 18%;">Matricola 1</th>
+                <th style="width: 15%;">Modello 2</th>
+                <th style="width: 15%;">Matricola 2</th>
             </tr>
-            <tr><td><input id="print_clima_1_tipo"></td><td><input id="print_clima_1_marca"></td><td><input id="print_clima_1_ue"></td><td><input id="print_clima_1_modello"></td><td><input id="print_clima_1_matricola"></td></tr>
+            <tbody id="print_clima_tbody">
+                <!-- Le righe del climatizzatore verranno inserite dinamicamente -->
+            </tbody>
             
             <tr class="row-header-1">
-                <td colspan="5" style="text-align: center; font-weight: bold; padding: 5px;">NUOVA CALDAIA</td>
+                <td colspan="7" style="text-align: center; font-weight: bold; padding: 5px;">NUOVA CALDAIA</td>
             </tr>
             <tr>
-                <td><input id="print_caldaia_nuova_marca" placeholder="Marca"></td>
+                <td colspan="2"><input id="print_caldaia_nuova_marca" placeholder="Marca"></td>
                 <td><input id="print_caldaia_nuova_tipo" placeholder="Tipo Cond/Cam"></td>
                 <td><input id="print_caldaia_nuova_modello" placeholder="Modello"></td>
-                <td colspan="2"><input id="print_caldaia_nuova_matricola" placeholder="Matricola"></td>
+                <td colspan="3"><input id="print_caldaia_nuova_matricola" placeholder="Matricola"></td>
             </tr>
 
             <tr class="row-header-2">
-                <td colspan="5" style="text-align: center; font-weight: bold; padding: 5px;">CALDAIA SOSTITUITA</td>
+                <td colspan="7" style="text-align: center; font-weight: bold; padding: 5px;">CALDAIA SOSTITUITA</td>
             </tr>
             <tr>
-                <td><input id="print_caldaia_vecchia_marca" placeholder="Marca"></td>
+                <td colspan="2"><input id="print_caldaia_vecchia_marca" placeholder="Marca"></td>
                 <td><input id="print_caldaia_vecchia_tipo" placeholder="Tipo Cond/Cam"></td>
                 <td><input id="print_caldaia_vecchia_modello" placeholder="Modello"></td>
-                <td colspan="2"><input id="print_caldaia_vecchia_matricola" placeholder="Matricola"></td>
+                <td colspan="3"><input id="print_caldaia_vecchia_matricola" placeholder="Matricola"></td>
             </tr>
         </table>
 
@@ -645,17 +861,62 @@
         setupAutoSave(); // Attiva il salvataggio automatico
     });
 
+    // --- GESTIONE UNITÀ CLIMATIZZATORE ---
+    function gestisciUnitaClima() {
+        const tipo = document.getElementById('clima_tipo').value;
+        const containerAggiuntive = document.getElementById('clima_unita_aggiuntive');
+        
+        // Rimuovi tutte le unità aggiuntive esistenti
+        containerAggiuntive.innerHTML = '';
+        
+        if (tipo === 'Dual') {
+            // Aggiungi una seconda unità
+            containerAggiuntive.innerHTML = creaUnitaClima(2);
+        } else if (tipo === 'Trial') {
+            // Aggiungi seconda e terza unità
+            containerAggiuntive.innerHTML = creaUnitaClima(2) + creaUnitaClima(3);
+        }
+        
+        // Riapplica gli event listeners per il salvataggio automatico
+        setupAutoSave();
+    }
+
+    function creaUnitaClima(numero) {
+        return `
+            <div class="unita-clima">
+                <h5>Unità ${numero}</h5>
+                <div class="grid-4" id="clima_unita_${numero}_a">
+                    <input type="text" id="clima_tipo_ue_${numero}" placeholder="Tipo U.E./U.I.">
+                    <input type="text" id="clima_modello_${numero}_1" placeholder="Modello 1">
+                    <input type="text" id="clima_matricola_${numero}_1" placeholder="Matricola 1">
+                </div>
+                <div class="grid-4" id="clima_unita_${numero}_b">
+                    <input type="text" id="clima_modello_${numero}_2" placeholder="Modello 2">
+                    <input type="text" id="clima_matricola_${numero}_2" placeholder="Matricola 2">
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+        `;
+    }
+
     // --- SALVATAGGIO DATI (LocalStorage) ---
     function setupAutoSave() {
         const inputs = document.querySelectorAll('input, select, textarea');
         inputs.forEach(input => {
+            // Rimuovi event listeners esistenti per evitare duplicazioni
+            input.removeEventListener('change', saveFormData);
+            input.removeEventListener('input', debounceHandler);
+            
             input.addEventListener('change', saveFormData);
             // Per i campi di testo, salva anche mentre si scrive (con un piccolo ritardo)
             if (input.type === 'text' || input.tagName === 'TEXTAREA') {
-                input.addEventListener('input', debounce(saveFormData, 500));
+                input.addEventListener('input', debounceHandler);
             }
         });
     }
+
+    const debounceHandler = debounce(saveFormData, 500);
 
     function saveFormData() {
         const data = {};
@@ -691,6 +952,9 @@
                 el.value = value;
             }
         }
+        
+        // Dopo aver caricato i dati, gestisci le unità clima
+        gestisciUnitaClima();
     }
     
     // Funzione di utilità per rallentare il salvataggio mentre si scrive
@@ -717,8 +981,6 @@
             ctx.lineWidth = 2.5; 
             ctx.lineCap = 'round'; 
             ctx.strokeStyle = '#000';
-            
-            // Ripristina firma se esiste (opzionale, più complesso, qui la resettiamo)
         }
         
         window.addEventListener("resize", resizeCanvas);
@@ -763,14 +1025,13 @@
     }
 
     // --- SALVATAGGIO E PDF ---
-    // HO RINOMINATO LA FUNZIONE PER CORREGGERE IL BUG
     function saveAndPrint() { 
         const btn = document.querySelector('.btn-primary');
         const originalText = btn.innerText;
         btn.disabled = true;
         btn.innerText = "Preparazione...";
 
-        // Salva un'ultima volta prima di stampare
+        // Salva un'ultima volta prima di generare il PDF
         saveFormData();
 
         // 1. Popola i campi di stampa
@@ -779,9 +1040,9 @@
         // 2. Prepara Firma Immagine
         prepareSignatureImage();
 
-        // 3. Genera PDF (Stampa Browser)
+        // 3. Genera PDF con nome cliente
         setTimeout(() => {
-            window.print(); 
+            generaPDFConNomeCliente();
             btn.disabled = false;
             btn.innerText = originalText;
         }, 300);
@@ -830,15 +1091,12 @@
             }
         });
 
-        // Impianti
+        // Impianti - Gestione dinamica delle unità clima
+        popolaClimaStampa();
+
+        // Caldaie
         const setVal = (id, val) => { const el = document.getElementById(id); if(el) el.value = val || ''; };
         
-        setVal('print_clima_1_tipo', document.getElementById('clima_tipo').value);
-        setVal('print_clima_1_marca', document.getElementById('clima_marca').value);
-        setVal('print_clima_1_ue', document.getElementById('clima_tipo_ue').value);
-        setVal('print_clima_1_modello', document.getElementById('clima_modello').value);
-        setVal('print_clima_1_matricola', document.getElementById('clima_matricola').value);
-
         setVal('print_caldaia_nuova_marca', document.getElementById('nuova_caldaia_marca').value);
         setVal('print_caldaia_nuova_tipo', document.getElementById('nuova_caldaia_tipo').value);
         setVal('print_caldaia_nuova_modello', document.getElementById('nuova_caldaia_modello').value);
@@ -848,6 +1106,616 @@
         setVal('print_caldaia_vecchia_tipo', document.getElementById('vecchia_caldaia_tipo').value);
         setVal('print_caldaia_vecchia_modello', document.getElementById('vecchia_caldaia_modello').value);
         setVal('print_caldaia_vecchia_matricola', document.getElementById('vecchia_caldaia_matricola').value);
+    }
+
+    function popolaClimaStampa() {
+        const tbody = document.getElementById('print_clima_tbody');
+        const tipo = document.getElementById('clima_tipo').value;
+        const marca = document.getElementById('clima_marca').value;
+        
+        // Svuota la tabella
+        tbody.innerHTML = '';
+        
+        // Determina quante unità mostrare
+        const numUnita = tipo === 'Trial' ? 3 : (tipo === 'Dual' ? 2 : 1);
+        
+        for (let i = 1; i <= numUnita; i++) {
+            const row = document.createElement('tr');
+            
+            // Solo la prima riga ha tipologia e marca
+            if (i === 1) {
+                row.innerHTML = `
+                    <td><input value="${tipo || ''}"></td>
+                    <td><input value="${marca || ''}"></td>
+                    <td><input value="${document.getElementById('clima_tipo_ue').value || ''}"></td>
+                    <td><input value="${document.getElementById('clima_modello_1').value || ''}"></td>
+                    <td><input value="${document.getElementById('clima_matricola_1').value || ''}"></td>
+                    <td><input value="${document.getElementById('clima_modello_2').value || ''}"></td>
+                    <td><input value="${document.getElementById('clima_matricola_2').value || ''}"></td>
+                `;
+            } else {
+                row.innerHTML = `
+                    <td></td>
+                    <td></td>
+                    <td><input value="${document.getElementById(`clima_tipo_ue_${i}`).value || ''}"></td>
+                    <td><input value="${document.getElementById(`clima_modello_${i}_1`).value || ''}"></td>
+                    <td><input value="${document.getElementById(`clima_matricola_${i}_1`).value || ''}"></td>
+                    <td><input value="${document.getElementById(`clima_modello_${i}_2`).value || ''}"></td>
+                    <td><input value="${document.getElementById(`clima_matricola_${i}_2`).value || ''}"></td>
+                `;
+            }
+            
+            tbody.appendChild(row);
+        }
+    }
+
+    // Funzione originale generaPDFConNomeCliente
+    // ========== SISTEMA ADMIN E STORICO PDF ==========
+    const ADMIN_PASSWORD = 'Covercare2024!'; // Password admin
+    let isAdminLoggedIn = false;
+    
+    // Mostra pulsante admin dopo 3 secondi
+    setTimeout(() => {
+        document.getElementById('adminBtn').style.display = 'block';
+    }, 3000);
+    
+    function showAdminLogin() {
+        document.getElementById('adminModal').classList.add('active');
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminPassword').focus();
+    }
+    
+    function hideAdminLogin() {
+        document.getElementById('adminModal').classList.remove('active');
+    }
+    
+    function adminLogin() {
+        const password = document.getElementById('adminPassword').value;
+        if (password === ADMIN_PASSWORD) {
+            isAdminLoggedIn = true;
+            hideAdminLogin();
+            showStorico();
+        } else {
+            alert('Password errata!');
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('adminPassword').focus();
+        }
+    }
+    
+    function showStorico() {
+        if (!isAdminLoggedIn) {
+            showAdminLogin();
+            return;
+        }
+        document.getElementById('storicoContainer').classList.add('active');
+        caricaStoricoPDF();
+    }
+    
+    function hideStorico() {
+        document.getElementById('storicoContainer').classList.remove('active');
+    }
+    
+    // ========== GESTIONE STORICO PDF ==========
+    function salvaPDFNelloStorico(pdfData, filename, datiCliente) {
+        const storico = getStoricoPDF();
+        const nuovoPDF = {
+            id: Date.now().toString(),
+            filename: filename,
+            data: new Date().toISOString(),
+            datiCliente: datiCliente,
+            pdfData: pdfData // Base64 del PDF
+        };
+        
+        storico.push(nuovoPDF);
+        
+        // Mantiene solo gli ultimi 100 PDF per non esaurire lo storage
+        if (storico.length > 100) {
+            storico.shift(); // Rimuove il più vecchio
+        }
+        
+        localStorage.setItem('covercare_storico_pdf', JSON.stringify(storico));
+        console.log('PDF salvato nello storico:', filename);
+    }
+    
+    function getStoricoPDF() {
+        const storico = localStorage.getItem('covercare_storico_pdf');
+        return storico ? JSON.parse(storico) : [];
+    }
+    
+    function caricaStoricoPDF() {
+        const storico = getStoricoPDF();
+        const storicoBody = document.getElementById('storicoBody');
+        
+        if (storico.length === 0) {
+            storicoBody.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Nessun PDF nello storico</p>';
+            return;
+        }
+        
+        // Ordina per data decrescente
+        storico.sort((a, b) => new Date(b.data) - new Date(a.data));
+        
+        storicoBody.innerHTML = storico.map(pdf => `
+            <div class="storico-item">
+                <div class="storico-item-header">
+                    <div class="storico-item-title">${pdf.filename}</div>
+                    <div class="storico-item-date">${new Date(pdf.data).toLocaleString('it-IT')}</div>
+                </div>
+                <div><strong>Cliente:</strong> ${pdf.datiCliente.nome} ${pdf.datiCliente.cognome}</div>
+                <div><strong>Ticket:</strong> ${pdf.datiCliente.ticket}</div>
+                <div><strong>Tecnico:</strong> ${pdf.datiCliente.tecnico}</div>
+                <div class="storico-item-actions">
+                    <button class="storico-btn storico-view-btn" onclick="visualizzaPDF('${pdf.id}')">
+                        <i class="fas fa-eye"></i> Visualizza
+                    </button>
+                    <button class="storico-btn storico-download-btn" onclick="downloadPDF('${pdf.id}')">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                    <button class="storico-btn storico-delete-btn" onclick="eliminaPDF('${pdf.id}')">
+                        <i class="fas fa-trash"></i> Elimina
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function visualizzaPDF(pdfId) {
+        const storico = getStoricoPDF();
+        const pdf = storico.find(p => p.id === pdfId);
+        if (pdf) {
+            // Crea una nuova finestra per visualizzare il PDF
+            const newWindow = window.open('', '_blank');
+            newWindow.document.write(`
+                <html>
+                    <head><title>${pdf.filename}</title></head>
+                    <body style="margin: 0; padding: 20px;">
+                        <embed src="data:application/pdf;base64,${pdf.pdfData}" width="100%" height="100%" type="application/pdf" />
+                    </body>
+                </html>
+            `);
+        }
+    }
+    
+    function downloadPDF(pdfId) {
+        const storico = getStoricoPDF();
+        const pdf = storico.find(p => p.id === pdfId);
+        if (pdf) {
+            // Converte base64 in blob e scarica
+            const byteCharacters = atob(pdf.pdfData);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = pdf.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+    }
+    
+    function eliminaPDF(pdfId) {
+        if (confirm('Sei sicuro di voler eliminare questo PDF?')) {
+            let storico = getStoricoPDF();
+            storico = storico.filter(p => p.id !== pdfId);
+            localStorage.setItem('covercare_storico_pdf', JSON.stringify(storico));
+            caricaStoricoPDF();
+        }
+    }
+    
+    function scaricaTuttiPDF() {
+        const storico = getStoricoPDF();
+        if (storico.length === 0) {
+            alert('Nessun PDF da scaricare');
+            return;
+        }
+        
+        if (confirm(`Scaricare ${storico.length} PDF?`)) {
+            storico.forEach((pdf, index) => {
+                setTimeout(() => {
+                    downloadPDF(pdf.id);
+                }, index * 500); // Attende 500ms tra ogni download
+            });
+        }
+    }
+    
+    function svuotaStorico() {
+        if (confirm('Sei sicuro di voler svuotare tutto lo storico? Questa azione non è reversibile.')) {
+            localStorage.removeItem('covercare_storico_pdf');
+            caricaStoricoPDF();
+        }
+    }
+    
+    function generaPDFConNomeCliente() {
+        // Estrai nome e cognome del cliente
+        const nome = document.getElementById('nome').value || 'Nome';
+        const cognome = document.getElementById('cognome').value || 'Cognome';
+        const ticket = document.getElementById('ticket').value || '000000';
+        const data = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        
+        // Crea filename pulito
+        const nomeCliente = `${cognome}_${nome}`.replace(/[^a-zA-Z0-9_]/g, '_');
+        const filename = `Intervento_${nomeCliente}_${ticket}_${data}.pdf`;
+        
+        // Configura html2pdf
+        const element = document.querySelector('.print-layout');
+        const opt = {
+            margin: 10,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        
+        // Prima popola i campi di stampa
+        populatePrintFields();
+        
+        // Prepara la firma
+        prepareSignatureImage();
+        
+        // Genera PDF e scarica
+        html2pdf().set(opt).from(element).save();
+        
+        // Salva nello storico dopo un breve ritardo
+        setTimeout(() => {
+            salvaPDFNelloStoricoDaHTML(filename);
+        }, 2000);
+    }
+    
+    // Funzione per salvare PDF nello storico usando html2pdf
+    function salvaPDFNelloStoricoDaHTML(filename) {
+        // Assicurati che i campi siano popolati
+        populatePrintFields();
+        prepareSignatureImage();
+        
+        const element = document.querySelector('.print-layout');
+        const opt = {
+            margin: 10,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        
+        // Genera PDF come blob e converti in base64
+        html2pdf().set(opt).from(element).outputPdf('blob').then(blob => {
+            const reader = new FileReader();
+            reader.onloadend = function() {
+                const base64Data = reader.result.split(',')[1];
+                
+                // Salva nello storico
+                const datiCliente = {
+                    nome: document.getElementById('nome')?.value || '',
+                    cognome: document.getElementById('cognome')?.value || '',
+                    ticket: document.getElementById('ticket')?.value || '',
+                    tecnico: document.getElementById('tecnico')?.value || '',
+                    dataIntervento: document.getElementById('dataIntervento')?.value || ''
+                };
+                
+                salvaPDFNelloStorico(base64Data, filename, datiCliente);
+                console.log('PDF salvato nello storico:', filename);
+            };
+            reader.readAsDataURL(blob);
+        }).catch(error => {
+            console.error('Errore nel salvataggio PDF nello storico:', error);
+        });
+    }
+    
+    // Funzione per generare PDF locale quando gipro non è disponibile
+    function generaPDFLocale(covercareData) {
+        // Carica jsPDF se non è disponibile
+        if (!window.jspdf) {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+            script.onload = () => {
+                creaPDFConJsPDF(covercareData);
+            };
+            document.head.appendChild(script);
+        } else {
+            creaPDFConJsPDF(covercareData);
+        }
+    }
+    
+    function creaPDFConJsPDF(covercareData) {
+        const { jsPDF } = window.jspdf; 
+        const doc = new jsPDF(); 
+        let y = 20; 
+        const left = 14; 
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const primary = [0, 86, 179]; // Colore Covercare
+        const dark = [30, 41, 59];
+        const gray = [100, 116, 139];
+        const lightGray = [241, 245, 249];
+        
+        // Header Covercare
+        doc.setFillColor(...dark); 
+        doc.rect(0, 0, pageWidth, 45, 'F');
+        doc.setFillColor(...primary); 
+        doc.rect(0, 45, pageWidth, 4, 'F');
+        
+        doc.setTextColor(255); 
+        doc.setFontSize(24); 
+        doc.setFont('helvetica', 'bold'); 
+        doc.text('MODULO INTERVENTO COVERCARE', left, 25);
+        
+        doc.setFontSize(10); 
+        doc.setFont('helvetica', 'normal'); 
+        doc.text(`Tecnico: ${covercareData.tecnico || '-'}`, pageWidth - left, 20, {align: 'right'}); 
+        doc.text(`Data Intervento: ${covercareData.dataIntervento || '-'}`, pageWidth - left, 28, {align: 'right'}); 
+        doc.text(`Ticket: ${covercareData.ticket || '-'}`, pageWidth - left, 36, {align: 'right'}); 
+        
+        y = 60;
+        const drawSectionHeader = (text) => { 
+            if (y > 250) { doc.addPage(); y = 20; } 
+            doc.setFillColor(...primary); 
+            doc.roundedRect(left, y, pageWidth - (left * 2), 7, 1, 1, 'F'); 
+            doc.setTextColor(255); 
+            doc.setFontSize(10); 
+            doc.setFont('helvetica', 'bold'); 
+            doc.text(text.toUpperCase(), left + 3, y + 5); 
+            y += 12; 
+            doc.setTextColor(...dark); 
+            doc.setFont('helvetica', 'normal'); 
+        };
+        
+        // Dati Cliente
+        drawSectionHeader('DATI CLIENTE');
+        doc.setFontSize(9);
+        doc.setTextColor(...gray);
+        doc.text('Nome:', left, y);
+        doc.setTextColor(...dark);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${covercareData.nome || ''} ${covercareData.cognome || ''}`, left + 25, y);
+        y += 6;
+        
+        doc.setTextColor(...gray);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Indirizzo:', left, y);
+        doc.setTextColor(...dark);
+        doc.text(covercareData.indirizzo || '-', left + 30, y);
+        y += 6;
+        
+        doc.setTextColor(...gray);
+        doc.text('Città:', left, y);
+        doc.setTextColor(...dark);
+        doc.text(`${covercareData.citta || ''} (${covercareData.provincia || ''})`, left + 20, y);
+        y += 6;
+        
+        doc.setTextColor(...gray);
+        doc.text('Telefono:', left, y);
+        doc.setTextColor(...dark);
+        doc.text(covercareData.telefono || '-', left + 30, y);
+        y += 6;
+        
+        doc.setTextColor(...gray);
+        doc.text('Email:', left, y);
+        doc.setTextColor(...dark);
+        doc.text(covercareData.email || '-', left + 25, y);
+        y += 6;
+        
+        doc.setTextColor(...gray);
+        doc.text('Codice Fiscale:', left, y);
+        doc.setTextColor(...dark);
+        doc.text(covercareData.cf || '-', left + 40, y);
+        y += 10;
+        
+        // Dettagli Impianti
+        drawSectionHeader('DETTAGLI IMPIANTI');
+        
+        // Climatizzatore
+        if (covercareData.clima_tipo) {
+            doc.setFontSize(10);
+            doc.setTextColor(...primary);
+            doc.setFont('helvetica', 'bold');
+            doc.text('❄️ CLIMATIZZATORE', left, y);
+            y += 8;
+            
+            doc.setFontSize(9);
+            doc.setTextColor(...gray);
+            doc.text('Tipologia:', left, y);
+            doc.setTextColor(...dark);
+            doc.setFont('helvetica', 'normal');
+            doc.text(covercareData.clima_tipo || '-', left + 35, y);
+            y += 6;
+            
+            doc.setTextColor(...gray);
+            doc.text('Marca:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.clima_marca || '-', left + 25, y);
+            y += 8;
+            
+            // Unità 1
+            doc.setTextColor(...dark);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Unità 1:', left, y);
+            y += 6;
+            
+            doc.setFontSize(8);
+            doc.setTextColor(...gray);
+            doc.text('Tipo U.E./U.I.:', left, y);
+            doc.setTextColor(...dark);
+            doc.setFont('helvetica', 'normal');
+            doc.text(covercareData.clima_tipo_ue || '-', left + 40, y);
+            y += 5;
+            
+            doc.setTextColor(...gray);
+            doc.text('Modello 1:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.clima_modello_1 || '-', left + 35, y);
+            y += 5;
+            
+            doc.setTextColor(...gray);
+            doc.text('Matricola 1:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.clima_matricola_1 || '-', left + 40, y);
+            y += 5;
+            
+            doc.setTextColor(...gray);
+            doc.text('Modello 2:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.clima_modello_2 || '-', left + 35, y);
+            y += 5;
+            
+            doc.setTextColor(...gray);
+            doc.text('Matricola 2:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.clima_matricola_2 || '-', left + 40, y);
+            y += 8;
+            
+            // Unità aggiuntive per Dual/Trial
+            const numUnita = covercareData.clima_tipo === 'Trial' ? 3 : (covercareData.clima_tipo === 'Dual' ? 2 : 1);
+            for (let i = 2; i <= numUnita; i++) {
+                doc.setFont('helvetica', 'bold');
+                doc.text(`Unità ${i}:`, left, y);
+                y += 6;
+                
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(...gray);
+                doc.text('Tipo U.E./U.I.:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData[`clima_tipo_ue_${i}`] || '-', left + 40, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Modello 1:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData[`clima_modello_${i}_1`] || '-', left + 35, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Matricola 1:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData[`clima_matricola_${i}_1`] || '-', left + 40, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Modello 2:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData[`clima_modello_${i}_2`] || '-', left + 35, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Matricola 2:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData[`clima_matricola_${i}_2`] || '-', left + 40, y);
+                y += 8;
+            }
+        }
+        
+        // Caldaia Nuova
+        if (covercareData.nuova_caldaia_marca) {
+            drawSectionHeader('🔥 NUOVA CALDAIA');
+            doc.setFontSize(9);
+            doc.setTextColor(...gray);
+            doc.text('Marca:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.nuova_caldaia_marca || '-', left + 25, y);
+            y += 5;
+            
+            doc.setTextColor(...gray);
+            doc.text('Tipo:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.nuova_caldaia_tipo || '-', left + 20, y);
+            y += 5;
+            
+            doc.setTextColor(...gray);
+            doc.text('Modello:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.nuova_caldaia_modello || '-', left + 25, y);
+            y += 5;
+            
+            doc.setTextColor(...gray);
+            doc.text('Matricola:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.nuova_caldaia_matricola || '-', left + 30, y);
+            y += 10;
+        }
+        
+        // Caldaia Sostituita
+        if (covercareData.vecchia_caldaia_marca) {
+            drawSectionHeader('⚙️ CALDAIA SOSTITUITA');
+            doc.setFontSize(9);
+            doc.setTextColor(...gray);
+            doc.text('Marca:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.vecchia_caldaia_marca || '-', left + 25, y);
+            y += 5;
+            
+            doc.setTextColor(...gray);
+            doc.text('Tipo:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.vecchia_caldaia_tipo || '-', left + 20, y);
+            y += 5;
+            
+            doc.setTextColor(...gray);
+            doc.text('Modello:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.vecchia_caldaia_modello || '-', left + 25, y);
+            y += 5;
+            
+            doc.setTextColor(...gray);
+            doc.text('Matricola:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.vecchia_caldaia_matricola || '-', left + 30, y);
+            y += 10;
+        }
+        
+        // Note intervento
+        if (covercareData.note) {
+            drawSectionHeader('NOTE INTERVENTO');
+            doc.setFontSize(9);
+            doc.setTextColor(...dark);
+            const lines = doc.splitTextToSize(covercareData.note, pageWidth - (left * 2) - 6);
+            doc.text(lines, left + 3, y);
+            y += (lines.length * 5) + 10;
+        }
+        
+        // Documentazione
+        const docs = [];
+        if (covercareData.doc_istruzioni) docs.push('Istruzioni prodotto');
+        if (covercareData.doc_conformita) docs.push('Dichiarazione conformità');
+        if (covercareData.doc_catasto) docs.push('Targatura catasto');
+        if (covercareData.doc_altro) docs.push('Altro');
+        
+        if (docs.length > 0) {
+            drawSectionHeader('DOCUMENTAZIONE CONSEGNATA');
+            doc.setFontSize(9);
+            docs.forEach((doc, index) => {
+                doc.text(`• ${doc}`, left + 5, y);
+                y += 5;
+            });
+            y += 5;
+        }
+        
+        // Firma
+        drawSectionHeader('FIRMA CLIENTE');
+        const sigWidth = 80;
+        const sigHeight = 35;
+        if (y > 230) { doc.addPage(); y = 20; }
+        const sigY = y;
+        
+        doc.setDrawColor(...gray);
+        doc.setLineWidth(0.5);
+        doc.setFillColor(...lightGray);
+        doc.roundedRect(left, sigY, sigWidth, sigHeight, 2, 2, 'FD');
+        doc.setFontSize(8);
+        doc.setTextColor(...gray);
+        doc.text('Firma Cliente', left + sigWidth/2, sigY + sigHeight + 5, {align: 'center'});
+        
+        // Filename con nome cliente
+        const nomeCliente = `${covercareData.cognome || 'Cognome'}_${covercareData.nome || 'Nome'}`.replace(/[^a-zA-Z0-9_]/g, '_');
+        const ticket = covercareData.ticket || '000000';
+        const data = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        const filename = `Covercare_${nomeCliente}_${ticket}_${data}.pdf`;
+        
+        doc.save(filename);
+        console.log('PDF Covercare locale generato con successo');
     }
 
     function prepareSignatureImage() {
@@ -879,3 +1747,5 @@
         }
     }
 </script>
+</body>
+</html>
