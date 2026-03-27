@@ -48,7 +48,7 @@
         body {
             font-family: 'Poppins', sans-serif;
             background-color: var(--ilt-bg);
-            color: var(--ilt-blue);
+            color: var(--ilt-text);
             line-height: 1.6;
             overflow-x: hidden;
         }
@@ -394,64 +394,12 @@
             align-items: center;
             justify-content: space-between;
         }
-        
-        .gipro-header-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .gipro-avatar {
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-        
-        .gipro-name h3 {
-            font-size: 1rem;
-            margin: 0;
-            font-weight: 600;
-        }
-        
-        .gipro-name p {
-            font-size: 0.8rem;
-            margin: 0;
-            opacity: 0.9;
-        }
-        
-        .gipro-minimize {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 5px;
-            border-radius: 50%;
-            transition: background 0.3s;
-        }
-        
-        .gipro-minimize:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .gipro-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background: #f8f9fa;
-        }
-        
-        .gipro-message {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
+       body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--ilt-bg);
+            color: var(--ilt-text);
+            line-height: 1.6;
+            overflow-x: hidden;
         }
         
         .gipro-message.assistant {
@@ -856,13 +804,6 @@
 
     <!-- Logica JavaScript -->
     <script>
-        // --- Gestione UI ---
-        function openTracker() {
-            document.getElementById('tracking-section').style.display = 'block';
-            document.querySelector('.hero').style.display = 'none';
-            window.scrollTo(0, 0);
-        }
-
         function closeTracker() {
             document.getElementById('tracking-section').style.display = 'none';
             document.querySelector('.hero').style.display = 'flex';

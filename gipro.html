@@ -74,23 +74,35 @@
         #intro-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         
         .intro-container { text-align: center; }
-        .intro-logo {
-            font-size: clamp(2.5rem, 8vw, 5rem);
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--cold), var(--primary), var(--hot));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            letter-spacing: 8px;
-            animation: pulse 2s ease-in-out infinite;
+        .intro-video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40vw;
+            max-width: 500px;
+            height: calc(40vw * 16 / 9);
+            max-height: 80vh;
+            object-fit: cover;
+            z-index: 99998;
+            background: #000;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
         }
-        .intro-sub { color: var(--text-secondary); margin-top: 15px; font-size: 1.1rem; letter-spacing: 3px; text-transform: uppercase; }
-        .intro-loader { width: 60px; height: 60px; border: 3px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; margin: 40px auto 0; animation: spin 1s linear infinite; }
-        .intro-status { margin-top: 20px; color: var(--text-secondary); font-size: 0.9rem; opacity: 0.8; }
+        .intro-status { 
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 99999;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+        }
         
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.02); } }
-
         /* LOGIN SCREEN */
         #login-screen {
             position: fixed; inset: 0; background: var(--bg-body);
@@ -1069,10 +1081,11 @@
 
     <div id="intro-screen">
         <div class="intro-container">
-            <div class="intro-logo">GIPRO</div>
-            <div class="intro-sub">Gestione Interventi Professionale</div>
-            <div class="intro-loader"></div>
-            <div class="intro-status" id="intro-status">Inizializzazione...</div>
+            <video class="intro-video" autoplay muted playsinline onended="Auth.onVideoEnded()">
+                <source src="loading-video.mp4.mp4" type="video/mp4">
+                Il tuo browser non supporta il video.
+            </video>
+            <div class="intro-status" id="intro-status">Inizializzazione e sincronizzazione...</div>
         </div>
     </div>
 
@@ -1403,6 +1416,12 @@
                 </div>
                 
                 <!-- NUOVA CARD: COVERCARE -->
+                <div class="dash-card" style="background: linear-gradient(135deg, var(--raee-green), var(--raee-dark));" onclick="RAEEGenerator.showHistory()">
+                    <span class="dash-icon">♻️</span>
+                    <div class="dash-title">Storico RAEE</div>
+                    <p>Visualizza formulari di trasporto</p>
+                </div>
+                
                 <div class="dash-card covercare" onclick="App.goToCovercare()">
                     <span class="dash-icon">🛡️</span>
                     <div class="dash-title">Covercare</div>
@@ -2326,22 +2345,33 @@
                      return; 
                 }
 
+                // Avvia il video quando non è in modalità tracking
+                const video = Utils.id('intro-video');
+                if (video) {
+                    video.play().catch(e => {
+                        console.log('Autoplay video bloccato:', e);
+                        // Se l'autoplay è bloccato, mostra un pulsante per avviare il video
+                        video.style.cursor = 'pointer';
+                        video.addEventListener('click', () => {
+                            video.play();
+                        }, { once: true });
+                    });
+                }
+
+                // Non nascondere la schermata subito, aspetta la fine del video
                 const session = localStorage.getItem('session_gipro');
                 if (session) {
                     try {
                         const user = JSON.parse(session);
                         if (Store.localUsers.find(u => u.id === user.id) || (user.username.toLowerCase() === 'admin')) {
                             Auth.currentUser = user;
-                            Auth.startSession();
-                            Auth.initComplete = true;
-                            Utils.id('intro-screen').classList.add('hidden');
+                            // Salva l'utente ma non avviare la sessione subito
+                            // La sessione partirà dopo la fine del video
                             return;
                         }
                     } catch (e) { localStorage.removeItem('session_gipro'); }
                 }
-                Auth.initComplete = true;
-                Utils.id('intro-screen').classList.add('hidden');
-                Utils.id('login-screen').classList.add('active');
+                // Se non c'è sessione valida, la schermata di login apparirà dopo il video
             },
             login: () => {
                 const u = Utils.id('login_user').value.trim(); const p = Utils.id('login_pass').value;
@@ -2350,6 +2380,21 @@
                 if (user) { Auth.currentUser = user; localStorage.setItem('session_gipro', JSON.stringify(user)); Utils.id('login-error').style.display = 'none'; Utils.id('login-screen').classList.remove('active'); Store.addLog(`Login effettuato da ${user.username}`); Auth.startSession(); } else { Utils.id('login-error').style.display = 'block'; Utils.id('login_pass').value = ''; }
             },
             logout: () => { if (Auth.currentUser) { Store.addLog(`Logout utente ${Auth.currentUser.username}`); } Auth.currentUser = null; localStorage.removeItem('session_gipro'); location.reload(); },
+            onVideoEnded: () => {
+                console.log('Video intro terminato, avvio il processo di login');
+                Auth.initComplete = true;
+                
+                // Controlla se c'è già una sessione attiva
+                if (Auth.currentUser) {
+                    // Utente già loggato, vai direttamente alla dashboard
+                    Auth.startSession();
+                    Utils.id('intro-screen').classList.add('hidden');
+                } else {
+                    // Nessuna sessione, mostra la schermata di login
+                    Utils.id('intro-screen').classList.add('hidden');
+                    Utils.id('login-screen').classList.add('active');
+                }
+            },
             startSession: () => {
                 Utils.id('userBadge').classList.add('visible'); Utils.id('loggedUser').innerText = Auth.currentUser.username; Utils.id('op_name').value = Auth.currentUser.username;
                 if (Auth.currentUser.role === 'admin') { Utils.id('adminQuickLink').classList.remove('hidden'); Utils.id('badgeRole').style.display = 'inline'; document.body.classList.add('is-admin'); } else { Utils.id('adminQuickLink').classList.add('hidden'); Utils.id('badgeRole').style.display = 'none'; document.body.classList.remove('is-admin'); }
@@ -2360,7 +2405,7 @@
 
         // ========== DATA STORE ==========
         const Store = {
-            localInterventions: [], localUsers: [], localLogs: [], localWarehouse: [], localMaterialHistory: [], localMessages: [], localDomicileTickets: [],
+            localInterventions: [], localUsers: [], localLogs: [], localWarehouse: [], localMaterialHistory: [], localMessages: [], localDomicileTickets: [], localRAEEForms: [],
             setup: () => {
                 if (!firebaseReady || !db) return;
                 db.collection("interventions").orderBy("client.dataIntervento", "desc").onSnapshot(snapshot => { 
@@ -2391,6 +2436,8 @@
                 db.collection("logs").orderBy("time", "desc").limit(200).onSnapshot(snapshot => { Store.localLogs = snapshot.docs.map(doc => doc.data()); if (Auth.currentUser?.role === 'admin') Admin.renderLogs(); }, err => console.error(err));
                 db.collection("material_history").orderBy("time", "desc").limit(500).onSnapshot(snapshot => { Store.localMaterialHistory = snapshot.docs.map(doc => doc.data()); }, err => console.error(err));
                 db.collection("messages").orderBy("timestamp", "desc").limit(50).onSnapshot(snapshot => { Store.localMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); if (Utils.id('view-communication').classList.contains('active')) CommunicationManager.render(); CommunicationManager.updateNotificationBadge(); }, err => console.error(err));
+                // Temporaneamente disabilitato - aggiungere regola raee_forms in Firebase
+                // db.collection("raee_forms").orderBy("createdAt", "desc").limit(200).onSnapshot(snapshot => { Store.localRAEEForms = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); }, err => console.error(err));
                 db.collection("users").onSnapshot(snapshot => { 
                     Store.localUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
                     console.log('DEBUG: Utenti caricati da Firebase:', Store.localUsers.length, Store.localUsers); 
@@ -2401,7 +2448,6 @@
                     // Forza sempre il render se siamo nella view domicilio
                     if (Utils.id('view-domicile') && Utils.id('view-domicile').offsetParent !== null) {
                         DomicileManager.render();
-                        DomicileManager.renderDailyOverview();
                     }
                 }, err => console.error('[STORE] Errore onSnapshot domicile_tickets:', err));
             },
@@ -2418,6 +2464,31 @@
             getMaterialHistory: () => Store.localMaterialHistory,
             getMessages: () => Store.localMessages,
             saveMessage: (msg) => { if (!db) return; db.collection("messages").add(msg).catch(err => console.error(err)); },
+            getRAEEForms: () => Store.localRAEEForms,
+            saveRAEEForm: (formData) => { 
+                if (!db) return; 
+                const id = Utils.generateId();
+                const raeeData = { 
+                    id, 
+                    ...formData, 
+                    createdAt: new Date().toISOString(),
+                    createdBy: Auth.currentUser.username
+                }; 
+                
+                db.collection("raee_forms").doc(id).set(raeeData)
+                    .then(() => {
+                        console.log('Formulario RAEE salvato in Firebase');
+                    })
+                    .catch(err => {
+                        console.error('Errore salvataggio RAEE:', err);
+                        // Aggiungi all'array locale come fallback
+                        Store.localRAEEForms.unshift(raeeData);
+                    }); 
+                
+                Store.addLog(`Formulario RAEE generato per ${formData.clientName} - ${formData.raeeCategory}`);
+                
+                return raeeData;
+            },
             deleteMessage: (id) => { if (!db) return; db.collection("messages").doc(id).delete().catch(err => console.error(err)); },
             markMessageRead: (id) => { if (!db) return; db.collection("messages").doc(id).update({ read: true }).catch(err => console.error(err)); },
             getDomicileTickets: () => Store.localDomicileTickets
@@ -2523,6 +2594,11 @@
                 Store.save(data); 
                 Store.addLog(`Intervento ${status} salvato per ${data.client.nome} da ${Auth.currentUser.username}`); 
                 PDF.generate(data);
+
+                // Verifica e genera RAEE se rilevato
+                setTimeout(() => {
+                    RAEEGenerator.generateFromIntervention(data);
+                }, 1000);
 
                 if (Auth.currentUser?.role === 'admin') { 
                     Warehouse.render(); 
@@ -2986,10 +3062,105 @@ www.iltlogistics.it`;
                         }
                     });
                 }
-                DomicileManager.renderDailyOverview();
             },
             
-            previewPhoto: (event) => { 
+            render: () => {
+                const tbody = Utils.id('domicileTableBody');
+                if (!tbody) return;
+                
+                const search = Utils.id('searchDomicile')?.value?.toLowerCase() || '';
+                const statusFilter = DomicileManager.currentStatusFilter;
+                const operatorFilter = Utils.id('filterDomicileOperator')?.value || '';
+                const currentUser = Auth.currentUser.username;
+                const today = Utils.today();
+                
+                let tickets = Store.getDomicileTickets().filter(t => {
+                    const matchesSearch = !search || 
+                        t.clientName?.toLowerCase().includes(search) || 
+                        t.address?.toLowerCase().includes(search) ||
+                        t.product?.toLowerCase().includes(search) ||
+                        t.ticketId?.toLowerCase().includes(search);
+                    
+                    const matchesStatus = !statusFilter || t.status === statusFilter;
+                    const matchesOperator = Auth.currentUser.role === 'admin' ? 
+                        (!operatorFilter || t.operator === operatorFilter) : 
+                        t.operator === currentUser;
+                    
+                    return matchesSearch && matchesStatus && matchesOperator;
+                });
+                
+                // Ordina i ticket per data, poi per numero d'ordine, poi per cliente
+                tickets.sort((a, b) => {
+                    if (a.date !== b.date) return b.date.localeCompare(a.date);
+                    if (a.orderNumber !== undefined && b.orderNumber !== undefined) {
+                        return a.orderNumber - b.orderNumber;
+                    }
+                    return a.clientName.localeCompare(b.clientName);
+                });
+                
+                tbody.innerHTML = '';
+                
+                if (tickets.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:var(--text-secondary);">Nessun ticket trovato.</td></tr>';
+                    return;
+                }
+                
+                tickets.forEach(ticket => {
+                    const statusBadge = ticket.status === 'completato' ? '<span class="badge badge-ok">Completato</span>' :
+                                       ticket.status === 'reclamo' ? '<span class="badge badge-warning">Reclamo</span>' :
+                                       '<span class="badge badge-low">Assegnato</span>';
+                    
+                    const typeBadge = ticket.type === 'consegna' ? '<span class="badge badge-info">Consegna</span>' :
+                                     ticket.type === 'ritiro' ? '<span class="badge badge-primary">Ritiro</span>' :
+                                     '<span class="badge badge-secondary">Altro</span>';
+                    
+                    const orderNumber = ticket.orderNumber || '-';
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>#${ticket.ticketId || ticket.id.substring(0,4)}</strong></td>
+                            <td>${ticket.clientName}</td>
+                            <td>${ticket.address}</td>
+                            <td>${ticket.phone || '-'}</td>
+                            <td>${typeBadge}</td>
+                            <td>${statusBadge}</td>
+                            <td>${orderNumber}</td>
+                            <td>
+                                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                                    <button class="btn btn-sm btn-primary" onclick="DomicileManager.openEditModal('${ticket.id}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    ${ticket.status !== 'completato' && ticket.status !== 'reclamo' ? 
+                                        `<button class="btn btn-sm btn-success" onclick="DomicileManager.openDomicileModal('${ticket.id}')">
+                                            <i class="fas fa-check"></i>
+                                        </button>` : ''}
+                                    ${Auth.currentUser.role === 'admin' ? 
+                                        `<button class="btn btn-sm btn-danger" onclick="DomicileManager.deleteTicket('${ticket.id}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>` : ''}
+                                    <button class="btn btn-sm btn-info" onclick="DomicileManager.viewPdf('${ticket.id}')">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            },
+            
+            filterStatus: (status) => {
+                DomicileManager.currentStatusFilter = status;
+                document.querySelectorAll('#domicileStatusFilter .category-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.textContent.toLowerCase().includes(status.toLowerCase()) || 
+                        (status === '' && btn.textContent === 'Tutti')) {
+                        btn.classList.add('active');
+                    }
+                });
+                DomicileManager.render();
+            },
+            
+            openDomicileModal: (id) => { 
                 const file = event.target.files[0]; 
                 if (file) { 
                     const reader = new FileReader(); 
@@ -3059,6 +3230,11 @@ www.iltlogistics.it`;
                     if(originalTicket) { 
                         const fullData = {...originalTicket, ...completionData}; 
                         DomicilePDF.generate(fullData); 
+                        
+                        // Verifica e genera RAEE se rilevato
+                        setTimeout(() => {
+                            RAEEGenerator.generateFromDomicile(fullData);
+                        }, 1000);
                     }
                     
                     // Verifica se è l'ultima consegna del giorno e genera resoconto
@@ -3514,7 +3690,6 @@ Vuoi generare il resoconto giornaliero completo?`,
                                 setTimeout(() => {
                                     console.log('[DELETE] Forzo render dopo eliminazione');
                                     DomicileManager.render();
-                                    DomicileManager.renderDailyOverview();
                                 }, 500);
                             })
                             .catch(err => { 
@@ -6209,6 +6384,462 @@ Vuoi generare il resoconto giornaliero completo?`,
 
             UI.showToast(`Report completo generato per ${interventions.length} interventi! Fatturato: € ${totalRevenue.toFixed(2)}, Guadagno netto: € ${netProfit.toFixed(2)}`, 'success');
             Store.addLog(`Report giornaliero completo generato da ${Auth.currentUser.username} - ${interventions.length} interventi, fatturato € ${totalRevenue.toFixed(2)}, guadagno € ${netProfit.toFixed(2)} del ${Utils.today()}`);
+        }
+    };
+
+    // RAEE PDF Generator - Integrazione con GIPRO
+    const RAEEGenerator = {
+        detectRAEE: (data) => {
+            const raeeKeywords = [
+                'frigorifero', 'frigo', 'congelatore', 'climatizzatore', 'condizionatore', 
+                'tv', 'televisione', 'monitor', 'computer', 'pc', 'laptop', 'stampante',
+                'elettrodomestico', 'lavatrice', 'lavastoviglie', 'forno', 'microonde',
+                'telefono', 'smartphone', 'tablet', 'caricabatterie', 'lampada', 'led'
+            ];
+            
+            const description = (data.description || data.product || '').toLowerCase();
+            const clientNotes = (data.notes || '').toLowerCase();
+            const interventionType = (data.type || '').toLowerCase();
+            
+            const hasRAEE = raeeKeywords.some(keyword => 
+                description.includes(keyword) || 
+                clientNotes.includes(keyword) || 
+                interventionType.includes(keyword)
+            );
+            
+            if (!hasRAEE) return null;
+            
+            // Determina categoria RAEE in base al tipo
+            let category = 'R6'; // Default piccoli elettrodomestici
+            let weight = 5; // Default peso kg
+            
+            if (description.includes('frigorifero') || description.includes('congelatore') || 
+                description.includes('climatizzatore') || description.includes('condizionatore')) {
+                category = 'R1';
+                weight = 50;
+            } else if (description.includes('lavatrice') || description.includes('lavastoviglie') || 
+                      description.includes('forno') || description.includes('microonde')) {
+                category = 'R2';
+                weight = 30;
+            } else if (description.includes('tv') || description.includes('televisione') || 
+                      description.includes('monitor')) {
+                category = 'R3';
+                weight = 15;
+            } else if (description.includes('computer') || description.includes('pc') || 
+                      description.includes('laptop') || description.includes('stampante')) {
+                category = 'R4';
+                weight = 10;
+            } else if (description.includes('lampada') || description.includes('led')) {
+                category = 'R5';
+                weight = 2;
+            }
+            
+            return { category, weight, detected: true };
+        },
+        
+        generateFromIntervention: (interventionData) => {
+            const raeeInfo = RAEEGenerator.detectRAEE(interventionData);
+            if (!raeeInfo) return;
+            
+            // Mostra dialogo di conferma con firma
+            UI.confirm('RAEE Rilevato', 
+                `Ho rilevato un apparecchio elettrico/elettronico nell'intervento per ${interventionData.client?.nome || interventionData.clientName || 'N.D.'}.
+                
+Categoria: ${raeeInfo.category}
+Peso stimato: ${raeeInfo.weight} kg
+
+Per procedere è richiesta la firma digitale. Vuoi continuare?`, 
+                () => RAEEGenerator.showSignatureModal(interventionData, raeeInfo, 'intervention')
+            );
+        },
+        
+        generateFromDomicile: (domicileData) => {
+            const raeeInfo = RAEEGenerator.detectRAEE(domicileData);
+            if (!raeeInfo) return;
+            
+            // Mostra dialogo di conferma con firma
+            UI.confirm('RAEE Rilevato', 
+                `Ho rilevato un apparecchio elettrico/elettronico nella consegna per ${domicileData.clientName || 'N.D.'}.
+                
+Categoria: ${raeeInfo.category}
+Peso stimato: ${raeeInfo.weight} kg
+
+Per procedere è richiesta la firma digitale. Vuoi continuare?`, 
+                () => RAEEGenerator.showSignatureModal(domicileData, raeeInfo, 'domicile')
+            );
+        },
+        
+        showSignatureModal: (data, raeeInfo, sourceType) => {
+            const clientName = data.client?.nome || data.clientName || 'N.D.';
+            const modal = `
+                <div class="modal-overlay active" id="raeeSignatureModal">
+                    <div class="modal" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <h3>Firma Digitale RAEE</h3>
+                            <button class="modal-close" onclick="RAEEGenerator.closeSignatureModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="info-box">
+                                <h4><i class="fas fa-recycle"></i> Dettagli RAEE</h4>
+                                <p><strong>Cliente:</strong> ${clientName}</p>
+                                <p><strong>Categoria:</strong> ${raeeInfo.category}</p>
+                                <p><strong>Peso:</strong> ${raeeInfo.weight} kg</p>
+                                <p><strong>Origine:</strong> ${sourceType === 'intervention' ? 'Intervento' : 'Consegna Domicilio'}</p>
+                            </div>
+                            
+                            <div style="margin: 20px 0;">
+                                <label><strong>Firma Operatore *</strong></label>
+                                <div class="sig-wrapper" style="height: 120px;">
+                                    <canvas id="sigRAEEOperator" class="sig-canvas"></canvas>
+                                    <button type="button" class="sig-clear" onclick="SignaturePad.clear('sigRAEEOperator')">Cancella</button>
+                                </div>
+                            </div>
+                            
+                            <div style="margin: 20px 0;">
+                                <label><strong>Firma Cliente *</strong></label>
+                                <div class="sig-wrapper" style="height: 120px;">
+                                    <canvas id="sigRAEEClient" class="sig-canvas"></canvas>
+                                    <button type="button" class="sig-clear" onclick="SignaturePad.clear('sigRAEEClient')">Cancella</button>
+                                </div>
+                            </div>
+                            
+                            <div style="margin: 20px 0;">
+                                <label><strong>Note Aggiuntive</strong></label>
+                                <textarea id="raeeNotes" style="width: 100%; height: 80px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px;" placeholder="Inserisci eventuali note sul trasporto RAEE..."></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn btn-outline" onclick="RAEEGenerator.closeSignatureModal()">Annulla</button>
+                            <button class="btn btn-success" onclick="RAEEGenerator.generateWithSignature()">
+                                <i class="fas fa-file-pdf"></i> Genera Formulario
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modal);
+            
+            // Inizializza le firme dopo che il modal è stato aggiunto al DOM
+            setTimeout(() => {
+                SignaturePad.init('sigRAEEOperator');
+                SignaturePad.init('sigRAEEClient');
+            }, 100);
+            
+            // Salva i dati per uso successivo
+            RAEEGenerator.currentData = { data, raeeInfo, sourceType };
+        },
+        
+        closeSignatureModal: () => {
+            const modal = Utils.id('raeeSignatureModal');
+            if (modal) modal.remove();
+            RAEEGenerator.currentData = null;
+        },
+        
+        generateWithSignature: () => {
+            const operatorSignature = SignaturePad.getImage('sigRAEEOperator');
+            const clientSignature = SignaturePad.getImage('sigRAEEClient');
+            const notes = Utils.id('raeeNotes').value;
+            
+            if (!operatorSignature) {
+                UI.showToast('Firma operatore obbligatoria', 'error');
+                return;
+            }
+            
+            if (!clientSignature) {
+                UI.showToast('Firma cliente obbligatoria', 'error');
+                return;
+            }
+            
+            const { data, raeeInfo, sourceType } = RAEEGenerator.currentData;
+            
+            // Genera il PDF con le firme
+            RAEEGenerator.generatePDF(data, raeeInfo, sourceType, operatorSignature, clientSignature, notes);
+            
+            // Chiudi il modal
+            RAEEGenerator.closeSignatureModal();
+        },
+        
+        showHistory: () => {
+            // Debug: mostra i dettagli dell'utente corrente
+            console.log('DEBUG RAEE - Utente corrente:', Auth.currentUser);
+            console.log('DEBUG RAEE - Ruolo:', Auth.currentUser?.role);
+            console.log('DEBUG RAEE - È admin?', Auth.currentUser?.role === 'admin');
+            
+            // Controllo sicurezza: solo utenti loggati possono accedere
+            if (!Auth.currentUser) {
+                UI.showToast('Accesso negato. Devi essere loggato per visualizzare lo storico RAEE.', 'error');
+                console.log('DEBUG RAEE - Accesso negato. Utente non loggato.');
+                return;
+            }
+            
+            console.log('DEBUG RAEE - Accesso consentito. Caricamento storico...');
+            const raeeForms = Store.getRAEEForms();
+            const modal = `
+                <div class="modal-overlay active" id="raeeHistoryModal">
+                    <div class="modal" style="max-width: 900px; max-height: 80vh; overflow-y: auto;">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-recycle"></i> Storico Formulari RAEE</h3>
+                            <button class="modal-close" onclick="RAEEGenerator.closeHistoryModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            ${raeeForms.length === 0 ? 
+                                '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">Nessun formulario RAEE trovato</p>' :
+                                `<div class="table-responsive">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th>Cliente</th>
+                                                <th>Categoria</th>
+                                                <th>Peso</th>
+                                                <th>Tipo</th>
+                                                <th>Operatore</th>
+                                                <th>Azioni</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${raeeForms.map(form => `
+                                                <tr>
+                                                    <td>${new Date(form.generatedAt).toLocaleDateString('it-IT')}</td>
+                                                    <td>${form.clientName}</td>
+                                                    <td><span style="background: var(--raee-green); color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${form.raeeCategory}</span></td>
+                                                    <td>${form.raeeWeight} kg</td>
+                                                    <td>${form.sourceType === 'intervention' ? 'Intervento' : 'Domicilio'}</td>
+                                                    <td>${form.createdBy}</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-primary" onclick="RAEEGenerator.viewFormDetails('${form.id}')">
+                                                            <i class="fas fa-eye"></i> Dettagli
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>`
+                            }
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn btn-secondary" onclick="RAEEGenerator.closeHistoryModal()">Chiudi</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modal);
+        },
+        
+        closeHistoryModal: () => {
+            const modal = Utils.id('raeeHistoryModal');
+            if (modal) modal.remove();
+        },
+        
+        viewFormDetails: (formId) => {
+            const form = Store.getRAEEForms().find(f => f.id === formId);
+            if (!form) return;
+            
+            const modal = `
+                <div class="modal-overlay active" id="raeeDetailsModal">
+                    <div class="modal" style="max-width: 600px;">
+                        <div class="modal-header">
+                            <h3><i class="fas fa-file-pdf"></i> Dettagli Formulario RAEE</h3>
+                            <button class="modal-close" onclick="RAEEGenerator.closeDetailsModal()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="info-box">
+                                <h4>Informazioni Generali</h4>
+                                <p><strong>Data Generazione:</strong> ${new Date(form.generatedAt).toLocaleString('it-IT')}</p>
+                                <p><strong>Operatore:</strong> ${form.createdBy}</p>
+                                <p><strong>File PDF:</strong> ${form.pdfFilename}</p>
+                            </div>
+                            
+                            <div class="info-box" style="background: #e0f2fe; border-color: #0284c7;">
+                                <h4>Dati Cliente</h4>
+                                <p><strong>Nome:</strong> ${form.clientName}</p>
+                                <p><strong>Indirizzo:</strong> ${form.clientAddress}</p>
+                                <p><strong>Telefono:</strong> ${form.clientPhone}</p>
+                            </div>
+                            
+                            <div class="info-box" style="background: #f0fdf4; border-color: #16a34a;">
+                                <h4>Dettagli RAEE</h4>
+                                <p><strong>Categoria:</strong> ${form.raeeCategory}</p>
+                                <p><strong>Peso:</strong> ${form.raeeWeight} kg</p>
+                                <p><strong>Descrizione:</strong> ${form.description}</p>
+                                <p><strong>Tipo Origine:</strong> ${form.sourceType === 'intervention' ? 'Intervento' : 'Consegna Domicilio'}</p>
+                            </div>
+                            
+                            ${form.notes ? `
+                                <div class="info-box">
+                                    <h4>Note</h4>
+                                    <p>${form.notes}</p>
+                                </div>
+                            ` : ''}
+                            
+                            <div style="text-align: center; margin-top: 20px;">
+                                <button class="btn btn-success" onclick="RAEEGenerator.regeneratePDF('${formId}')">
+                                    <i class="fas fa-redo"></i> Rigenera PDF
+                                </button>
+                            </div>
+                        </div>
+                        <div class="modal-actions">
+                            <button class="btn btn-secondary" onclick="RAEEGenerator.closeDetailsModal()">Chiudi</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modal);
+        },
+        
+        closeDetailsModal: () => {
+            const modal = Utils.id('raeeDetailsModal');
+            if (modal) modal.remove();
+        },
+        
+        regeneratePDF: (formId) => {
+            const form = Store.getRAEEForms().find(f => f.id === formId);
+            if (!form) return;
+            
+            // Ricostruisci i dati per rigenerare il PDF
+            const data = {
+                client: { nome: form.clientName, indirizzo: form.clientAddress, telefono: form.clientPhone },
+                description: form.description,
+                id: form.sourceId,
+                notes: form.notes
+            };
+            
+            const raeeInfo = { category: form.raeeCategory, weight: form.raeeWeight };
+            
+            RAEEGenerator.generatePDF(data, raeeInfo, form.sourceType, form.operatorSignature, form.clientSignature, form.notes);
+            RAEEGenerator.closeDetailsModal();
+        },
+        
+        generatePDF: (data, raeeInfo, sourceType, operatorSignature = null, clientSignature = null, notes = '') => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Logo e titolo
+            doc.setFontSize(20);
+            doc.text('FORMULARIO TRASPORTO RAEE', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.text('Rifiuti di Apparecchiature Elettriche ed Elettroniche', 105, 30, { align: 'center' });
+            doc.text(`Generato da: ${sourceType === 'intervention' ? 'Intervento' : 'Consegna Domicilio'} - ${new Date().toLocaleDateString('it-IT')}`, 105, 40, { align: 'center' });
+            
+            // Dati trasportatore (ILT Logistics)
+            doc.setFontSize(14);
+            doc.text('DATI TRASPORTATORE', 20, 60);
+            doc.setFontSize(11);
+            doc.text('ILT Logistics Srl', 20, 70);
+            doc.text('P.IVA: [Inserire P.IVA]', 20, 80);
+            doc.text('Indirizzo: [Inserire indirizzo sede]', 20, 90);
+            doc.text('Tel: [Inserire telefono]', 20, 100);
+            
+            // Dati cliente/produttore
+            doc.setFontSize(14);
+            doc.text('DATI PRODUTTORE/DETENTORE', 20, 120);
+            doc.setFontSize(11);
+            const clientName = data.client?.nome || data.clientName || 'N.D.';
+            const clientAddress = data.client?.indirizzo || data.address || 'N.D.';
+            const clientPhone = data.client?.telefono || data.phone || 'N.D.';
+            
+            doc.text(`Cliente: ${clientName}`, 20, 130);
+            doc.text(`Indirizzo: ${clientAddress}`, 20, 140);
+            doc.text(`Telefono: ${clientPhone}`, 20, 150);
+            
+            // Categoria RAEE rilevata
+            doc.setFontSize(14);
+            doc.text('CATEGORIE RAEE', 20, 170);
+            doc.setFontSize(11);
+            
+            const categoryNames = {
+                'R1': 'R1 - Freddo e Climate',
+                'R2': 'R2 - Grandi Elettrodomestici',
+                'R3': 'R3 - TV e Monitor',
+                'R4': 'R4 - Informatica',
+                'R5': 'R5 - Illuminazione',
+                'R6': 'R6 - Piccoli Elettrodomestici'
+            };
+            
+            doc.text(`${categoryNames[raeeInfo.category]}: ${raeeInfo.weight} kg`, 20, 180);
+            
+            // Dettagli apparecchio
+            doc.setFontSize(14);
+            doc.text('DETTAGLI APPARECCHIO', 20, 200);
+            doc.setFontSize(11);
+            const description = data.description || data.product || 'N.D.';
+            doc.text(`Descrizione: ${description}`, 20, 210);
+            
+            if (data.type) {
+                doc.text(`Tipo intervento: ${data.type}`, 20, 220);
+            }
+            
+            // Dettagli trasporto
+            doc.setFontSize(14);
+            doc.text('DETTAGLI TRASPORTO', 20, 240);
+            doc.setFontSize(11);
+            doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, 20, 250);
+            doc.text(`Operatore: ${Auth.currentUser.username}`, 20, 260);
+            doc.text(`Destinazione: Impianto RAEE autorizzato`, 20, 270);
+            doc.text('Numero Colli: 1', 20, 280);
+            
+            // Note
+            if (notes || data.notes) {
+                doc.setFontSize(14);
+                doc.text('NOTE', 20, 300);
+                doc.setFontSize(11);
+                const finalNotes = notes || data.notes || '';
+                const splitNote = doc.splitTextToSize(finalNotes, 170);
+                doc.text(splitNote, 20, 310);
+            }
+            
+            // Firme digitali
+            if (operatorSignature || clientSignature) {
+                doc.setFontSize(14);
+                doc.text('FIRME DIGITALI', 20, 350);
+                
+                if (operatorSignature) {
+                    doc.setFontSize(11);
+                    doc.text('Firma Operatore:', 20, 365);
+                    try {
+                        doc.addImage(operatorSignature, 'PNG', 20, 370, 60, 30);
+                    } catch(e) { console.error('Errore firma operatore:', e); }
+                }
+                
+                if (clientSignature) {
+                    doc.setFontSize(11);
+                    doc.text('Firma Cliente:', 120, 365);
+                    try {
+                        doc.addImage(clientSignature, 'PNG', 120, 370, 60, 30);
+                    } catch(e) { console.error('Errore firma cliente:', e); }
+                }
+            }
+            
+            // Salva PDF
+            const filename = `formulario_raee_${Utils.sanitize(clientName).replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+            doc.save(filename);
+            
+            // Salva nello storico
+            const formData = {
+                clientName: clientName,
+                clientAddress: clientAddress,
+                clientPhone: clientPhone,
+                raeeCategory: raeeInfo.category,
+                raeeWeight: raeeInfo.weight,
+                description: description,
+                sourceType: sourceType,
+                sourceId: data.id,
+                operatorSignature: operatorSignature,
+                clientSignature: clientSignature,
+                notes: notes || data.notes,
+                pdfFilename: filename,
+                generatedAt: new Date().toISOString()
+            };
+            
+            Store.saveRAEEForm(formData);
+            
+            UI.showToast('Formulario RAEE generato e salvato nello storico!', 'success');
+            Store.addLog(`Formulario RAEE generato per ${clientName} - ${raeeInfo.category}`);
         }
     };
 

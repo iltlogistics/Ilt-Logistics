@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trasporto RAEE - ILT Logistics Srl</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --ilt-blue: #1e293b;
+            --ilt-orange: #f97316;
+            --ilt-text: #f8fafc;
+            --ilt-bg: #f1f5f9;
+            --raee-green: #10b981;
+            --raee-dark: #059669;
+            --raee-light: #d1fae5;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--ilt-bg) 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            color: var(--ilt-text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: var(--ilt-blue);
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .raee-icon {
+            font-size: 3rem;
+            color: var(--raee-green);
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: var(--radius);
+            padding: 40px;
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            color: var(--ilt-blue);
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--raee-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: var(--ilt-blue);
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--raee-green);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .raee-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .category-card {
+            background: var(--raee-light);
+            border: 2px solid var(--raee-green);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .category-card:hover {
+            background: var(--raee-green);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .category-card.selected {
+            background: var(--raee-green);
+            color: white;
+        }
+
+        .category-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .category-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .weight-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .weight-input input {
+            flex: 1;
+        }
+
+        .weight-input span {
+            color: var(--ilt-blue);
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--raee-green);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--raee-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .btn-secondary {
+            background: var(--ilt-blue);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #0f172a;
+            transform: translateY(-2px);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .info-box {
+            background: #fef3c7;
+            border-left: 4px solid var(--ilt-orange);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .info-box h3 {
+            color: #92400e;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-box ul {
+            color: #78350f;
+            margin-left: 20px;
+        }
+
+        .required {
+            color: #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .form-container {
+                padding: 25px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .raee-categories {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--raee-green);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="raee-icon">
+                <i class="fas fa-recycle"></i>
+            </div>
+            <h1>Modulo Trasporto RAEE</h1>
+            <p class="subtitle">Rifiuti di Apparecchiature Elettriche ed Elettroniche</p>
+        </header>
+
+        <div class="form-container">
+            <div class="info-box">
+                <h3><i class="fas fa-info-circle"></i> Informazioni Importanti</h3>
+                <ul>
+                    <li>Compila tutti i campi obbligatori contrassegnati con <span class="required">*</span></li>
+                    <li>Seleziona almeno una categoria di RAEE da trasportare</li>
+                    <li>Indica il peso approssimativo per ogni categoria selezionata</li>
+                    <li>Il formulario verrà generato in formato PDF una volta inviato</li>
+                </ul>
+            </div>
+
+            <form id="raeeForm">
+                <!-- Dati del Trasportatore -->
+                <section>
+                    <h2 class="section-title">
+                        <i class="fas fa-truck"></i>
+                        Dati del Trasportatore
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="trasportatore_nome">Nome Trasportatore <span class="required">*</span></label>
+                            <input type="text" id="trasportatore_nome" name="trasportatore_nome" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="trasportatore_partita_iva">Partita IVA <span class="required">*</span></label>
+                            <input type="text" id="trasportatore_partita_iva" name="trasportatore_partita_iva" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="trasportatore_indirizzo">Indirizzo <span class="required">*</span></label>
+                            <input type="text" id="trasportatore_indirizzo" name="trasportatore_indirizzo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="trasportatore_telefono">Telefono <span class="required">*</span></label>
+                            <input type="tel" id="trasportatore_telefono" name="trasportatore_telefono" required>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Dati del Produttore/Detentore -->
+                <section>
+                    <h2 class="section-title">
+                        <i class="fas fa-building"></i>
+                        Dati del Produttore/Detentore
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="produttore_nome">Ragione Sociale <span class="required">*</span></label>
+                            <input type="text" id="produttore_nome" name="produttore_nome" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="produttore_partita_iva">Partita IVA <span class="required">*</span></label>
+                            <input type="text" id="produttore_partita_iva" name="produttore_partita_iva" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="produttore_indirizzo">Indirizzo Ritiro <span class="required">*</span></label>
+                            <input type="text" id="produttore_indirizzo" name="produttore_indirizzo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="produttore_telefono">Telefono <span class="required">*</span></label>
+                            <input type="tel" id="produttore_telefono" name="produttore_telefono" required>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Categorie RAEE -->
+                <section>
+                    <h2 class="section-title">
+                        <i class="fas fa-th-large"></i>
+                        Categorie RAEE
+                    </h2>
+                    <div class="raee-categories">
+                        <div class="category-card" data-category="R1">
+                            <div class="category-icon"><i class="fas fa-temperature-low"></i></div>
+                            <div class="category-name">R1 - Freddo e Climate</div>
+                            <div class="weight-input">
+                                <input type="number" step="0.1" min="0" placeholder="Peso (kg)" class="weight-input-field" data-category="R1">
+                                <span>kg</span>
+                            </div>
+                        </div>
+                        <div class="category-card" data-category="R2">
+                            <div class="category-icon"><i class="fas fa-plug"></i></div>
+                            <div class="category-name">R2 - Grandi Elettrodomestici</div>
+                            <div class="weight-input">
+                                <input type="number" step="0.1" min="0" placeholder="Peso (kg)" class="weight-input-field" data-category="R2">
+                                <span>kg</span>
+                            </div>
+                        </div>
+                        <div class="category-card" data-category="R3">
+                            <div class="category-icon"><i class="fas fa-tv"></i></div>
+                            <div class="category-name">R3 - TV e Monitor</div>
+                            <div class="weight-input">
+                                <input type="number" step="0.1" min="0" placeholder="Peso (kg)" class="weight-input-field" data-category="R3">
+                                <span>kg</span>
+                            </div>
+                        </div>
+                        <div class="category-card" data-category="R4">
+                            <div class="category-icon"><i class="fas fa-laptop"></i></div>
+                            <div class="category-name">R4 - Informatica</div>
+                            <div class="weight-input">
+                                <input type="number" step="0.1" min="0" placeholder="Peso (kg)" class="weight-input-field" data-category="R4">
+                                <span>kg</span>
+                            </div>
+                        </div>
+                        <div class="category-card" data-category="R5">
+                            <div class="category-icon"><i class="fas fa-lightbulb"></i></div>
+                            <div class="category-name">R5 - Illuminazione</div>
+                            <div class="weight-input">
+                                <input type="number" step="0.1" min="0" placeholder="Peso (kg)" class="weight-input-field" data-category="R5">
+                                <span>kg</span>
+                            </div>
+                        </div>
+                        <div class="category-card" data-category="R6">
+                            <div class="category-icon"><i class="fas fa-power-off"></i></div>
+                            <div class="category-name">R6 - Piccoli Elettrodomestici</div>
+                            <div class="weight-input">
+                                <input type="number" step="0.1" min="0" placeholder="Peso (kg)" class="weight-input-field" data-category="R6">
+                                <span>kg</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Dettagli Trasporto -->
+                <section>
+                    <h2 class="section-title">
+                        <i class="fas fa-shipping-fast"></i>
+                        Dettagli Trasporto
+                    </h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="data_trasporto">Data Trasporto <span class="required">*</span></label>
+                            <input type="date" id="data_trasporto" name="data_trasporto" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="targa_mezzo">Targa Mezzo <span class="required">*</span></label>
+                            <input type="text" id="targa_mezzo" name="targa_mezzo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="destinazione">Impianto Destinazione <span class="required">*</span></label>
+                            <input type="text" id="destinazione" name="destinazione" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="numero_colli">Numero Colli <span class="required">*</span></label>
+                            <input type="number" id="numero_colli" name="numero_colli" min="1" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="note">Note Aggiuntive</label>
+                        <textarea id="note" name="note" placeholder="Inserisci eventuali note aggiuntive sul trasporto..."></textarea>
+                    </div>
+                </section>
+
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-file-pdf"></i>
+                        Genera Formulario PDF
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <i class="fas fa-redo"></i>
+                        Reset Modulo
+                    </button>
+                </div>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Generazione formulario in corso...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <script>
+        // Gestione selezione categorie RAEE
+        document.querySelectorAll('.category-card').forEach(card => {
+            card.addEventListener('click', function() {
+                this.classList.toggle('selected');
+            });
+        });
+
+        // Imposta data di oggi come default
+        document.getElementById('data_trasporto').valueAsDate = new Date();
+
+        // Gestione invio form
+        document.getElementById('raeeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validazione categorie selezionate
+            const selectedCategories = document.querySelectorAll('.category-card.selected');
+            if (selectedCategories.length === 0) {
+                alert('Seleziona almeno una categoria di RAEE');
+                return;
+            }
+
+            // Validazione peso per categorie selezionate
+            let validWeights = true;
+            selectedCategories.forEach(card => {
+                const category = card.dataset.category;
+                const weightInput = card.querySelector('.weight-input-field');
+                if (!weightInput.value || weightInput.value <= 0) {
+                    validWeights = false;
+                }
+            });
+
+            if (!validWeights) {
+                alert('Inserisci il peso per tutte le categorie selezionate');
+                return;
+            }
+
+            // Mostra loading
+            document.getElementById('loading').style.display = 'block';
+            
+            // Simula generazione PDF
+            setTimeout(() => {
+                generatePDF();
+                document.getElementById('loading').style.display = 'none';
+            }, 1500);
+        });
+
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Logo e titolo
+            doc.setFontSize(20);
+            doc.text('FORMULARIO TRASPORTO RAEE', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.text('Rifiuti di Apparecchiature Elettriche ed Elettroniche', 105, 30, { align: 'center' });
+            
+            // Dati trasportatore
+            doc.setFontSize(14);
+            doc.text('DATI TRASPORTATORE', 20, 50);
+            doc.setFontSize(11);
+            doc.text(`Nome: ${document.getElementById('trasportatore_nome').value}`, 20, 60);
+            doc.text(`P.IVA: ${document.getElementById('trasportatore_partita_iva').value}`, 20, 70);
+            doc.text(`Indirizzo: ${document.getElementById('trasportatore_indirizzo').value}`, 20, 80);
+            doc.text(`Tel: ${document.getElementById('trasportatore_telefono').value}`, 20, 90);
+            
+            // Dati produttore
+            doc.setFontSize(14);
+            doc.text('DATI PRODUTTORE/DETENTORE', 20, 110);
+            doc.setFontSize(11);
+            doc.text(`Ragione Sociale: ${document.getElementById('produttore_nome').value}`, 20, 120);
+            doc.text(`P.IVA: ${document.getElementById('produttore_partita_iva').value}`, 20, 130);
+            doc.text(`Indirizzo: ${document.getElementById('produttore_indirizzo').value}`, 20, 140);
+            doc.text(`Tel: ${document.getElementById('produttore_telefono').value}`, 20, 150);
+            
+            // Categorie RAEE
+            doc.setFontSize(14);
+            doc.text('CATEGORIE RAEE', 20, 170);
+            doc.setFontSize(11);
+            
+            let yPos = 180;
+            document.querySelectorAll('.category-card.selected').forEach(card => {
+                const category = card.dataset.category;
+                const name = card.querySelector('.category-name').textContent;
+                const weight = card.querySelector('.weight-input-field').value;
+                doc.text(`${name}: ${weight} kg`, 20, yPos);
+                yPos += 10;
+            });
+            
+            // Dettagli trasporto
+            doc.setFontSize(14);
+            doc.text('DETTAGLI TRASPORTO', 20, yPos + 10);
+            doc.setFontSize(11);
+            doc.text(`Data: ${document.getElementById('data_trasporto').value}`, 20, yPos + 20);
+            doc.text(`Targa: ${document.getElementById('targa_mezzo').value}`, 20, yPos + 30);
+            doc.text(`Destinazione: ${document.getElementById('destinazione').value}`, 20, yPos + 40);
+            doc.text(`Numero Colli: ${document.getElementById('numero_colli').value}`, 20, yPos + 50);
+            
+            // Note
+            const note = document.getElementById('note').value;
+            if (note) {
+                doc.setFontSize(14);
+                doc.text('NOTE', 20, yPos + 70);
+                doc.setFontSize(11);
+                const splitNote = doc.splitTextToSize(note, 170);
+                doc.text(splitNote, 20, yPos + 80);
+            }
+            
+            // Salva PDF
+            doc.save(`formulario_raee_${new Date().toISOString().split('T')[0]}.pdf`);
+            
+            alert('Formulario RAEE generato con successo!');
+        }
+
+        function resetForm() {
+            if (confirm('Sei sicuro di voler resettare il modulo?')) {
+                document.getElementById('raeeForm').reset();
+                document.querySelectorAll('.category-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                document.getElementById('data_trasporto').valueAsDate = new Date();
+            }
+        }
+    </script>
+</body>
+</html>
