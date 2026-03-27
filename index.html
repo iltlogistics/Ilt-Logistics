@@ -53,6 +53,138 @@
             overflow-x: hidden;
         }
 
+        /* --- VIDEO INTRODUTTIVO --- */
+        .video-intro {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vw;
+            height: 80vh;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 0;
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .video-container::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .intro-video {
+            width: 120%;
+            height: 120%;
+            object-fit: contain;
+            margin: 0;
+            padding: 0;
+            border-radius: 20px;
+            background: #000;
+            object-position: center top;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+        }
+
+        .intro-logo {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--ilt-orange), #fbbf24);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeInScale 1s ease-out, fadeOutAfter 1s ease-out 2s forwards;
+        }
+
+        .intro-text {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 0.5s forwards, fadeOutAfter 1s ease-out 2s forwards;
+        }
+
+        .skip-intro {
+            padding: 1rem 2rem;
+            background: var(--ilt-orange);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeInUp 1s ease-out 1s forwards, fadeOutAfter 1s ease-out 2s forwards;
+            transition: all 0.3s ease;
+        }
+
+        .skip-intro:hover {
+            background: #ea580c;
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeOutAfter {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .main-content {
+            display: none;
+        }
+
+        .main-content.active {
+            display: block;
+        }
+
         a { text-decoration: none; color: inherit; }
         ul { list-style: none; }
 
@@ -568,6 +700,23 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
+    <!-- Video Introduttivo -->
+    <div class="video-intro" id="videoIntro">
+        <div class="video-container">
+            <video class="intro-video" id="introVideo" autoplay muted>
+                <source src="loading-video.mp4.mp4" type="video/mp4">
+                Il tuo browser non supporta il tag video.
+            </video>
+            <div class="video-overlay">
+                <div class="intro-logo">ILT Logistics</div>
+                <div class="intro-text">Installazioni Professionali e Logistica Rapida</div>
+                <button class="skip-intro" onclick="skipIntro()">Vai al Sito</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenuto Principale -->
+    <div class="main-content" id="mainContent">
 
     <!-- Header -->
     <header>
@@ -612,7 +761,7 @@
 
                 <div class="tk-search-box" id="tkSearchBox">
                     <p style="margin-bottom: 20px; color: var(--trk-text-secondary);">Inserisci il codice della tua consegna</p>
-                    <input type="text" id="trackingId" class="tk-input" placeholder="Es: 0001" maxlength="10" autocomplete="off">
+                    <input type="text" id="trackingId" class="tk-input" placeholder="Es: 0001 o TRK-ABC123" maxlength="20" autocomplete="off">
                     <button class="tk-btn" onclick="Tracker.search()"><i class="fas fa-search"></i> Cerca Consegna</button>
                 </div>
 
@@ -705,8 +854,8 @@
                     <div class="contact-item">
                         <i class="fas fa-phone-alt"></i>
                         <div>
-                            <a href="tel:+393898735341">+39 389 873 5341</a><br>
-                            <a href="tel:+393311640977">+39 331 164 0977</a>
+                            <a href="tel:+390916739583">+091 6739583</a><br>
+                            <a href="tel:+393793336959">+39 379 333 6959</a>
                         </div>
                     </div>
                     <div class="contact-item">
@@ -804,9 +953,64 @@
 
     <!-- Logica JavaScript -->
     <script>
+        // --- Gestione Video Introduttivo ---
+        let videoTimeout;
+        
+        window.addEventListener('load', function() {
+            const video = document.getElementById('introVideo');
+            const videoIntro = document.getElementById('videoIntro');
+            const mainContent = document.getElementById('mainContent');
+            
+            // Imposta un timeout di 10 secondi massimo per il video
+            videoTimeout = setTimeout(() => {
+                endIntro();
+            }, 10000);
+            
+            // Quando il video finisce, passa al contenuto principale
+            video.addEventListener('ended', function() {
+                endIntro();
+            });
+            
+            // Gestione errori del video
+            video.addEventListener('error', function() {
+                console.log('Video non disponibile, salto diretto al contenuto');
+                endIntro();
+            });
+        });
+        
+        function skipIntro() {
+            endIntro();
+        }
+        
+        function endIntro() {
+            clearTimeout(videoTimeout);
+            
+            const videoIntro = document.getElementById('videoIntro');
+            const mainContent = document.getElementById('mainContent');
+            
+            // Fade out del video
+            videoIntro.style.opacity = '0';
+            videoIntro.style.transition = 'opacity 0.5s ease';
+            
+            setTimeout(() => {
+                videoIntro.style.display = 'none';
+                mainContent.classList.add('active');
+                
+                // Resetta lo scroll all'inizio
+                window.scrollTo(0, 0);
+            }, 500);
+        }
+
         function closeTracker() {
             document.getElementById('tracking-section').style.display = 'none';
             document.querySelector('.hero').style.display = 'flex';
+            Tracker.reset();
+        }
+
+        function openTracker() {
+            document.getElementById('tracking-section').style.display = 'block';
+            document.querySelector('.hero').style.display = 'none';
+            // Resetta il tracker per una nuova ricerca
             Tracker.reset();
         }
 
@@ -841,12 +1045,25 @@
                 document.getElementById('tkResultCard').style.display = 'none';
 
                 try {
+                    // 1. Cerca per Tracking ID (es. "TRK-XXXXX")
                     let snapshot = await db.collection("domicile_tickets")
+                        .where("trackingId", "==", input)
+                        .limit(1)
+                        .get();
+                        
+                    if (!snapshot.empty) {
+                        snapshot.forEach(doc => Tracker.showResult(doc.data()));
+                        return;
+                    }
+                    
+                    // 2. Cerca per Ticket ID (es. "0001")
+                    snapshot = await db.collection("domicile_tickets")
                         .where("ticketId", "==", input)
                         .limit(1)
                         .get();
 
                     if (snapshot.empty) {
+                        // 3. Se non trova, cerca per ID Documento
                         const docRef = await db.collection("domicile_tickets").doc(input).get();
                         if (docRef.exists) {
                             Tracker.showResult(docRef.data());

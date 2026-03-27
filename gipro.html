@@ -41,7 +41,6 @@
             --timbra: #3b82f6;
             --domicile: #f59e0b;
             --covercare: #0056b3; /* Nuovo colore per Covercare */
-            --corso: #6366f1; /* Corsi formazione e aggiornamento */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -209,12 +208,139 @@
         .dash-card.vehicles::before { background: linear-gradient(90deg, var(--vehicles), #14b8a6); }
         .dash-card.domicile::before { background: linear-gradient(90deg, var(--domicile), #fbbf24); }
         .dash-card.covercare::before { background: linear-gradient(90deg, var(--covercare), #004494); }
-        .dash-card.corso::before { background: linear-gradient(90deg, var(--corso), #818cf8); }
         
         .dash-icon { font-size: 3.5rem; margin-bottom: 18px; display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }
         .dash-icon-image { width: 60px; height: 60px; margin-bottom: 18px; display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); object-fit: contain; }
         .dash-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; color: var(--text-primary); }
         .dash-card p { color: var(--text-secondary); font-size: 0.95rem; }
+
+        /* Stili per il Giro di Consegne */
+        .delivery-round-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .delivery-item {
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+            cursor: move;
+        }
+        
+        .delivery-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .delivery-item.completed {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success);
+            opacity: 0.8;
+        }
+        
+        .delivery-item.current {
+            background: rgba(14, 165, 233, 0.1);
+            border-color: var(--primary);
+            animation: pulse 2s infinite;
+        }
+        
+        .delivery-number {
+            background: var(--primary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .delivery-item.completed .delivery-number {
+            background: var(--success);
+        }
+        
+        .delivery-item.current .delivery-number {
+            background: var(--primary);
+            animation: pulse 2s infinite;
+        }
+        
+        .delivery-info {
+            flex: 1;
+        }
+        
+        .delivery-client {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .delivery-address {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        
+        .delivery-time {
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .delivery-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .delivery-actions button {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-call {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-call:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-complete {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-complete:hover {
+            background: #059669;
+        }
+        
+        .btn-tracking {
+            background: var(--warehouse);
+            color: white;
+        }
+        
+        .btn-tracking:hover {
+            background: #6d28d9;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
 
         .notification-badge {
             position: absolute; top: 20px; right: 20px; background: var(--danger); color: white;
@@ -1205,28 +1331,51 @@
         <div class="modal" style="max-width: 600px;">
             <h3 id="domicileModalTitle">Esecuzione Ticket</h3>
             <div id="domicileTicketDetails" style="text-align: left; margin-bottom: 20px; font-size: 0.95rem; background: var(--bg-body); padding: 15px; border-radius: 8px;"></div>
+            
+            <!-- Foto Consegna -->
             <div class="form-group" style="margin-top: 15px;">
-                <label>📝 Note Aggiuntive</label>
-                <textarea id="dom_notes" rows="3" placeholder="Es. 4 piano senza ascensore, prodotto danneggiato..."></textarea>
+                <label>📷 Foto della Consegna</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="file" id="deliveryPhoto" accept="image/*" capture="environment" style="flex: 1;" onchange="DomicileManager.handlePhotoUpload(event)">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="DomicileManager.takePhoto()">
+                        <i class="fas fa-camera"></i> Scatta Foto
+                    </button>
+                </div>
+                <div id="photoPreview" style="margin-top: 10px; text-align: center;"></div>
             </div>
+            
+            <!-- Clausola Privacy -->
             <div class="form-group" style="margin-top: 15px;">
-                <label>📷 Aggiungi Foto</label>
-                <input type="file" id="dom_photo" accept="image/*" capture="environment" onchange="DomicileManager.previewPhoto(event)">
-                <img id="dom_photo_preview" src="" alt="" style="width: 100%; margin-top: 10px; border-radius: 8px; display: none;">
-            </div>
-            <div class="form-group" style="margin-top: 15px;">
-                <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer;">
-                    <input type="checkbox" id="dom_privacy_check" style="width: auto; margin-top: 4px;">
-                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Il cliente dichiara di aver preso visione dell'informativa sulla privacy e acconsente al trattamento dei dati.</span>
+                <label style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="privacyConsent" style="width: auto;">
+                    <strong>Dichiaro di aver ottenuto il consenso del cliente per il trattamento dei dati personali (GDPR)</strong>
                 </label>
             </div>
+            
+            <!-- Note Aggiuntive -->
             <div class="form-group" style="margin-top: 15px;">
-                <label>Firma Cliente *</label>
-                <div class="sig-wrapper" style="height: 150px;">
+                <label>📝 Note Aggiuntive</label>
+                <textarea id="dom_execution_notes" style="width: 100%; height: 80px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px;" placeholder="Note sull'esecuzione..."></textarea>
+            </div>
+            
+            <!-- Firma Cliente -->
+            <div style="margin: 20px 0;">
+                <label><strong>Firma Cliente *</strong></label>
+                <div class="sig-wrapper" style="height: 120px;">
                     <canvas id="sigDomicile" class="sig-canvas"></canvas>
-                    <div class="sig-clear" onclick="SignaturePad.clear('sigDomicile')">Cancella</div>
+                    <button type="button" class="sig-clear" onclick="SignaturePad.clear('sigDomicile')">Cancella</button>
                 </div>
             </div>
+            
+            <!-- Tracking Info -->
+            <div id="trackingInfo" style="background: rgba(139, 92, 246, 0.1); padding: 15px; border-radius: 8px; margin-top: 15px; display: none;">
+                <h4 style="margin: 0 0 10px; color: var(--warehouse);"><i class="fas fa-truck"></i> Tracking Consegna</h4>
+                <p style="margin: 0; font-size: 0.9rem;">
+                    <strong>ID Tracking:</strong> <span id="trackingId"></span><br>
+                    <strong>Link Tracciabilità:</strong> <a href="#" id="trackingLink" target="_blank" style="color: var(--warehouse);"></a>
+                </p>
+            </div>
+            
             <div class="modal-actions row">
                 <button class="btn btn-outline" onclick="UI.closeModal('domicileModal')">Annulla</button>
                 <button class="btn btn-warning" onclick="DomicileManager.finalizeTicket('reclamo')">Chiuso con Reclamo</button>
@@ -1490,7 +1639,7 @@
                     <div class="form-grid">
                         <div class="form-group"><label>Nome Cliente *</label><input type="text" id="dom_client_name" placeholder="Nome e Cognome"></div>
                         <div class="form-group"><label>Indirizzo *</label><input type="text" id="dom_address" placeholder="Via, Numero, Città"></div>
-                        <div class="form-group"><label>Telefono/Numero</label><input type="text" id="dom_phone" placeholder="Numero di contatto"></div>
+                        <div class="form-group"><label>Telefono/Numero *</label><input type="text" id="dom_phone" placeholder="Numero di contatto"></div>
                         <div class="form-group"><label>Data Consegna *</label><input type="date" id="dom_date" value=""></div>
                         <div class="form-group">
                             <label>Tipologia Intervento *</label>
@@ -1501,12 +1650,20 @@
                                 <option value="incasso">Incasso</option>
                                 <option value="reclamo">Reclamo</option>
                                 <option value="rendi_prendi">Rendi / Prendi</option>
+                                <option value="trasferimento_merci">Trasferimento Merci</option>
                             </select>
                         </div>
-                        <div class="form-group"><label>Tipologia Prodotto</label><input type="text" id="dom_product" placeholder="Es. Condizionatore, Caldaia..."></div>
+                        <div class="form-group"><label>Tipologia Prodotto *</label><input type="text" id="dom_product" placeholder="Es. Condizionatore, Caldaia..."></div>
+                        <div class="form-group"><label>Quantità Prodotto *</label><input type="number" id="dom_quantity" placeholder="Es. 1, 2, 3..." min="1" value="1"></div>
                         <div class="form-group"><label>Pagamento alla Consegna</label><input type="text" id="dom_payment" placeholder="Es. 150€ in contanti"></div>
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="dom_raee" style="width: auto;">
+                                RAEE (Rifiuto Apparecchiature Elettriche/Elettroniche)
+                            </label>
+                        </div>
                         <div class="form-group"><label>Ubicazione merce</label><input type="text" id="dom_ubicazione" placeholder="Es. Magazzino Palermo, Box 12..."></div>
-                        <div class="form-group"><label>Note</label><textarea id="dom_ticket_notes" rows="2" placeholder="Note per l'operatore o per il ticket..."></textarea></div>
+                        <div class="form-group"><label>Note Aggiuntive</label><textarea id="dom_ticket_notes" rows="2" placeholder="Note per l'operatore o per il ticket..."></textarea></div>
                         <div class="form-group"><label>Assegna a Operatore *</label><select id="dom_operator"></select></div>
                     </div>
                     <div class="text-right mt-2">
@@ -1540,10 +1697,50 @@
                 </table>
             </div>
             
-            <div class="text-right mt-2">
+            <div class="text-right mt-2 admin-only">
                 <button class="btn btn-success" onclick="DomicileManager.saveOrder()"><i class="fas fa-save"></i> Salva Ordine Consegne</button>
             </div>
             
+            </div>
+
+            <!-- SEZIONE: GIRO DI CONSEGNE -->
+            <div class="card mt-2" style="border-top: 4px solid var(--success);">
+                <div class="flex-between mb-2">
+                    <h3 style="margin:0; font-size:1.2rem; color: var(--success);"><i class="fas fa-route me-2"></i>Il Tuo Giro di Consegne</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-sm btn-secondary" onclick="DomicileManager.optimizeRoute()">
+                            <i class="fas fa-magic"></i> Ottimizza Percorso
+                        </button>
+                        <button class="btn btn-sm btn-primary" onclick="DomicileManager.startDeliveryRound()">
+                            <i class="fas fa-play"></i> Inizia Giro
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="deliveryRoundContainer">
+                    <div id="roundStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div class="stat-card" style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid var(--success);">
+                            <div class="stat-value" id="roundTotal">0</div>
+                            <div class="stat-label">Totali</div>
+                        </div>
+                        <div class="stat-card" style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning);">
+                            <div class="stat-value" id="roundPending">0</div>
+                            <div class="stat-label">In Attesa</div>
+                        </div>
+                        <div class="stat-card" style="background: rgba(239, 68, 68, 0.1); border-left: 4px solid var(--danger);">
+                            <div class="stat-value" id="roundCompleted">0</div>
+                            <div class="stat-label">Completati</div>
+                        </div>
+                        <div class="stat-card" style="background: rgba(139, 92, 246, 0.1); border-left: 4px solid var(--warehouse);">
+                            <div class="stat-value" id="roundTime">0h</div>
+                            <div class="stat-label">Tempo Stimato</div>
+                        </div>
+                    </div>
+                    
+                    <div id="deliveryRoundList" class="delivery-round-list">
+                        <!-- La scaletta verrà generata dinamicamente -->
+                    </div>
+                </div>
             </div>
 
             <!-- SEZIONE: GESTIONE CHIAMATE CLIENTI -->
@@ -2514,7 +2711,15 @@
                     UI.showView('view-communication');
                 });
             },
-            goToDomicile: () => { DomicileManager.init(); DomicileManager.render(); UI.showView('view-domicile'); },
+            goToDomicile: () => { 
+                DomicileManager.init(); 
+                DomicileManager.render(); 
+                // Inizializza il giro di consegne per operatori
+                if (Auth.currentUser?.role !== 'admin') {
+                    DomicileManager.initDeliveryRound();
+                }
+                UI.showView('view-domicile'); 
+            },
             goToTimbratura: () => { 
                 UI.showView('view-timbrature'); 
                 TimbraManager.init();
@@ -3127,9 +3332,10 @@ www.iltlogistics.it`;
                             <td>${orderNumber}</td>
                             <td>
                                 <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                                    <button class="btn btn-sm btn-primary" onclick="DomicileManager.openEditModal('${ticket.id}')">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
+                                    ${Auth.currentUser.role === 'admin' ? 
+                                        `<button class="btn btn-sm btn-primary" onclick="DomicileManager.openEditModal('${ticket.id}')">
+                                            <i class="fas fa-edit"></i>
+                                        </button>` : ''}
                                     ${ticket.status !== 'completato' && ticket.status !== 'reclamo' ? 
                                         `<button class="btn btn-sm btn-success" onclick="DomicileManager.openDomicileModal('${ticket.id}')">
                                             <i class="fas fa-check"></i>
@@ -3161,91 +3367,59 @@ www.iltlogistics.it`;
             },
             
             openDomicileModal: (id) => { 
-                const file = event.target.files[0]; 
-                if (file) { 
-                    const reader = new FileReader(); 
-                    reader.onload = (e) => { 
-                        const img = new Image(); 
-                        img.src = e.target.result; 
-                        img.onload = () => { 
-                            const canvas = document.createElement('canvas'); 
-                            const MAX_WIDTH = 800; 
-                            const MAX_HEIGHT = 600; 
-                            let width = img.width; 
-                            let height = img.height; 
-                            if (width > height) { 
-                                if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } 
-                            } else { 
-                                if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; } 
-                            } 
-                            canvas.width = width; 
-                            canvas.height = height; 
-                            const ctx = canvas.getContext('2d'); 
-                            ctx.drawImage(img, 0, 0, width, height); 
-                            const compressedSrc = canvas.toDataURL('image/jpeg', 0.7); 
-                            const preview = Utils.id('dom_photo_preview'); 
-                            preview.src = compressedSrc; 
-                            preview.style.display = 'block'; 
-                        }; 
-                    }; 
-                    reader.readAsDataURL(file); 
-                } 
-            },
-            finalizeTicket: (status) => {
-                const privacyChecked = Utils.id('dom_privacy_check').checked;
-                const signature = SignaturePad.getImage('sigDomicile');
-                const photoData = Utils.id('dom_photo_preview').src;
-                const notes = Utils.id('dom_notes').value;
-                if (!privacyChecked) { UI.showToast('Consenso Privacy obbligatorio', 'error'); return; }
-                if (!signature) { UI.showToast('Firma cliente obbligatoria', 'error'); return; }
-                const ticketId = DomicileManager.currentTicketId;
-                if (!ticketId) { UI.showToast('Errore: ID Ticket non valido', 'error'); return; }
+                const ticket = Store.getDomicileTickets().find(t => t.id === id);
+                if (!ticket) {
+                    UI.showToast('Ticket non trovato', 'error');
+                    return;
+                }
                 
-                // Ottieni il ticket corrente per rimuovere l'ordine
-                const currentTicket = Store.getDomicileTickets().find(t => t.id === ticketId);
-                const completionData = { 
-                    status: status, 
-                    completedAt: new Date().toLocaleString('it-IT'), 
-                    completedBy: Auth.currentUser.username, 
-                    signature: signature, 
-                    photo: photoData && !photoData.endsWith('undefined') ? photoData : null, 
-                    privacyAccepted: true, 
-                    notes: notes,
-                    // Rimuovi l'ordine di consegna quando completato
-                    orderNumber: firebase.firestore.FieldValue.delete(),
-                    orderIndex: firebase.firestore.FieldValue.delete()
-                }; 
+                // Imposta il ticket corrente
+                DomicileManager.currentTicketId = id;
                 
-                db.collection("domicile_tickets").doc(ticketId).update(completionData).then(() => { 
-                    UI.showToast(`Ticket ${status === 'reclamo' ? 'segnalato' : 'completato'}!`, 'success'); 
+                // Mostra dettagli ticket nel modal
+                const details = Utils.id('domicileTicketDetails');
+                details.innerHTML = `
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 0.9rem;">
+                        <div><strong>Ticket:</strong> #${ticket.ticketId || ticket.id.substring(0,4)}</div>
+                        <div><strong>Cliente:</strong> ${ticket.clientName}</div>
+                        <div><strong>Indirizzo:</strong> ${ticket.address}</div>
+                        <div><strong>Telefono:</strong> ${ticket.phone || '-'}</div>
+                        <div><strong>Tipo:</strong> ${ticket.type}</div>
+                        <div><strong>Prodotto:</strong> ${ticket.product || '-'}</div>
+                        ${ticket.quantity ? `<div><strong>Quantità:</strong> ${ticket.quantity}</div>` : ''}
+                        ${ticket.payment ? `<div><strong>Pagamento:</strong> ${ticket.payment}</div>` : ''}
+                        ${ticket.raee ? `<div><strong>RAEE:</strong> Sì</div>` : ''}
+                        ${ticket.note ? `<div style="grid-column: 1 / -1;"><strong>Note:</strong> ${ticket.note}</div>` : ''}
+                    </div>
+                `;
+                
+                // Resetta campi del modal
+                Utils.id('dom_execution_notes').value = '';
+                Utils.id('privacyConsent').checked = false;
+                Utils.id('photoPreview').innerHTML = '';
+                delete Utils.id('photoPreview').dataset.photo;
+                
+                // Apre il modal
+                UI.openModal('domicileModal');
+                
+                // Inizializza il canvas della firma dopo l'apertura del modal
+                setTimeout(() => {
+                    SignaturePad.init('sigDomicile');
+                    SignaturePad.clear('sigDomicile');
                     
-                    if (status === 'reclamo') { 
-                        const originalTicket = Store.getDomicileTickets().find(t => t.id === ticketId); 
-                        const msg = { content: `⚠️ RECLAMO segnalato da ${Auth.currentUser.username} per il ticket di ${originalTicket?.clientName || 'N.D.'}. Motivo: ${notes || 'Non specificato'}`, author: Auth.currentUser.username, recipient: 'admin', time: new Date().toLocaleString('it-IT'), timestamp: firebase.firestore.FieldValue.serverTimestamp(), read: false }; 
-                        Store.saveMessage(msg); 
-                        Store.addLog(`Reclamo inviato per ticket ${ticketId}`); 
-                    }
-                    
-                    const originalTicket = Store.getDomicileTickets().find(t => t.id === ticketId);
-                    if(originalTicket) { 
-                        const fullData = {...originalTicket, ...completionData}; 
-                        DomicilePDF.generate(fullData); 
+                    // Forza il ridimensionamento del canvas
+                    const canvas = Utils.id('sigDomicile');
+                    if (canvas) {
+                        const wrapper = canvas.parentElement;
+                        const rect = wrapper.getBoundingClientRect();
+                        canvas.width = rect.width;
+                        canvas.height = rect.height;
                         
-                        // Verifica e genera RAEE se rilevato
-                        setTimeout(() => {
-                            RAEEGenerator.generateFromDomicile(fullData);
-                        }, 1000);
+                        // Re-inizializza dopo il ridimensionamento
+                        SignaturePad.init('sigDomicile');
+                        SignaturePad.clear('sigDomicile');
                     }
-                    
-                    // Verifica se è l'ultima consegna del giorno e genera resoconto
-                    if (status === 'completato') {
-                        DomicileManager.checkAndGenerateDailyReport();
-                        // Rinumera i ticket rimanenti dopo il completamento
-                        DomicileManager.renumberRemainingTickets(currentTicket?.date);
-                    }
-                    
-                    UI.closeModal('domicileModal'); 
-                }).catch(err => { console.error("Errore Firestore:", err); UI.showToast('Errore salvataggio: ' + err.message, 'error'); }); 
+                }, 100);
             },
             
             checkAndGenerateDailyReport: () => {
@@ -3645,6 +3819,12 @@ Vuoi generare il resoconto giornaliero completo?`,
             
             viewPdf: (id) => { const t = Store.getDomicileTickets().find(t => t.id === id); if(t) DomicilePDF.generate(t); },
             openEditModal: (id) => { 
+                // Controllo permessi: solo admin può modificare i domicili
+                if (Auth.currentUser.role !== 'admin') {
+                    UI.showToast('Solo gli amministratori possono modificare i ticket domicilio', 'error');
+                    return;
+                }
+                
                 const t = Store.getDomicileTickets().find(t => t.id === id); 
                 if (!t) { UI.showToast('Ticket non trovato', 'error'); return; } 
                 Utils.id('edit_dom_id').value = t.id; 
@@ -3666,6 +3846,12 @@ Vuoi generare il resoconto giornaliero completo?`,
                 UI.openModal('domicileEditModal'); 
             },
             saveEditTicket: () => { 
+                // Controllo permessi: solo admin può modificare i domicili
+                if (Auth.currentUser.role !== 'admin') {
+                    UI.showToast('Solo gli amministratori possono modificare i ticket domicilio', 'error');
+                    return;
+                }
+                
                 const id = Utils.id('edit_dom_id').value; 
                 if (!id) return; 
                 const updatedData = { clientName: Utils.id('edit_dom_client_name').value, address: Utils.id('edit_dom_address').value, phone: Utils.id('edit_dom_phone').value, date: Utils.id('edit_dom_date').value, type: Utils.id('edit_dom_type').value, product: Utils.id('edit_dom_product').value, payment: Utils.id('edit_dom_payment').value, ubicazioneMerce: Utils.id('edit_dom_ubicazione').value.trim() || null, note: Utils.id('edit_dom_notes').value.trim() || null, operator: Utils.id('edit_dom_operator').value, status: Utils.id('edit_dom_status').value }; 
@@ -3678,6 +3864,12 @@ Vuoi generare il resoconto giornaliero completo?`,
                 } 
             },
             deleteTicket: (id) => { 
+                // Controllo permessi: solo admin può eliminare i domicili
+                if (Auth.currentUser.role !== 'admin') {
+                    UI.showToast('Solo gli amministratori possono eliminare i ticket domicilio', 'error');
+                    return;
+                }
+                
                 UI.confirm('Elimina Ticket', `Sei sicuro di voler eliminare il ticket #${id.substring(0,8)}?`, () => { 
                     console.log('[DELETE] Tentativo eliminazione ticket ID:', id);
                     if (db) { 
@@ -3703,6 +3895,511 @@ Vuoi generare il resoconto giornaliero completo?`,
                         UI.showToast('Errore: Database non disponibile', 'error');
                     }
                 }); 
+            },
+            
+            createTicket: () => {
+                const clientName = Utils.id('dom_client_name').value.trim();
+                const address = Utils.id('dom_address').value.trim();
+                const phone = Utils.id('dom_phone').value.trim();
+                const date = Utils.id('dom_date').value;
+                const type = Utils.id('dom_type').value;
+                const product = Utils.id('dom_product').value.trim();
+                const quantity = Utils.id('dom_quantity').value;
+                const payment = Utils.id('dom_payment').value.trim();
+                const raee = Utils.id('dom_raee').checked;
+                const ubicazione = Utils.id('dom_ubicazione').value.trim();
+                const notes = Utils.id('dom_ticket_notes').value.trim();
+                const operator = Utils.id('dom_operator').value;
+                
+                if (!clientName || !address || !phone || !date || !product || !quantity || !operator) {
+                    UI.showToast('Compila tutti i campi obbligatori (*)', 'error');
+                    return;
+                }
+                
+                const ticketId = 'DOM-' + Date.now();
+                const trackingId = 'TRK-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                const newTicket = {
+                    ticketId: ticketId,
+                    trackingId: trackingId,
+                    clientName: clientName,
+                    address: address,
+                    phone: phone,
+                    date: date,
+                    type: type,
+                    product: product,
+                    quantity: parseInt(quantity),
+                    payment: payment,
+                    raee: raee,
+                    ubicazioneMerce: ubicazione,
+                    note: notes,
+                    operator: operator,
+                    status: 'assegnato',
+                    createdAt: new Date().toISOString(),
+                    createdBy: Auth.currentUser.username
+                };
+                
+                if (db) {
+                    db.collection("domicile_tickets").add(newTicket)
+                        .then(() => {
+                            UI.showToast('Ticket creato con successo!', 'success');
+                            Store.addLog(`Ticket domicilio ${ticketId} creato per ${clientName}`);
+                            
+                            // Pulisci il form
+                            Utils.id('dom_client_name').value = '';
+                            Utils.id('dom_address').value = '';
+                            Utils.id('dom_phone').value = '';
+                            Utils.id('dom_type').value = 'consegna';
+                            Utils.id('dom_product').value = '';
+                            Utils.id('dom_quantity').value = '1';
+                            Utils.id('dom_payment').value = '';
+                            Utils.id('dom_raee').checked = false;
+                            Utils.id('dom_ubicazione').value = '';
+                            Utils.id('dom_ticket_notes').value = '';
+                            Utils.id('dom_operator').value = '';
+                            
+                            // Resetta la data di oggi
+                            Utils.id('dom_date').value = Utils.today();
+                        })
+                        .catch(err => {
+                            console.error('Errore creazione ticket:', err);
+                            UI.showToast('Errore durante la creazione del ticket', 'error');
+                        });
+                } else {
+                    UI.showToast('Database non disponibile', 'error');
+                }
+            },
+            
+            // Funzioni per il Giro di Consegne
+            initDeliveryRound: () => {
+                DomicileManager.updateDeliveryRoundStats();
+                DomicileManager.renderDeliveryRound();
+            },
+            
+            updateDeliveryRoundStats: () => {
+                // Verifica che l'utente sia autenticato
+                if (!Auth.currentUser || !Auth.currentUser.username) {
+                    return;
+                }
+                
+                const tickets = Store.getDomicileTickets().filter(t => 
+                    t.operator === Auth.currentUser.username && 
+                    t.date === Utils.today() &&
+                    t.status !== 'completato' && t.status !== 'reclamo'
+                );
+                
+                const completed = Store.getDomicileTickets().filter(t => 
+                    t.operator === Auth.currentUser.username && 
+                    t.date === Utils.today() &&
+                    t.status === 'completato'
+                );
+                
+                // Calcola tempo stimato (15 minuti per consegna + 10 minuti spostamento)
+                const estimatedTime = tickets.length * 25; // minuti
+                
+                Utils.id('roundTotal').innerText = tickets.length + completed.length;
+                Utils.id('roundPending').innerText = tickets.length;
+                Utils.id('roundCompleted').innerText = completed.length;
+                Utils.id('roundTime').innerText = Math.floor(estimatedTime / 60) + 'h ' + (estimatedTime % 60) + 'm';
+            },
+            
+            renderDeliveryRound: () => {
+                // Verifica che l'utente sia autenticato
+                if (!Auth.currentUser || !Auth.currentUser.username) {
+                    return;
+                }
+                
+                const container = Utils.id('deliveryRoundList');
+                const tickets = Store.getDomicileTickets().filter(t => 
+                    t.operator === Auth.currentUser.username && 
+                    t.date === Utils.today()
+                );
+                
+                if (tickets.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">Nessuna consegna per oggi</div>';
+                    return;
+                }
+                
+                // Ordina per numero d'ordine se presente, altrimenti per cliente
+                tickets.sort((a, b) => {
+                    if (a.orderNumber !== undefined && b.orderNumber !== undefined) {
+                        return a.orderNumber - b.orderNumber;
+                    }
+                    return a.clientName.localeCompare(b.clientName);
+                });
+                
+                let html = '';
+                tickets.forEach((ticket, index) => {
+                    const statusClass = ticket.status === 'completato' ? 'completed' : 
+                                       ticket.status === 'in_corso' ? 'current' : '';
+                    const timeSlot = DomicileManager.calculateTimeSlot(index, tickets.length);
+                    
+                    html += `
+                        <div class="delivery-item ${statusClass}" id="delivery-${ticket.id}">
+                            <div class="delivery-number">${index + 1}</div>
+                            <div class="delivery-info">
+                                <div class="delivery-client">${ticket.clientName}</div>
+                                <div class="delivery-address">${ticket.address}</div>
+                                <div class="delivery-time">${timeSlot}</div>
+                            </div>
+                            <div class="delivery-actions">
+                                <button class="btn-call" onclick="DomicileManager.callClient('${ticket.id}')">
+                                    <i class="fas fa-phone"></i>
+                                </button>
+                                <button class="btn-tracking" onclick="DomicileManager.showTracking('${ticket.id}')">
+                                    <i class="fas fa-truck"></i>
+                                </button>
+                                ${ticket.status !== 'completato' ? 
+                                    `<button class="btn-complete" onclick="DomicileManager.executeTicket('${ticket.id}')">
+                                        <i class="fas fa-check"></i>
+                                    </button>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            },
+            
+            calculateTimeSlot: (index, total) => {
+                const startHour = 9; // 9:00 inizio
+                const minutesPerDelivery = 25; // 15 min consegna + 10 min spostamento
+                const startTime = startHour * 60 + index * minutesPerDelivery;
+                const endTime = startTime + 15; // 15 minuti per consegna
+                
+                const formatTime = (minutes) => {
+                    const h = Math.floor(minutes / 60);
+                    const m = minutes % 60;
+                    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                };
+                
+                return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+            },
+            
+            optimizeRoute: () => {
+                // Verifica che l'utente sia autenticato
+                if (!Auth.currentUser || !Auth.currentUser.username) {
+                    UI.showToast('Utente non autenticato', 'error');
+                    return;
+                }
+                
+                const tickets = Store.getDomicileTickets().filter(t => 
+                    t.operator === Auth.currentUser.username && 
+                    t.date === Utils.today() &&
+                    t.status !== 'completato' && t.status !== 'reclamo'
+                );
+                
+                if (tickets.length < 2) {
+                    UI.showToast('Servono almeno 2 consegne per ottimizzare il percorso', 'info');
+                    return;
+                }
+                
+                // Algoritmo semplice di ottimizzazione (nearest neighbor)
+                const optimized = DomicileManager.nearestNeighborOptimization(tickets);
+                
+                // Aggiorna i numeri d'ordine
+                const batch = db.batch();
+                optimized.forEach((ticket, index) => {
+                    const ref = db.collection("domicile_tickets").doc(ticket.id);
+                    batch.update(ref, {
+                        orderNumber: index + 1,
+                        orderIndex: index
+                    });
+                });
+                
+                batch.commit()
+                    .then(() => {
+                        UI.showToast('Percorso ottimizzato con successo!', 'success');
+                        DomicileManager.renderDeliveryRound();
+                    })
+                    .catch(err => {
+                        console.error('Errore ottimizzazione percorso:', err);
+                        UI.showToast('Errore durante l\'ottimizzazione', 'error');
+                    });
+            },
+            
+            nearestNeighborOptimization: (tickets) => {
+                if (tickets.length === 0) return tickets;
+                
+                const optimized = [tickets[0]]; // Inizia dal primo ticket
+                const remaining = tickets.slice(1);
+                
+                while (remaining.length > 0) {
+                    const current = optimized[optimized.length - 1];
+                    let nearest = remaining[0];
+                    let minDistance = Infinity;
+                    let nearestIndex = 0;
+                    
+                    remaining.forEach((ticket, index) => {
+                        // Semplice distanza basata su ordinamento alfabetico indirizzi
+                        const distance = Math.abs(current.address.localeCompare(ticket.address));
+                        if (distance < minDistance) {
+                            minDistance = distance;
+                            nearest = ticket;
+                            nearestIndex = index;
+                        }
+                    });
+                    
+                    optimized.push(nearest);
+                    remaining.splice(nearestIndex, 1);
+                }
+                
+                return optimized;
+            },
+            
+            startDeliveryRound: () => {
+                // Verifica che l'utente sia autenticato
+                if (!Auth.currentUser || !Auth.currentUser.username) {
+                    UI.showToast('Utente non autenticato', 'error');
+                    return;
+                }
+                
+                const tickets = Store.getDomicileTickets().filter(t => 
+                    t.operator === Auth.currentUser.username && 
+                    t.date === Utils.today() &&
+                    t.status === 'assegnato'
+                );
+                
+                if (tickets.length === 0) {
+                    UI.showToast('Nessuna consegna da iniziare', 'warning');
+                    return;
+                }
+                
+                // Imposta il primo ticket come "in corso"
+                if (tickets.length > 0) {
+                    const firstTicket = tickets[0];
+                    db.collection("domicile_tickets").doc(firstTicket.id).update({
+                        status: 'in_corso',
+                        startTime: new Date().toISOString()
+                    }).then(() => {
+                        UI.showToast('Giro di consegne iniziato!', 'success');
+                        DomicileManager.renderDeliveryRound();
+                    });
+                }
+            },
+            
+            callClient: (ticketId) => {
+                const ticket = Store.getDomicileTickets().find(t => t.id === ticketId);
+                if (!ticket) return;
+                
+                CallManager.openCallModal(ticketId);
+            },
+            
+            showTracking: (ticketId) => {
+                const ticket = Store.getDomicileTickets().find(t => t.id === ticketId);
+                if (!ticket) return;
+                
+                const trackingUrl = `https://ilt-tracking.web.app/track/${ticket.trackingId}`;
+                
+                // Copia link negli appunti
+                navigator.clipboard.writeText(trackingUrl).then(() => {
+                    UI.showToast('Link tracking copiato negli appunti!', 'success');
+                });
+                
+                // Mostra tracking info
+                Utils.id('trackingId').innerText = ticket.trackingId;
+                Utils.id('trackingLink').href = trackingUrl;
+                Utils.id('trackingLink').innerText = trackingUrl;
+                Utils.id('trackingInfo').style.display = 'block';
+            },
+            
+            executeTicket: (ticketId) => {
+                const ticket = Store.getDomicileTickets().find(t => t.id === ticketId);
+                if (!ticket) return;
+                
+                DomicileManager.currentTicketId = ticketId;
+                DomicileManager.openDomicileModal(ticketId);
+            },
+            
+            handlePhotoUpload: (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const preview = Utils.id('photoPreview');
+                        preview.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">`;
+                        preview.dataset.photo = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            },
+            
+            takePhoto: () => {
+                // Attiva la camera del dispositivo
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.capture = 'environment';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const preview = Utils.id('photoPreview');
+                            preview.innerHTML = `<img src="${e.target.result}" style="max-width: 100%; max-height: 200px; border-radius: 8px;">`;
+                            preview.dataset.photo = e.target.result;
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                };
+                input.click();
+            },
+            
+            finalizeTicket: (status) => {
+                const ticketId = DomicileManager.currentTicketId;
+                if (!ticketId) return;
+                
+                const ticket = Store.getDomicileTickets().find(t => t.id === ticketId);
+                if (!ticket) return;
+                
+                // Validazioni
+                const privacyConsent = Utils.id('privacyConsent').checked;
+                const signature = SignaturePad.isEmpty('sigDomicile');
+                const executionNotes = Utils.id('dom_execution_notes').value.trim();
+                const photoData = Utils.id('photoPreview').dataset.photo;
+                
+                if (!privacyConsent) {
+                    UI.showToast('Devi ottenere il consenso privacy per procedere', 'error');
+                    return;
+                }
+                
+                if (signature) {
+                    UI.showToast('La firma del cliente è obbligatoria', 'error');
+                    return;
+                }
+                
+                // Prepara dati di completamento
+                const completionData = {
+                    status: status,
+                    completedAt: new Date().toISOString(),
+                    completedBy: Auth.currentUser.username,
+                    executionNotes: executionNotes,
+                    privacyConsent: privacyConsent,
+                    signature: SignaturePad.getImage('sigDomicile'),
+                    photo: photoData || null
+                };
+                
+                // Aggiorna ticket
+                db.collection("domicile_tickets").doc(ticketId).update(completionData)
+                    .then(() => {
+                        UI.showToast(`Ticket ${status === 'completato' ? 'completato' : 'chiuso con reclamo'}!`, 'success');
+                        Store.addLog(`Ticket ${ticket.ticketId} ${status} da ${Auth.currentUser.username}`);
+                        
+                        // Se completato, genera PDF e invia conferma SMS
+                        if (status === 'completato') {
+                            DomicilePDF.generate(ticket);
+                            DomicileManager.sendCompletionSMS(ticket);
+                        }
+                        
+                        // Passa al prossimo ticket se esiste
+                        DomicileManager.moveToNextTicket(ticket);
+                        
+                        UI.closeModal('domicileModal');
+                        
+                        // Resetta campi
+                        Utils.id('privacyConsent').checked = false;
+                        Utils.id('dom_execution_notes').value = '';
+                        Utils.id('photoPreview').innerHTML = '';
+                        delete Utils.id('photoPreview').dataset.photo;
+                        SignaturePad.clear('sigDomicile');
+                    })
+                    .catch(err => {
+                        console.error('Errore finalizzazione ticket:', err);
+                        UI.showToast('Errore durante la finalizzazione', 'error');
+                    });
+            },
+            
+            moveToNextTicket: (currentTicket) => {
+                // Verifica che l'utente sia autenticato
+                if (!Auth.currentUser || !Auth.currentUser.username) {
+                    return;
+                }
+                
+                // Trova il prossimo ticket non completato
+                const tickets = Store.getDomicileTickets().filter(t => 
+                    t.operator === Auth.currentUser.username && 
+                    t.date === Utils.today() &&
+                    t.status === 'assegnato'
+                );
+                
+                if (tickets.length > 0) {
+                    // Imposta il prossimo ticket come "in corso"
+                    const nextTicket = tickets[0];
+                    db.collection("domicile_tickets").doc(nextTicket.id).update({
+                        status: 'in_corso',
+                        startTime: new Date().toISOString()
+                    }).then(() => {
+                        UI.showToast('Prossimo ticket avviato automaticamente', 'info');
+                        DomicileManager.renderDeliveryRound();
+                    });
+                } else {
+                    UI.showToast('Giro di consegne completato!', 'success');
+                }
+            },
+            
+            sendCompletionSMS: (ticket) => {
+                // Simula invio SMS al cliente
+                const message = `ILT LOGISTICS: La sua consegna #${ticket.trackingId} è stata completata. Grazie per aver scelto i nostri servizi! Per assistenza: +39XXXXXXXX`;
+                
+                // In una implementazione reale, qui ci sarebbe una chiamata a un servizio SMS
+                console.log('SMS inviato a', ticket.phone, ':', message);
+                Store.addLog(`SMS completamento inviato a ${ticket.clientName} (${ticket.phone})`);
+            },
+            
+            saveOrder: () => {
+                // Controllo permessi: solo admin può riordinare i domicili
+                if (Auth.currentUser.role !== 'admin') {
+                    UI.showToast('Solo gli amministratori possono riordinare i ticket domicilio', 'error');
+                    return;
+                }
+                
+                const rows = Utils.id('domicileTableBody').querySelectorAll('tr');
+                if (rows.length === 0) {
+                    UI.showToast('Nessun ticket da ordinare', 'warning');
+                    return;
+                }
+                
+                const tickets = [];
+                rows.forEach((row, index) => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 3) {
+                        const ticketId = cells[0].textContent.replace('#', '').trim();
+                        const ticket = Store.getDomicileTickets().find(t => 
+                            t.ticketId === ticketId || t.id.substring(0, 4) === ticketId
+                        );
+                        if (ticket) {
+                            tickets.push({
+                                ...ticket,
+                                orderNumber: index + 1,
+                                orderIndex: index
+                            });
+                        }
+                    }
+                });
+                
+                if (tickets.length === 0) {
+                    UI.showToast('Nessun ticket valido trovato', 'warning');
+                    return;
+                }
+                
+                // Salva l'ordine in Firestore
+                const batch = db.batch();
+                tickets.forEach(ticket => {
+                    const ref = db.collection("domicile_tickets").doc(ticket.id);
+                    batch.update(ref, {
+                        orderNumber: ticket.orderNumber,
+                        orderIndex: ticket.orderIndex
+                    });
+                });
+                
+                batch.commit()
+                    .then(() => {
+                        UI.showToast(`Ordine salvato per ${tickets.length} ticket!`, 'success');
+                        Store.addLog(`Ordinamento ticket domicilio salvato da ${Auth.currentUser.username}`);
+                    })
+                    .catch(err => {
+                        console.error('Errore salvataggio ordine:', err);
+                        UI.showToast('Errore durante il salvataggio dell\'ordine', 'error');
+                    });
             }
         };
 
@@ -5831,111 +6528,6 @@ Vuoi generare il resoconto giornaliero completo?`,
     // Event Listener per chiusura dropdown materiali
     document.addEventListener('click', (e) => { const dropdown = Utils.id('materialDropdown'); const searchInput = Utils.id('materialSearch'); if (dropdown && !dropdown.contains(e.target) && e.target !== searchInput) { dropdown.classList.remove('show'); } });
 
-    // VIRTUAL ASSISTANT
-    const VirtualAssistant = {
-        isOpen: false,
-        
-        toggleChat() {
-            const chatWindow = Utils.id('chatWindow');
-            const chatButton = Utils.id('chatButton');
-            
-            if (this.isOpen) {
-                chatWindow.classList.add('hidden');
-                chatButton.style.transform = 'scale(1)';
-            } else {
-                chatWindow.classList.remove('hidden');
-                chatButton.style.transform = 'scale(0.9)';
-                Utils.id('chatInput').focus();
-            }
-            this.isOpen = !this.isOpen;
-        },
-        
-        sendMessage() {
-            const input = Utils.id('chatInput');
-            const message = input.value.trim();
-            
-            if (!message) return;
-            
-            this.addMessage(message, 'user');
-            input.value = '';
-            
-            // Simula risposta dell'assistente
-            setTimeout(() => {
-                const response = this.generateResponse(message);
-                this.addMessage(response, 'assistant');
-            }, 1000);
-        },
-        
-        sendQuickMessage(message) {
-            this.addMessage(message, 'user');
-            
-            // Simula risposta dell'assistente
-            setTimeout(() => {
-                const response = this.generateResponse(message);
-                this.addMessage(response, 'assistant');
-            }, 1000);
-        },
-        
-        addMessage(text, sender) {
-            const messagesContainer = Utils.id('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}-message`;
-            
-            const time = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-            
-            messageDiv.innerHTML = `
-                <div class="message-avatar">
-                    <i class="fas fa-${sender === 'user' ? 'user' : 'robot'}"></i>
-                </div>
-                <div class="message-content">
-                    <p>${text}</p>
-                    <div class="message-time">${time}</div>
-                </div>
-            `;
-            
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        },
-        
-        generateResponse(message) {
-            const lowerMessage = message.toLowerCase();
-            
-            // Risposte predefinite per domande comuni
-            if (lowerMessage.includes('refrigerazione') || lowerMessage.includes('climatizzatore') || lowerMessage.includes('frigo')) {
-                return 'Per la refrigerazione, puoi accedere al modulo specifico dalla dashboard. Lì potrai registrare interventi su climatizzatori, frigoriferi e celle frigorifere. Hai bisogno di aiuto per qualche procedura specifica?';
-            }
-            
-            if (lowerMessage.includes('domicilio') || lowerMessage.includes('consegna') || lowerMessage.includes('ticket')) {
-                return 'Per creare un ticket domicilio, vai alla sezione Domicilio dalla dashboard. Potrai inserire i dati del cliente, l\'indirizzo e assegnare l\'intervento a un operatore. Solo gli amministratori possono creare nuovi ticket.';
-            }
-            
-            if (lowerMessage.includes('timbra') || lowerMessage.includes('timbratura') || lowerMessage.includes('ingresso')) {
-                return 'Per timbrare l\'ingresso o l\'uscita, clicca sulla card "Timbra" nella dashboard. Potrai registrare automaticamente orario e data del tuo turno di lavoro.';
-            }
-            
-            if (lowerMessage.includes('covercare')) {
-                return 'Covercare è un modulo speciale per interventi specifici. Puoi accedervi dalla dashboard cliccando sulla card Covercare. Il modulo è personalizzato per le esigenze di Covercare Spa a Socio Unico.';
-            }
-            
-            if (lowerMessage.includes('admin') || lowerMessage.includes('amministratore')) {
-                return 'Le funzioni admin sono disponibili solo per utenti con privilegi di amministratore. Se sei un admin, vedrai le card aggiuntive nella dashboard per gestione magazzino, attrezzature, mezzi e pannello admin.';
-            }
-            
-            if (lowerMessage.includes('aiuto') || lowerMessage.includes('help') || lowerMessage.includes('supporto')) {
-                return 'Sono qui per aiutarti! Puoi farmi domande su: refrigerazione, riscaldamento, timbrature, ticket domicilio, covercare, o funzioni admin. Usa anche i pulsanti rapidi qui sotto per domande comuni.';
-            }
-            
-            // Risposta di default
-            return 'Capisco la tua domanda. Posso aiutarti con informazioni su refrigerazione, riscaldamento, timbrature, ticket domicilio, covercare e funzioni admin. Prova a essere più specifico o usa i pulsanti rapidi per domande comuni.';
-        },
-        
-        handleKeyPress(event) {
-            if (event.key === 'Enter') {
-                this.sendMessage();
-            }
-        }
-    };
-
     // ========== INTERVENTI MANAGER ==========
     const InterventiManager = {
         currentStatusFilter: '',
@@ -6845,8 +7437,13 @@ Per procedere è richiesta la firma digitale. Vuoi continuare?`,
 
     // Inizializzazione Store e Auth
     Store.setup();
-    window.onload = Auth.init;
+    window.onload = () => {
+        Auth.init();
+        // Inizializza il giro di consegne per operatori
+        if (Auth.currentUser?.role !== 'admin') {
+            DomicileManager.initDeliveryRound();
+        }
+    };
 </script>
-<!-- VIRTUAL ASSISTANT -->
 </body>
 </html>
