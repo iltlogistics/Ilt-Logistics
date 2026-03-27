@@ -379,7 +379,7 @@
 
                 // Calcolo logico
                 const remainingStops = myPosition - completedCount;
-                const minutesPerStop = 15;
+                const minutesPerStop = 30;
                 const estimatedMinutes = remainingStops > 0 ? remainingStops * minutesPerStop : 0;
                 
                 // Calcolo progresso visivo
@@ -397,7 +397,7 @@
                     label = "Imminente";
                 } else if (remainingStops === 1) {
                     message = "Sei il prossimo! Il corriere è alla consegna precedente.";
-                    label = "Arrivo tra circa 15 min";
+                    label = "Arrivo tra circa 30 min";
                 } else {
                     message = `Sei la ${myPosition}ª tappa su ${totalStops}. Mancano ${remainingStops} consegne.`;
                     label = `Arrivo stimato tra ${estimatedMinutes} min`;

@@ -2798,7 +2798,7 @@ ${trackingLink}
 
 Per qualsiasi informazione o assistenza, può contattare il nostro servizio clienti ai seguenti recapiti:
  ILT LOGISTICS SRL
-+39 091 673 9583 | +39 379 333 6959
++39 389 873 5341 | +39 331 164 0977
 Oppure rispondere al presente messaggio
 
 Dati Consegna:
@@ -2838,7 +2838,7 @@ ${trackingLink}
 
 Per qualsiasi informazione o assistenza, può contattare il nostro servizio clienti ai seguenti recapiti:
  ILT LOGISTICS SRL
-+39 091 673 9583 | +39 379 333 6959
++39 389 873 5341 | +39 331 164 0977
 Oppure rispondere al presente messaggio
 
 Dati Consegna:
@@ -2946,7 +2946,7 @@ www.iltlogistics.it`;
         };
 
         // ========== DOMICILE PDF GENERATOR ==========
-        DomicilePDF = {
+        const DomicilePDF = {
             generate: (data) => {
                 const pdf = new jsPDF();
                 pdf.text(`Indirizzo: ${data.address}`, 10, 30);
@@ -3532,7 +3532,7 @@ Vuoi generare il resoconto giornaliero completo?`,
         };
 
         // ========== DOMICILE PDF GENERATOR ==========
-        DomicilePDF = {
+        const DomicilePDF = {
             generate: (data) => { 
                 const { jsPDF } = window.jspdf; 
                 const doc = new jsPDF(); 

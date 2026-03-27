@@ -1,0 +1,2685 @@
+                const { jsPDF } = window.jspdf; 
+                const doc = new jsPDF(); 
+                const left = 14; 
+                let y = 20; 
+                const pageWidth = doc.internal.pageSize.getWidth(); 
+                const headerColor = data.status === 'reclamo' ? [239, 68, 68] : [245, 158, 11]; 
+                doc.setFillColor(...headerColor); 
+                doc.rect(0, 0, pageWidth, 40, 'F'); 
+                doc.setTextColor(255); 
+                doc.setFontSize(22); 
+                doc.setFont('helvetica', 'bold'); 
+                doc.text(`RAPPORTO DOMICILIO ${data.status === 'reclamo' ? '- RECLAMO' : ''}`, left, 25); 
+                doc.setFontSize(10); 
+                doc.text(`Data: ${data.date}`, left, 35); 
+                y = 50; 
+                doc.setTextColor(30, 41, 59); 
+                doc.setFont('helvetica', 'bold'); 
+                doc.text('Cliente:', left, y); 
+                doc.setFont('helvetica', 'normal'); 
+                doc.text(Utils.sanitize(data.clientName), left + 30, y); 
+                y += 8; 
+                doc.text('Indirizzo:', left, y); 
+                doc.text(Utils.sanitize(data.address), left + 30, y); 
+                y += 8; 
+                if(data.phone) { doc.text('Telefono:', left, y); doc.text(data.phone, left + 30, y); y += 8; } 
+                doc.text('Tipologia:', left, y); doc.text(data.type, left + 30, y); y += 8; 
+                if(data.product) { doc.text('Prodotto:', left, y); doc.text(Utils.sanitize(data.product), left + 30, y); y += 8; } 
+                if(data.payment) { doc.text('Pagamento:', left, y); doc.text(Utils.sanitize(data.payment), left + 30, y); y += 8; } 
+                if(data.ubicazioneMerce) { doc.text('Ubicazione merce:', left, y); doc.text(Utils.sanitize(data.ubicazioneMerce), left + 40, y); y += 8; } 
+                if(data.note) { doc.setFont('helvetica', 'bold'); doc.text('Note:', left, y); y += 5; doc.setFont('helvetica', 'normal'); doc.setFontSize(10); const splitNote = doc.splitTextToSize(Utils.sanitize(data.note), pageWidth - (left * 2)); doc.text(splitNote, left, y); y += (splitNote.length * 5) + 5; doc.setFontSize(12); } 
+                y += 5; 
+                doc.setDrawColor(200); 
+                doc.line(left, y, pageWidth - left, y); 
+                y += 10; 
+                if(data.notes) { 
+                    doc.setFont('helvetica', 'bold'); 
+                    doc.text('Note Operatore:', left, y); 
+                    y += 5; 
+                    doc.setFont('helvetica', 'normal'); 
+                    doc.setFontSize(10); 
+                    const splitNotes = doc.splitTextToSize(Utils.sanitize(data.notes), pageWidth - (left * 2)); 
+                    doc.text(splitNotes, left, y); 
+                    y += (splitNotes.length * 5) + 5; 
+                    doc.setFontSize(12); 
+                } 
+                y += 5; 
+                doc.setDrawColor(200); 
+                doc.line(left, y, pageWidth - left, y); 
+                y += 10; 
+                doc.setFontSize(9); 
+                doc.setTextColor(100); 
+                doc.text('Il cliente dichiara di aver preso visione dell\'informativa sulla privacy e acconsente', left, y); 
+                y += 5; 
+                doc.text('al trattamento dei dati per le finalità connesse all\'esecuzione del servizio.', left, y); 
+                y += 10; 
+                doc.setFontSize(12); 
+                doc.setTextColor(30, 41, 59); 
+                doc.text('Firma Cliente:', left, y); 
+                if (data.signature) { try { doc.addImage(data.signature, 'PNG', left, y + 5, 80, 40); } catch(e) { console.error(e); } } 
+                y += 55; 
+                if (data.photo) { if (y > 200) { doc.addPage(); y = 20; } doc.text('Foto Allegata:', left, y); try { doc.addImage(data.photo, 'JPEG', left, y + 5, 100, 75); } catch(e) { console.error(e); } } 
+                doc.save(`Domicilio_${Utils.sanitize(data.clientName).replace(/\s+/g, '_')}.pdf`); 
+                UI.showToast('PDF scaricato', 'success'); 
+            },
+            
+            generateDailyReport: (reportData) => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'landscape', // Imposta il formato orizzontale
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                const left = 14;
+                let y = 20;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                
+                // Header
+                doc.setFillColor(245, 158, 11);
+                doc.rect(0, 0, pageWidth, 40, 'F');
+                doc.setTextColor(255);
+                doc.setFontSize(24);
+                doc.setFont('helvetica', 'bold');
+                doc.text('RESOCONTO GIORNALIERO', left, 25);
+                doc.setFontSize(12);
+                doc.text(`Operatore: ${reportData.operator}`, left, 35);
+                doc.text(`Data: ${reportData.date}`, pageWidth - 60, 35);
+                
+                y = 55;
+                doc.setTextColor(30, 41, 59);
+                
+                // Statistiche in due colonne per sfruttare meglio lo spazio orizzontale
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text('Riepilogo Giornata', left, y);
+                y += 10;
+                
+                doc.setFontSize(12);
+                const col1X = left;
+                const col2X = pageWidth / 2 + 20;
+                
+                // Colonna sinistra
+                doc.text(`Consegne completate: ${reportData.completedDeliveries}/${reportData.totalDeliveries}`, col1X, y);
+                y += 8;
+                doc.text(`Targa veicolo: ${reportData.vehicle}`, col1X, y);
+                y += 8;
+                doc.text(`Spese: €${reportData.expenses.toFixed(2)}`, col1X, y);
+                y += 8;
+                
+                // Colonna destra
+                let yStart = y - 16; // Allinea con la prima riga della colonna sinistra
+                doc.text(`Rifornimento: €${reportData.refuel.toFixed(2)}`, col2X, yStart);
+                yStart += 8;
+                doc.text(`Totale spese: €${(reportData.expenses + reportData.refuel).toFixed(2)}`, col2X, yStart);
+                yStart += 8;
+                
+                y = Math.max(y, yStart) + 15;
+                
+                // Elenco clienti in due colonne per ottimizzare lo spazio
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text('Clienti Serviti', left, y);
+                y += 15;
+                
+                doc.setFontSize(11);
+                const clientsPerColumn = Math.ceil(reportData.clients.length / 2);
+                let col1Y = y;
+                let col2Y = y;
+                
+                reportData.clients.forEach((client, index) => {
+                    const isInFirstColumn = index < clientsPerColumn;
+                    let currentY = isInFirstColumn ? col1Y : col2Y;
+                    const currentX = isInFirstColumn ? left : pageWidth / 2 + 20;
+                    
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`${index + 1}. ${client.name}`, currentX, currentY);
+                    currentY += 6;
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`   Indirizzo: ${client.address}`, currentX, currentY);
+                    currentY += 5;
+                    doc.text(`   Tipo: ${client.type}`, currentX, currentY);
+                    currentY += 5;
+                    if (client.product && client.product !== 'N.D.') {
+                        doc.text(`   Prodotto: ${client.product}`, currentX, currentY);
+                        currentY += 5;
+                    }
+                    if (client.payment && client.payment !== 'N.D.') {
+                        doc.text(`   Pagamento: ${client.payment}`, currentX, currentY);
+                        currentY += 5;
+                    }
+                    if (client.completedAt) {
+                        doc.text(`   Completato: ${client.completedAt}`, currentX, currentY);
+                        currentY += 5;
+                    }
+                    if (client.notes && client.notes.trim()) {
+                        doc.text(`   Note: ${client.notes}`, currentX, currentY);
+                        currentY += 5;
+                    }
+                    currentY += 8;
+                    
+                    if (isInFirstColumn) {
+                        col1Y = currentY;
+                    } else {
+                        col2Y = currentY;
+                    }
+                });
+                
+                y = Math.max(col1Y, col2Y) + 10;
+                
+                // Note aggiuntive
+                if (reportData.notes && reportData.notes.trim()) {
+                    if (y > 140) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    doc.setDrawColor(200);
+                    doc.line(left, y, pageWidth - left, y);
+                    y += 10;
+                    
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text('Note Aggiuntive', left, y);
+                    y += 8;
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(11);
+                    const splitNotes = doc.splitTextToSize(Utils.sanitize(reportData.notes), pageWidth - (left * 2));
+                    doc.text(splitNotes, left, y);
+                    y += (splitNotes.length * 5) + 10;
+                }
+                
+                // Firma operatore e timestamp in basso a destra
+                if (y > 120) {
+                    doc.addPage();
+                    y = 20;
+                }
+                
+                doc.setDrawColor(200);
+                doc.line(left, y, pageWidth - left, y);
+                y += 15;
+                
+                // Calcola lo spazio per le firme
+                const signatureWidth = 80;
+                const signatureHeight = 40;
+                const signatureSpacing = 20;
+                const totalSignatures = 1 + (reportData.operator2 ? 1 : 0) + (reportData.operator3 ? 1 : 0);
+                const availableWidth = pageWidth - (left * 2);
+                const signatureX = left;
+                
+                // Firma operatore principale (sempre presente)
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.text('Firma Operatore Principale:', signatureX, y);
+                y += 20;
+                if (reportData.operatorSignature) {
+                    try {
+                        doc.addImage(reportData.operatorSignature, 'PNG', signatureX, y, signatureWidth, signatureHeight);
+                    } catch(e) {
+                        console.error(e);
+                    }
+                }
+                
+                // Firma secondo operatore (se presente)
+                if (reportData.operator2 && reportData.operator2Signature) {
+                    const op2X = signatureX + signatureWidth + signatureSpacing;
+                    doc.text(`Firma ${reportData.operator2}:`, op2X, y - 20);
+                    try {
+                        doc.addImage(reportData.operator2Signature, 'PNG', op2X, y, signatureWidth, signatureHeight);
+                    } catch(e) {
+                        console.error(e);
+                    }
+                }
+                
+                // Firma terzo operatore (se presente)
+                if (reportData.operator3 && reportData.operator3Signature) {
+                    const op3X = signatureX + (signatureWidth + signatureSpacing) * (reportData.operator2 ? 2 : 1);
+                    doc.text(`Firma ${reportData.operator3}:`, op3X, y - 20);
+                    try {
+                        doc.addImage(reportData.operator3Signature, 'PNG', op3X, y, signatureWidth, signatureHeight);
+                    } catch(e) {
+                        console.error(e);
+                    }
+                }
+                
+                y += signatureHeight + 30;
+                
+                // Timestamp in basso a sinistra
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Resoconto generato il: ${reportData.generatedAt}`, left, y);
+                
+                // Elenco operatori partecipanti in alto a destra
+                if (totalSignatures > 1) {
+                    const operatorsList = [reportData.operator];
+                    if (reportData.operator2) operatorsList.push(reportData.operator2);
+                    if (reportData.operator3) operatorsList.push(reportData.operator3);
+                    
+                    doc.setFontSize(10);
+                    doc.setTextColor(50);
+                    doc.text(`Operatori: ${operatorsList.join(', ')}`, pageWidth - 150, 35);
+                }
+                
+                // Salva il PDF
+                const fileName = `Resoconto_Giornaliero_${reportData.date}_${reportData.operator.replace(/\s+/g, '_')}.pdf`;
+                doc.save(fileName);
+                UI.showToast('Resoconto giornaliero scaricato', 'success');
+            },
+            
+            generateCompleteDailyReport: (reportData) => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+                const left = 14;
+                let y = 20;
+                const pageWidth = doc.internal.pageSize.getWidth();
+                
+                // Header
+                doc.setFillColor(59, 130, 246); // Blu per resoconto completo
+                doc.rect(0, 0, pageWidth, 45, 'F');
+                doc.setTextColor(255);
+                doc.setFontSize(26);
+                doc.setFont('helvetica', 'bold');
+                doc.text('RESOCONTO GIORNALIERO COMPLETO', left, 25);
+                doc.setFontSize(12);
+                doc.text(`Operatore: ${reportData.operator}`, left, 35);
+                doc.text(`Data: ${reportData.date}`, pageWidth - 60, 35);
+                doc.text(`Task totali: ${reportData.completedTasks}/${reportData.totalTasks}`, left, 42);
+                
+                y = 60;
+                doc.setTextColor(30, 41, 59);
+                
+                // Statistiche complete in tre colonne
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(18);
+                doc.text('Riepilogo Completo Giornata', left, y);
+                y += 15;
+                
+                doc.setFontSize(12);
+                const col1X = left;
+                const col2X = pageWidth / 3 + 10;
+                const col3X = (pageWidth * 2) / 3 + 10;
+                
+                // Colonna 1 - Consegne
+                doc.setFont('helvetica', 'bold');
+                doc.text('CONSEGNE', col1X, y);
+                y += 8;
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Completate: ${reportData.completedDeliveries}/${reportData.totalDeliveries}`, col1X, y);
+                y += 6;
+                doc.text(`Tasso: ${reportData.totalDeliveries > 0 ? Math.round((reportData.completedDeliveries / reportData.totalDeliveries) * 100) : 0}%`, col1X, y);
+                
+                // Colonna 2 - Interventi
+                let yStart = y - 14;
+                doc.setFont('helvetica', 'bold');
+                doc.text('INTERVENTI', col2X, yStart);
+                yStart += 8;
+                if (reportData.clients && reportData.clients.length > 0) {
+                    doc.setDrawColor(200);
+                    doc.line(left, y, pageWidth - left, y);
+                    y += 10;
+                    
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(16);
+                    doc.text('Consegne Effettuate', left, y);
+                    y += 10;
+                    
+                    doc.setFontSize(11);
+                    reportData.clients.forEach((client, index) => {
+                        if (y > 180) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(`${index + 1}. ${client.name}`, left, y);
+                        y += 6;
+                        
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(`   Indirizzo: ${client.address}`, left, y);
+                        y += 5;
+                        doc.text(`   Tipo: ${client.type} | Prodotto: ${client.product}`, left, y);
+                        y += 5;
+                        doc.text(`   Pagamento: ${client.payment} | Completato: ${client.completedAt}`, left, y);
+                        y += 8;
+                    });
+                }
+                
+                // Sezione Interventi
+                if (reportData.interventions && reportData.interventions.length > 0) {
+                    if (y > 160) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    doc.setDrawColor(200);
+                    doc.line(left, y, pageWidth - left, y);
+                    y += 10;
+                    
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(16);
+                    doc.text('Interventi Effettuati', left, y);
+                    y += 10;
+                    
+                    doc.setFontSize(11);
+                    reportData.interventions.forEach((intervention, index) => {
+                        if (y > 180) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(`${index + 1}. ${intervention.client}`, left, y);
+                        y += 6;
+                        
+                        doc.setFont('helvetica', 'normal');
+                        doc.text(`   Indirizzo: ${intervention.address}`, left, y);
+                        y += 5;
+                        doc.text(`   Tipo: ${intervention.type} | Descrizione: ${intervention.description}`, left, y);
+                        y += 5;
+                        doc.text(`   Completato: ${intervention.completedAt}`, left, y);
+                        y += 8;
+                    });
+                }
+                
+                // Note aggiuntive
+                if (reportData.notes && reportData.notes.trim()) {
+                    if (y > 140) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    
+                    doc.setDrawColor(200);
+                    doc.line(left, y, pageWidth - left, y);
+                    y += 10;
+                    
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(14);
+                    doc.text('Note Aggiuntive', left, y);
+                    y += 8;
+                    
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(11);
+                    const splitNotes = doc.splitTextToSize(Utils.sanitize(reportData.notes), pageWidth - (left * 2));
+                    doc.text(splitNotes, left, y);
+                    y += (splitNotes.length * 5) + 10;
+                }
+                
+                // Firme
+                if (y > 120) {
+                    doc.addPage();
+                    y = 20;
+                }
+                
+                doc.setDrawColor(200);
+                doc.line(left, y, pageWidth - left, y);
+                y += 15;
+                
+                const signatureWidth = 70;
+                const signatureHeight = 35;
+                
+                // Firma operatore principale
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(12);
+                doc.text('Firma Operatore Principale:', left, y);
+                y += 20;
+                if (reportData.operatorSignature) {
+                    try {
+                        doc.addImage(reportData.operatorSignature, 'PNG', left, y, signatureWidth, signatureHeight);
+                    } catch(e) {
+                        console.error(e);
+                    }
+                }
+                
+                // Altre firme
+                const signatureX = left + signatureWidth + 15;
+                if (reportData.operator2 && reportData.operator2Signature) {
+                    doc.text(`Firma ${reportData.operator2}:`, signatureX, y - 20);
+                    try {
+                        doc.addImage(reportData.operator2Signature, 'PNG', signatureX, y, signatureWidth, signatureHeight);
+                    } catch(e) {
+                        console.error(e);
+                    }
+                }
+                
+                if (reportData.operator3 && reportData.operator3Signature) {
+                    const signatureX3 = signatureX + (reportData.operator2 ? signatureWidth + 15 : 0);
+                    doc.text(`Firma ${reportData.operator3}:`, signatureX3, y - 20);
+                    try {
+                        doc.addImage(reportData.operator3Signature, 'PNG', signatureX3, y, signatureWidth, signatureHeight);
+                    } catch(e) {
+                        console.error(e);
+                    }
+                }
+                
+                // Footer
+                y += signatureHeight + 20;
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Resoconto completo generato il: ${reportData.generatedAt}`, left, y);
+                
+                // Salva il PDF
+                const fileName = `Resoconto_Completo_${reportData.date}_${reportData.operator.replace(/\s+/g, '_')}.pdf`;
+                doc.save(fileName);
+                UI.showToast('Resoconto giornaliero completo scaricato', 'success');
+            }
+        };
+
+        // ========== COMMUNICATION MANAGER ==========
+        const CommunicationManager = {
+            currentAttachment: null,
+            updateNotificationBadge: () => { const badge = Utils.id('commBadge'); if (!badge || !Auth.currentUser) return; const currentUser = Auth.currentUser; const messages = Store.getMessages(); const unreadCount = messages.filter(msg => { const isAddressedToMe = (msg.recipient === 'all') || (msg.recipient === currentUser.username) || (currentUser.role === 'admin' && msg.recipient === 'admin'); const isRead = msg.read === true; if (msg.author === currentUser.username) return false; return isAddressedToMe && !isRead; }).length; if (unreadCount > 0) { badge.innerText = unreadCount; badge.classList.remove('hidden'); } else { badge.classList.add('hidden'); } },
+            render: () => { const container = Utils.id('messagesContainer'); const recipientSelect = Utils.id('msgRecipient'); if (!container || !recipientSelect) return; const currentUser = Auth.currentUser; const currentVal = recipientSelect.value; recipientSelect.innerHTML = '<option value="all">📢 A Tutti (Bacheca Generale)</option>'; if (currentUser.role === 'admin') { const users = Store.getUsers(); console.log('DEBUG: Utenti caricati:', users); users.forEach(u => { if (u.username !== currentUser.username) { recipientSelect.innerHTML += `<option value="${u.username}">👤 A ${u.username}</option>`; } }); } else { recipientSelect.innerHTML += '<option value="admin">👔 All\'Amministratore</option>'; } recipientSelect.value = currentVal || 'all'; const allMessages = Store.getMessages(); const visibleMessages = allMessages.filter(msg => { const isAdmin = currentUser.role === 'admin'; const isSender = msg.author === currentUser.username; const isBroadcast = msg.recipient === 'all'; if (isSender) return true; if (isBroadcast) return true; if (msg.recipient === currentUser.username) return true; if (isAdmin && msg.recipient === 'admin') return true; return false; }); if (visibleMessages.length === 0) { container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-secondary);">Nessun messaggio presente.</div>'; return; } container.innerHTML = visibleMessages.map(m => { let recipientLabel = m.recipient !== 'all' ? `<span class="message-to">(Privato per: ${m.recipient})</span>` : ''; const isRead = m.read === true; if (!isRead && m.author !== currentUser.username) Store.markMessageRead(m.id); let attachmentHtml = ''; if(m.attachment) { attachmentHtml = `<img src="${m.attachment}" class="message-attachment-img" alt="Allegato">`; } return `<div class="message-bubble ${isRead ? '' : 'unread'}"><div class="message-meta"><div><span class="message-author">${m.author}</span>${recipientLabel}</div><span>${m.time}</span></div><div class="message-content">${m.content.replace(/\n/g, '<br>')}</div>${attachmentHtml}${Auth.currentUser.role === 'admin' || Auth.currentUser.username === m.author ? `<div class="text-right" style="margin-top:10px;"><button class="btn btn-sm btn-danger" onclick="CommunicationManager.delete('${m.id}')">Elimina</button></div>` : ''}</div>`; }).join(''); },
+            sendMessage: () => { const content = Utils.id('newMessageContent').value.trim(); const recipient = Utils.id('msgRecipient').value; if (!content) { UI.showToast('Scrivi un messaggio', 'error'); return; } const msg = { content: content, author: Auth.currentUser.username, recipient: recipient, time: new Date().toLocaleString('it-IT'), timestamp: firebase.firestore.FieldValue.serverTimestamp(), read: false }; if (CommunicationManager.currentAttachment) { msg.attachment = CommunicationManager.currentAttachment; } Store.saveMessage(msg); Store.addLog(`Messaggio inviato da ${Auth.currentUser.username} a ${recipient}`); Utils.id('newMessageContent').value = ''; CommunicationManager.clearAttachment(); UI.showToast('Messaggio inviato', 'success'); },
+            previewAttachment: (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                if (file.size > 1024 * 1024) {
+                    UI.showToast('L\'allegato è troppo grande (Max 1MB)', 'error');
+                    event.target.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 600;
+                        const MAX_HEIGHT = 600;
+                        let width = img.width;
+                        let height = img.height;
+                        if (width > height) {
+                            if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+                        } else {
+                            if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const compressedData = canvas.toDataURL('image/jpeg', 0.7);
+                        CommunicationManager.currentAttachment = compressedData;
+                        Utils.id('msgPreviewImg').src = compressedData;
+                        Utils.id('msgFileName').innerText = file.name;
+                        Utils.id('msgAttachmentPreview').classList.remove('hidden');
+                    };
+                };
+                reader.readAsDataURL(file);
+            },
+            clearAttachment: () => {
+                CommunicationManager.currentAttachment = null;
+                Utils.id('msgAttachment').value = '';
+                Utils.id('msgAttachmentPreview').classList.add('hidden');
+            },
+            delete: (id) => { UI.confirm('Elimina Messaggio', 'Vuoi eliminare questo messaggio?', () => { Store.deleteMessage(id); UI.showToast('Messaggio eliminato', 'info'); }); }
+        };
+
+        // ========== WAREHOUSE MANAGER ==========
+        const Warehouse = {
+            currentFilter: '',
+            currentLocationFilter: '', 
+            render: () => { 
+                const tbody = Utils.id('warehouseBody'); 
+                if (!tbody) return; 
+                const search = Utils.id('searchWarehouse')?.value?.toLowerCase() || ''; 
+                const materials = Store.getWarehouse(); 
+                
+                let filtered = materials.filter(m => { 
+                    const matchSearch = m.name.toLowerCase().includes(search); 
+                    const matchCategory = !Warehouse.currentFilter || m.category === Warehouse.currentFilter;
+                    const matchLocation = !Warehouse.currentLocationFilter || m.location === Warehouse.currentLocationFilter; 
+                    return matchSearch && matchCategory && matchLocation; 
+                }); 
+                
+                if (filtered.length === 0) { 
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">Nessun materiale trovato</td></tr>'; 
+                } else { 
+                    tbody.innerHTML = filtered.map(m => { 
+                        const value = (m.quantity * m.price).toFixed(2); 
+                        const isLow = m.quantity <= (m.minStock || 5); 
+                        const isNegative = m.quantity < 0; 
+                        const statusClass = isLow ? 'row-low-stock' : ''; 
+                        const qtyClass = isNegative ? 'negative-stock' : ''; 
+                        let statusBadge; 
+                        if (isNegative) statusBadge = '<span class="badge badge-low">NEGATIVO</span>'; 
+                        else if (isLow) statusBadge = '<span class="badge badge-low">Sotto scorta</span>'; 
+                        else statusBadge = '<span class="badge badge-ok">OK</span>'; 
+                        const locationBadge = m.location ? `<span class="badge ${m.location === 'Palermo' ? 'badge-cold' : 'badge-hot'}">${m.location}</span>` : '<span class="badge badge-warning">N/D</span>';
+                        return `<tr class="${statusClass}">
+                            <td><strong>${m.name}</strong></td>
+                            <td><span class="badge badge-warehouse">${m.category}</span></td>
+                            <td class="${qtyClass}">${m.quantity}</td>
+                            <td>E ${m.price.toFixed(2)}</td>
+                            <td>E ${value}</td>
+                            <td>${locationBadge}</td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" onclick="Warehouse.openModal('${m.id}')">Modifica</button>
+                                <button class="btn btn-sm btn-danger" onclick="Warehouse.delete('${m.id}')">Elimina</button>
+                            </td>
+                        </tr>`; 
+                    }).join(''); 
+                } 
+                
+                const totalItems = materials.reduce((sum, m) => sum + m.quantity, 0); 
+                const totalValue = materials.reduce((sum, m) => sum + (m.quantity * m.price), 0); 
+                const lowStock = materials.filter(m => m.quantity <= (m.minStock || 5)).length; 
+                if (Utils.id('totalItems')) Utils.id('totalItems').innerText = totalItems; 
+                if (Utils.id('totalValue')) Utils.id('totalValue').innerText = `E ${totalValue.toFixed(2)}`; 
+                if (Utils.id('lowStockItems')) Utils.id('lowStockItems').innerText = lowStock; 
+                Warehouse.renderHistory(); 
+            },
+            renderHistory: () => { const tbody = Utils.id('consumptionHistoryBody'); if (!tbody) return; const history = Store.getMaterialHistory(); if (history.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">Nessun consumo registrato</td></tr>'; } else { tbody.innerHTML = history.map(h => `<tr><td>${h.time}</td><td><strong>${h.operator}</strong></td><td>${h.materialName}</td><td style="color: var(--danger)">-${h.quantityUsed}</td><td>${h.clientName}</td><td style="color: ${h.newStock < 0 ? 'var(--danger)' : 'var(--text-primary)'}">${h.newStock}</td></tr>`).join(''); } },
+            filterCategory: (category) => { Warehouse.currentFilter = category; document.querySelectorAll('#categoryFilter .category-btn').forEach(btn => { btn.classList.remove('active'); if (btn.textContent.includes(category) || (category === '' && btn.textContent === 'Tutti')) { btn.classList.add('active'); } }); Warehouse.render(); },
+            filterLocation: (location) => { Warehouse.currentLocationFilter = location; Warehouse.render(); },
+            openModal: (id = null) => { 
+                Utils.id('editMaterialId').value = id || ''; 
+                Utils.id('materialName').value = ''; 
+                Utils.id('materialQty').value = ''; 
+                Utils.id('materialCategory').value = ''; 
+                Utils.id('materialPrice').value = ''; 
+                Utils.id('materialMinStock').value = ''; 
+                Utils.id('materialLocation').value = ''; 
+                Utils.id('warehouseModalTitle').innerText = id ? 'Modifica Materiale' : 'Aggiungi Materiale'; 
+                if (id) { 
+                    const m = Store.getMaterialById(id); 
+                    if (m) { 
+                        Utils.id('materialName').value = m.name; 
+                        Utils.id('materialQty').value = m.quantity; 
+                        Utils.id('materialCategory').value = m.category; 
+                        Utils.id('materialPrice').value = m.price; 
+                        Utils.id('materialMinStock').value = m.minStock || ''; 
+                        Utils.id('materialLocation').value = m.location || ''; 
+                    } 
+                } 
+                UI.openModal('warehouseModal'); 
+            },
+            saveMaterial: () => { 
+                const id = Utils.id('editMaterialId').value; 
+                const name = Utils.id('materialName').value.trim(); 
+                const quantity = parseInt(Utils.id('materialQty').value) || 0; 
+                const category = Utils.id('materialCategory').value; 
+                const price = parseFloat(Utils.id('materialPrice').value) || 0; 
+                const minStock = parseInt(Utils.id('materialMinStock').value) || 5; 
+                const location = Utils.id('materialLocation').value; 
+                if (!name || !category || !location) { 
+                    UI.showToast('Nome, categoria e sede sono obbligatori', 'error'); 
+                    return; 
+                } 
+                const data = { name , quantity, category, price, minStock, location }; 
+                if (id) { 
+                    db.collection("warehouse").doc(id).update(data); 
+                    Store.addLog(`Materiale modificato: ${name}`); 
+                } else { 
+                    const newId = Utils.generateId(); 
+                    db.collection("warehouse").doc(newId).set({ id: newId, ...data }); 
+                    Store.addLog(`Nuovo materiale aggiunto: ${name}`); 
+                } 
+                UI.closeModal('warehouseModal'); 
+                UI.showToast('Materiale salvato', 'success'); 
+            },
+            delete: (id) => { const m = Store.getMaterialById(id); UI.confirm('Elimina Materiale', `Eliminare "${m?.name}" dal magazzino?`, () => { db.collection("warehouse").doc(id).delete(); Store.addLog(`Materiale eliminato: ${m?.name}`); UI.showToast('Materiale eliminato', 'info'); }); },
+            exportMaterials: () => { const data = Store.getWarehouse(); const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `magazzino_backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); UI.showToast('Magazzino esportato', 'success'); },
+            importMaterials: (event) => { 
+                const file = event.target.files[0]; 
+                if (!file) return; 
+                const reader = new FileReader(); 
+                reader.onload = (e) => { 
+                    try { 
+                        const json = JSON.parse(e.target.result); 
+                        if (Array.isArray(json)) { UI.confirm('Importa Magazzino', `Sostituire il magazzino attuale con ${json.length} articoli?`, () => { 
+                            const batch = db.batch(); 
+                            json.forEach(item => { 
+                                const ref = db.collection("warehouse").doc(item.id || Utils.generateId()); 
+                                batch.set(ref, item, { merge: true }); 
+                            }); 
+                            batch.commit(); 
+                            Store.addLog(`Magazzino importato: ${json.length} articoli`); 
+                            UI.showToast('Magazzino importato', 'success'); 
+                        }); 
+                    } else { 
+                        UI.showToast('Formato file non valido', 'error'); 
+                    } 
+                } catch (err) { 
+                    UI.showToast('Errore lettura file', 'error'); 
+                } 
+            }; 
+            reader.readAsText(file); 
+            event.target.value = ''; 
+        }
+    };
+
+    // ========== ADMIN ==========
+    const Admin = {
+        renderUsers: () => { 
+            const tbody = Utils.id('adminUsersBody'); 
+            if (!tbody) return; 
+            tbody.innerHTML = ''; 
+            Store.getUsers().forEach(u => { 
+                const isMe = Auth.currentUser?.id === u.id; 
+                const locationBadge = u.location ? `<span class="badge badge-domicile" style="margin-left: 8px;">${u.location}</span>` : '<span style="color: var(--text-secondary); font-size: 0.8rem; margin-left: 8px;">Nessuna sede</span>';
+                tbody.innerHTML += `<tr><td>${u.username} ${isMe ? '<small>(tu)</small>' : ''}</td><td><span class="badge ${u.username === 'admin' ? 'badge-admin' : 'badge-cold'}">${u.role}</span></td><td>${locationBadge}</td><td><button class="btn btn-sm btn-warning" onclick="Admin.openUserModal('${u.id}')" ${isMe ? 'disabled' : ''}>Modifica</button> <button class="btn btn-sm btn-danger" onclick="Admin.deleteUser('${u.id}')" ${isMe ? 'disabled' : ''}>Elimina</button></td></tr>`; 
+            }); 
+        },
+        renderLogs: () => { const logContainer = Utils.id('activityLog'); if (logContainer) { logContainer.innerHTML = Store.localLogs.map(l => `<div class="log-entry"><span class="log-time">[${l.time}]</span>${l.msg}</div>`).join(''); } },
+        openUserModal: (id = null) => { 
+            Utils.id('editUserId').value = id || ''; 
+            Utils.id('editUserUsername').value = ''; 
+            Utils.id('editUserPass').value = ''; 
+            Utils.id('editUserRole').value = 'user'; 
+            Utils.id('editUserLocation').value = ''; 
+            Utils.id('userModalTitle').innerText = id ? 'Modifica Utente' : 'Nuovo Utente'; 
+            if (id) { 
+                const u = Store.getUsers().find(x => x.id === id); 
+                if (u) { 
+                    Utils.id('editUserUsername').value = u.username; 
+                    Utils.id('editUserRole').value = u.role; 
+                    Utils.id('editUserLocation').value = u.location || ''; 
+                } 
+            } 
+            UI.openModal('userModal'); 
+        },
+        saveUser: () => { 
+            const id = Utils.id('editUserId').value; 
+            const username = Utils.id('editUserUsername').value.trim(); 
+            let pass = Utils.id('editUserPass').value; 
+            const role = Utils.id('editUserRole').value; 
+            const location = Utils.id('editUserLocation').value;
+            
+            if (!username) { UI.showToast('Username obbligatorio', 'error'); return; } 
+            if (!location) { UI.showToast('Sede obbligatoria', 'error'); return; }
+            
+            if (id) { 
+                const data = { username, role, location }; 
+                if (pass) data.password = pass; 
+                db.collection("users").doc(id).update(data); 
+                Store.addLog(`Admin ha modificato l'utente ${username} (sede: ${location})`); 
+                UI.showToast('Utente modificato!', 'success');
+            } else { 
+                if (!pass) { 
+                    UI.showToast('Password obbligatoria per nuovi utenti', 'error'); 
+                    return; 
+                } 
+                const newId = Utils.generateId(); 
+                db.collection("users").doc(newId).set({ id: newId, username, password: pass, role, location }); 
+                Store.addLog(`Admin ha creato l'utente ${username} (sede: ${location})`); 
+                UI.showToast('Nuovo utente creato!', 'success');
+            } 
+            UI.closeModal('userModal'); 
+        },
+        deleteUser: (id) => {
+            const u = Store.getUsers().find(x => x.id === id);
+            if (!u) return;
+            
+            // Blocca l'eliminazione dell'utente Master Admin hardcoded 'admin'
+            if (u.username === 'admin') {
+                UI.showToast('Non è possibile eliminare l\'amministratore principale', 'error');
+                return;
+            }
+
+            UI.confirm('Elimina Operatore', `Sei sicuro di voler eliminare l'utente ${u.username}? Questo lo disabiliterà permanentemente.`, () => {
+                db.collection("users").doc(id).delete()
+                    .then(() => {
+                        Store.addLog(`Admin ha eliminato l'utente ${u.username}`);
+                        UI.showToast('Operatore eliminato con successo', 'success');
+                        // La lista si aggiornerà automaticamente grazie al listener onSnapshot
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        UI.showToast('Errore durante l\'eliminazione', 'error');
+                    });
+            });
+        },
+        openAssignmentModal: () => {
+            const currentName = Utils.id('c_nome').value;
+            const currentAddress = Utils.id('c_indirizzo').value;
+            const currentPhone = Utils.id('c_tel').value;
+            const currentEmail = Utils.id('c_email') ? Utils.id('c_email').value : '';
+
+            const users = Store.getUsers().filter(u => u.role !== 'admin');
+            if(users.length === 0) {
+                UI.showToast('Nessun operatore disponibile', 'error');
+                return;
+            }
+
+            const modalContent = `
+                <div class="modal-overlay" id="createCommessaModal" style="display:flex; z-index: 100001;">
+                    <div class="modal">
+                        <h3 style="color:var(--warning); margin-top:0;">Crea Commessa Operatore</h3>
+                        <p style="font-size:0.9rem; color:var(--text-secondary);">I dati attuali del cliente verranno usati per la commessa.</p>
+                        
+                        <div class="form-group"><label>Cliente</label><input type="text" id="comm_client" value="${(currentName || '').replace(/"/g, '&quot;')}"></div>
+                        <div class="form-group"><label>Indirizzo</label><input type="text" id="comm_address" value="${(currentAddress || '').replace(/"/g, '&quot;')}"></div>
+                        <div class="form-group"><label>Telefono</label><input type="text" id="comm_phone" value="${(currentPhone || '').replace(/"/g, '&quot;')}"></div>
+                        <div class="form-group"><label>Email</label><input type="email" id="comm_email" placeholder="email@esempio.it" value="${(currentEmail || '').replace(/"/g, '&quot;')}"></div>
+                        <div class="form-group">
+                            <label>Assegna a Operatore *</label>
+                            <select id="comm_operator">
+                                ${users.map(u => `<option value="${u.username}">${u.username}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo Intervento</label>
+                            <select id="comm_type">
+                                <option>Installazione</option>
+                                <option>Riparazione</option>
+                                <option>Manutenzione</option>
+                                <option>Sopralluogo</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Tipo macchina da installare</label><input type="text" id="comm_machine_type" placeholder="Es. Condizionatore split 9000 BTU, Caldaia a condensazione..."></div>
+                        <div class="form-group"><label>Numero macchine da installare</label><input type="number" id="comm_machine_count" min="1" max="20" value="1" style="width:80px;"></div>
+                        <div class="form-group">
+                            <label>Data Intervento *</label>
+                            <input type="date" id="comm_intervention_date" value="${Utils.today()}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ora Intervento</label>
+                            <input type="time" id="comm_intervention_time" style="padding: 10px;">
+                        </div>
+                        <div class="form-group"><label>Note / Pagamento</label><textarea id="comm_notes" rows="3" placeholder="Es. Pagamento in contanti, dettagli extra..."></textarea></div>
+
+                        <div class="modal-actions row">
+                            <button class="btn btn-outline" onclick="Utils.id('createCommessaModal').remove()">Annulla</button>
+                            <button class="btn btn-warning" onclick="Admin.saveCommessa()">Crea Commessa</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const old = Utils.id('createCommessaModal');
+            if(old) old.remove();
+            
+            document.body.insertAdjacentHTML('beforeend', modalContent);
+        },
+        saveCommessa: () => {
+            const client = Utils.id('comm_client').value;
+            const address = Utils.id('comm_address').value;
+            const phone = Utils.id('comm_phone').value;
+            const email = Utils.id('comm_email').value.trim();
+            const operator = Utils.id('comm_operator').value;
+            const type = Utils.id('comm_type').value;
+            const machineType = Utils.id('comm_machine_type').value.trim();
+            const machineCount = parseInt(Utils.id('comm_machine_count').value, 10) || 1;
+            const interventionDate = Utils.id('comm_intervention_date').value;
+            const interventionTime = Utils.id('comm_intervention_time').value;
+            const notes = Utils.id('comm_notes').value;
+
+            if(!client || !operator || !interventionDate) {
+                UI.showToast('Cliente, Operatore e Data Intervento sono obbligatori', 'error');
+                return;
+            }
+
+            // Determina categoria automaticamente in base al tipo macchina
+            let category = 'refrigerazione';
+            const machineLower = machineType.toLowerCase();
+            const heatingKeywords = ['caldaia', 'caldaie', 'scaldabagno', 'scaldacqua', 'riscaldamento', 'pompa di calore', 'pdc', 'termosifone', 'radiatore', 'stufa', 'termo', 'boiler'];
+            const coolingKeywords = ['climatizzatore', 'climatizzatori', 'condizionatore', 'condizionatori', 'split', 'multi-split', 'cassette', 'canalizzato', 'vr', 'refrigerazione', 'frigorifero', 'cella frigorifera', 'chiller'];
+            
+            if (heatingKeywords.some(k => machineLower.includes(k))) {
+                category = 'riscaldamento';
+            } else if (coolingKeywords.some(k => machineLower.includes(k))) {
+                category = 'refrigerazione';
+            }
+
+            let noteText = notes;
+            if (machineType) {
+                noteText = 'Macchina da installare: ' + machineType + (noteText ? '\n\n' + noteText : '');
+            }
+
+            const data = {
+                id: Utils.generateId(),
+                status: 'assegnato',
+                author: 'Admin',
+                assignedTo: operator,
+                client: {
+                    nome: client,
+                    indirizzo: address,
+                    tel: phone,
+                    email: email || undefined,
+                    date: Utils.today(),
+                    dataIntervento: interventionDate,
+                    oraIntervento: interventionTime
+                },
+                intervention: {
+                    tipo: type.toLowerCase(),
+                    tipo_label: type,
+                    note: noteText,
+                    machineType: machineType || undefined,
+                    machineCount: machineCount
+                },
+                materials: [],
+                total: '0.00',
+                category: category,
+                createdAt: new Date().toLocaleString('it-IT')
+            };
+
+            Store.save(data);
+            Store.addLog(`Commessa creata per ${operator} - Cliente: ${client} - Data: ${interventionDate} ${interventionTime || ''}`);
+            UI.showToast(`Commessa assegnata con successo! Categoria: ${category === 'refrigerazione' ? 'Refrigerazione ❄️' : 'Riscaldamento 🔥'}`, 'success');
+            
+            Utils.id('createCommessaModal').remove();
+            App.goToDashboard();
+        }
+    };
+
+    // ========== SIGNATURE PAD ==========
+    const SignaturePad = {
+        init: (canvasId) => { 
+            const canvas = Utils.id(canvasId); 
+            if (!canvas) return; 
+            const ctx = canvas.getContext('2d'); 
+            const rect = canvas.getBoundingClientRect(); 
+            canvas.width = rect.width; 
+            canvas.height = rect.height; 
+            ctx.strokeStyle = '#000000'; 
+            ctx.lineWidth = 3; 
+            ctx.lineCap = 'round'; 
+            ctx.lineJoin = 'round';
+            let isDrawing = false; 
+            const getPos = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX || e.touches?.[0]?.clientX) - r.left, y: (e.clientY || e.touches?.[0]?.clientY) - r.top }; }; 
+            const start = (e) => { e.preventDefault(); isDrawing = true; const { x, y } = getPos(e); ctx.beginPath(); ctx.moveTo(x, y); }; 
+            const move = (e) => { if (!isDrawing) return; e.preventDefault(); const { x, y } = getPos(e); ctx.lineTo(x, y); ctx.stroke(); }; 
+            const end = () => { isDrawing = false; }; 
+            canvas.onmousedown = start; canvas.onmousemove = move; canvas.onmouseup = end; canvas.onmouseleave = end; 
+            canvas.ontouchstart = start; canvas.ontouchmove = move; canvas.ontouchend = end; 
+        },
+        clear: (canvasId) => { const canvas = Utils.id(canvasId); if (!canvas) return; const ctx = canvas.getContext('2d'); ctx.clearRect(0, 0, canvas.width, canvas.height); },
+        isEmpty: (canvasId) => { const canvas = Utils.id(canvasId); if (!canvas) return true; const blank = document.createElement('canvas'); blank.width = canvas.width; blank.height = canvas.height; return canvas.toDataURL() === blank.toDataURL(); },
+        getImage: (canvasId) => { if (SignaturePad.isEmpty(canvasId)) return null; return Utils.id(canvasId).toDataURL(); }
+    };
+
+    // ========== FORM MANAGER ==========
+    const FormManager = {
+        materials: [], currentStep: 1, category: 'refrigerazione',
+        setCategory: (cat) => { FormManager.category = cat; const header = Utils.id('formHeader'); if (header) header.innerHTML = `Nuovo Intervento ${cat === 'refrigerazione' ? '❄️' : '🔥'}`; FormManager.updateTipoOptions(); },
+        updateTipoOptions: () => { const select = Utils.id('i_tipo'); if (!select) return; select.innerHTML = '<option value="" disabled selected>-- Seleziona --</option>'; const options = FormManager.category === 'refrigerazione' ? [{ val: 'installazione', text: 'Installazione' }, { val: 'manutenzione', text: 'Manutenzione Ordinaria' }, { val: 'riparazione', text: 'Riparazione Guasto' }, { val: 'ricariga', text: 'Ricarica Gas Refrigerante' }, { val: 'sopralluogo', text: 'Sopralluogo' }] : [{ val: 'installazione', text: 'Installazione Caldaia' }, { val: 'installazione_scaldino_gas', text: 'Installazione Scaldino a Gas' }, { val: 'installazione_scaldabagno_elettrico', text: 'Installazione Scaldabagno Elettrico' }, { val: 'installazione_stufa_pellet', text: 'Installazione Stufa Pellet' }, { val: 'manutenzione', text: 'Manutenzione Caldaia' }, { val: 'riparazione', text: 'Riparazione Guasto' }, { val: 'sopralluogo', text: 'Sopralluogo' }]; options.forEach(o => { const opt = document.createElement('option'); opt.value = o.val; opt.textContent = o.text; select.appendChild(opt); }); },
+        reset: () => { 
+            const form = Utils.id('interventionForm'); 
+            if (form) form.reset(); 
+            Utils.id('editId').value = ''; 
+            FormManager.materials = []; 
+            FormManager.renderMaterials(); 
+            const dynamicFields = Utils.id('dynamicFields'); 
+            if (dynamicFields) dynamicFields.innerHTML = ''; 
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0'); 
+            const yyyy = today.getFullYear();
+            const formattedDate = dd + '/' + mm + '/' + yyyy;
+            Utils.id('c_intervention_date').value = formattedDate; 
+            Utils.id('c_date').value = Utils.today(); 
+            Utils.id('op_name').value = Auth.currentUser?.username || ''; 
+            SignaturePad.clear('sigClient'); 
+            SignaturePad.clear('sigTech'); 
+            FormManager.goToStep(1); 
+        },
+        goToStep: (step) => { for (let i = 1; i <= 5; i++) { const section = Utils.id(`section-${i}`); const stepEl = Utils.id(`step-${i}`); if (section) section.classList.add('hidden'); if (stepEl) stepEl.classList.remove('active', 'completed'); } const currentSection = Utils.id(`section-${step}`); const currentStepEl = Utils.id(`step-${step}`); if (currentSection) currentSection.classList.remove('hidden'); if (currentStepEl) currentStepEl.classList.add('active'); for (let i = 1; i < step; i++) { const prevStep = Utils.id(`step-${i}`); if (prevStep) { prevStep.classList.add('completed'); prevStep.classList.remove('active'); } } FormManager.currentStep = step; if (step === 5) { setTimeout(() => { SignaturePad.init('sigClient'); SignaturePad.init('sigTech'); FormManager.updateSummary(); }, 100); } },
+        nextStep: (target) => { if (target === 2 && (!Utils.id('c_nome').value || !Utils.id('c_indirizzo').value)) { UI.showToast('Inserisci Nome e Indirizzo', 'error'); return; } if (target === 3 && !Utils.id('i_tipo').value) { UI.showToast('Seleziona il Tipo Intervento', 'error'); return; } FormManager.goToStep(target); },
+        prevStep: (target) => FormManager.goToStep(target),
+        toggleTypeFields: () => { const type = Utils.id('i_tipo').value; const cat = FormManager.category; const container = Utils.id('dynamicFields'); if (!container) return; let html = ''; if (cat === 'refrigerazione') { if (type === 'installazione') { html = `<div class="tech-box"><h4>Dati Installazione</h4><div class="form-grid"><div class="form-group"><label>Tipologia Impianto</label><select id="tech_imp_type"><option value="">--</option><option>Spalla-Spalla</option><option>Sotto Finestra DX</option><option>Sotto Finestra SX</option><option>Canalizzato</option><option>Predisposizione</option><option>Centralizzato</option></select></div><div class="form-group"><label>Posizione Condensa</label><select id="tech_drain"><option>A Pavimento</option><option>A Parete</option><option>Pompa di Sollevamento</option></select></div><div class="form-group"><label>Lunghezza Tubi (m)</label><input type="number" id="tech_pipe_length"></div><div class="form-group"><label>Dislivello (m)</label><input type="number" id="tech_height_diff"></div></div></div></div>`; } else if (type === 'manutenzione') { html = `<div class="tech-box"><h4>Manutenzione Ordinaria</h4><div class="form-grid"><div class="form-group"><label>Pulizia Filtri</label><select id="tech_filters"><option>Eseguita</option><option>Sostituiti</option></select></div><div class="form-group"><label>Pressione Bassa (bar)</label><input type="number" step="0.1" id="tech_press_low"></div><div class="form-group"><label>Pressione Alta (bar)</label><input type="number" step="0.1" id="tech_press_high"></div><div class="form-group"><label>Temperatura (°C)</label><input type="number" step="0.1" id="tech_temp"></div></div></div>`; } else if (type === 'ricariga') { html = `<div class="tech-box"><h4>Ricarica Gas</h4><div class="form-grid"><div class="form-group"><label>Tipo Gas</label><select id="tech_gas_type"><option>R32</option><option>R410A</option><option>R134a</option></select></div><div class="form-group"><label>Quantità (kg)</label><input type="number" step="0.01" id="tech_gas_qty"></div><div class="form-group"><label>Pressione Bassa</label><input type="number" step="0.1" id="tech_press_low"></div><div class="form-group"><label>Pressione Alta</label><input type="number" step="0.1" id="tech_press_high"></div></div></div>`; } else if (type === 'riparazione') { html = `<div class="tech-box"><h4>Riparazione</h4><div class="form-grid"><div class="form-group"><label>Codice Errore</label><input type="text" id="tech_error"></div><div class="form-group"><label>Causale</label><input type="text" id="tech_part"></div><div class="form-group" style="grid-column: 1/-1;"><label>Diagnosi</label><textarea id="tech_diagnosis" rows="2"></textarea></div></div></div>`; } else { html = `<div class="tech-box"><h4>Sopralluogo</h4><div class="form-grid"><div class="form-group"><label>Stanza</label><input type="text" id="tech_room"></div><div class="form-group"><label>Note</label><textarea id="tech_notes" rows="2"></textarea></div></div></div>`; } } else { if (type === 'installazione') { html = `<div class="tech-box"><h4>Installazione Caldaia</h4><div class="form-grid"><div class="form-group"><label>Tipo</label><select id="tech_heat_type"><option>a Parete</option><option>a Terra</option></select></div><div class="form-group"><label>Potenza (kW)</label><input type="number" id="tech_power_kw"></div></div></div>`; } else if (type === 'manutenzione') { html = `<div class="tech-box"><h4>Manutenzione Caldaia</h4><div class="form-grid"><div class="form-group"><label>CO (ppm)</label><input type="number" id="tech_co"></div><div class="form-group"><label>Rendimento (%)</label><input type="number" step="0.1" id="tech_efficiency"></div></div></div>`; } else { html = `<div class="tech-box"><h4>Riparazione</h4><div class="form-grid"><div class="form-group"><label>Codice Errore</label><input type="text" id="tech_error"></div></div></div>`; } } container.innerHTML = html; },
+        renderMachines: () => { 
+            const count = parseInt(Utils.id('m_count').value) || 1; 
+            const container = Utils.id('machinesContainer'); 
+            if (!container) return; 
+            container.innerHTML = ''; 
+            for (let i = 1; i <= count; i++) { 
+                const div = document.createElement('div'); 
+                div.className = 'card'; 
+                div.style.cssText = 'border-left: 4px solid var(--primary); margin-bottom: 15px;'; 
+                div.innerHTML = `
+                    <h4 style="margin:0 0 15px; color: var(--primary);">Unità #${i}</h4>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Marca</label>
+                            <div style="position: relative;">
+                                <input type="text" name="m_${i}_brand">
+                                <button type="button" class="btn btn-sm" onclick="FormManager.scanMachine(${i})" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); background: var(--primary); color: white; padding: 5px 8px; font-size: 0.7rem;">
+                                    <i class="fas fa-camera"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>Modello</label><input type="text" name="m_${i}_model"></div>
+                        <div class="form-group"><label>Matricola Int.</label><input type="text" name="m_${i}_sn_int"></div>
+                        <div class="form-group"><label>Matricola Est.</label><input type="text" name="m_${i}_sn_out"></div>
+                        <div class="form-group"><label>Tipo Gas</label><select name="m_${i}_gas" onchange="FormManager.calcEmissions(${i})"><option value="">--</option><option value="R32">R32</option><option value="R410A">R410A</option><option value="R134a">R134a</option></select></div>
+                        <div class="form-group"><label>Qty Gas (gr)</label><input type="number" name="m_${i}_gas_qty" oninput="FormManager.calcEmissions(${i})"></div>
+                        <div class="form-group"><label>GWP</label><input type="number" name="m_${i}_gwp" readonly></div>
+                        <div class="form-group"><label>CO2 Eq (kg)</label><input type="number" name="m_${i}_co2" readonly></div>
+                        <div class="form-group"><label>BTU</label><select name="m_${i}_btu"><option>9000</option><option>12000</option><option>18000</option></select></div>
+                        <div class="form-group"><label>Stanza</label><input type="text" name="m_${i}_room"></div>
+                    </div>
+                `; 
+                container.appendChild(div); 
+            } 
+        },
+        calcEmissions: (index) => { const gasSelect = document.querySelector(`[name="m_${index}_gas"]`); const qtyInput = document.querySelector(`[name="m_${index}_gas_qty"]`); const gwpInput = document.querySelector(`[name="m_${index}_gwp"]`); const co2Input = document.querySelector(`[name="m_${index}_co2"]`); if (!gasSelect || !qtyInput) return; const gasType = gasSelect.value; const qty = parseFloat(qtyInput.value) || 0; const gwpMap = { 'R32': 675, 'R410A': 2088, 'R134a': 1430 }; const gwp = gwpMap[gasType] || 0; gwpInput.value = gwp; co2Input.value = ((qty / 1000) * gwp).toFixed(2); },
+        showMaterialDropdown: () => { 
+            const searchInput = Utils.id('materialSearch'); 
+            const dropdown = Utils.id('materialDropdown'); 
+            if (!dropdown || !searchInput) return; 
+            const search = searchInput.value.toLowerCase(); 
+            const materials = Store.getWarehouse(); 
+            
+            // Filtra materiali per sede dell'utente loggato (se non è admin)
+            let availableMaterials = materials;
+            if (Auth.currentUser?.role !== 'admin' && Auth.currentUser?.location) {
+                availableMaterials = materials.filter(m => m.location === Auth.currentUser.location);
+            }
+            
+            const filtered = availableMaterials.filter(m => m.name.toLowerCase().includes(search)); 
+            if (filtered.length === 0) { 
+                dropdown.innerHTML = '<div class="material-option" style="color: var(--text-secondary);">Nessun materiale trovato nella tua sede</div>'; 
+            } else { 
+                dropdown.innerHTML = filtered.map(m => `
+                    <div class="material-option" onclick="FormManager.selectMaterial('${m.id}')">
+                        <div>
+                            <div class="material-option-name">${m.name}</div>
+                            <div class="material-option-meta">
+                                <span class="badge badge-warehouse">${m.category}</span>
+                                <span class="badge ${m.location === 'Palermo' ? 'badge-cold' : 'badge-hot'}" style="margin-left:5px;">${m.location || 'N/D'}</span>
+                            </div>
+                        </div>
+                        <div class="material-option-price">E ${m.price.toFixed(2)}</div>
+                    </div>`
+                ).join(''); 
+            } 
+            dropdown.classList.add('show'); 
+        },
+        selectMaterial: (id) => { 
+            const material = Store.getMaterialById(id); 
+            if (!material) return; 
+            Utils.id('mat_desc').value = material.name; 
+            Utils.id('mat_price').value = material.price.toFixed(2); 
+            Utils.id('mat_qta').value = 1; 
+            Utils.id('materialSearch').value = material.name + ' (' + (material.location || 'N/D') + ')'; 
+            Utils.id('selected_warehouse_id').value = id; 
+            Utils.id('materialDropdown').classList.remove('show'); 
+        },
+        addMaterial: () => { 
+            const desc = Utils.id('mat_desc').value.trim(); 
+            const qta = parseInt(Utils.id('mat_qta').value) || 0; 
+            const price = parseFloat(Utils.id('mat_price').value) || 0; 
+            const selectedId = Utils.id('selected_warehouse_id').value; 
+            
+            if (!desc || qta <= 0) { UI.showToast('Dati non validi', 'error'); return; } 
+            
+            let warehouseItem = null;
+            if(selectedId) {
+                warehouseItem = Store.getMaterialById(selectedId);
+            }
+            
+            const materialEntry = { 
+                desc, 
+                qta, 
+                price, 
+                total: qta * price, 
+                fromWarehouse: warehouseItem ? warehouseItem.id : null,
+                location: warehouseItem ? warehouseItem.location : 'Manuale' 
+            }; 
+            FormManager.materials.push(materialEntry); 
+            FormManager.renderMaterials(); 
+            
+            Utils.id('mat_desc').value = ''; 
+            Utils.id('mat_qta').value = '1'; 
+            Utils.id('mat_price').value = ''; 
+            Utils.id('materialSearch').value = ''; 
+            Utils.id('selected_warehouse_id').value = ''; 
+        },
+        removeMaterial: (idx) => { FormManager.materials.splice(idx, 1); FormManager.renderMaterials(); },
+        renderMaterials: () => { 
+            const tbody = Utils.id('materialsTableBody'); 
+            if (!tbody) return; 
+            tbody.innerHTML = ''; 
+            let total = 0; 
+            FormManager.materials.forEach((m, idx) => { 
+                total += m.total; 
+                const originBadge = m.fromWarehouse ? '<span class="badge badge-warehouse">Magazzino</span>' : '<span class="badge badge-cold">Manuale</span>';
+                const locationColor = m.location === 'Palermo' ? 'badge-cold' : (m.location === 'Milano' ? 'badge-hot' : 'badge-secondary');
+                const locationBadge = `<span class="badge ${locationColor}">${m.location}</span>`;
+                
+                tbody.innerHTML += `<tr>
+                    <td>${m.desc}</td>
+                    <td>${m.qta}</td>
+                    <td>E ${m.price.toFixed(2)}</td>
+                    <td>E ${m.total.toFixed(2)}</td>
+                    <td>${locationBadge}</td>
+                    <td>${originBadge}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="FormManager.removeMaterial(${idx})">x</button></td>
+                </tr>`; 
+            }); 
+            Utils.id('materialsTotal').innerText = total.toFixed(2); 
+        },
+        updateSummary: () => { const nome = Utils.id('c_nome').value; const data = Utils.id('c_intervention_date').value; const ora = Utils.id('c_intervention_time').value; const tipo = Utils.id('i_tipo').selectedOptions[0]?.text || '-'; const op = Utils.id('op_name').value; const tot = Utils.id('materialsTotal').innerText; const summaryContent = Utils.id('summaryContent'); if (!summaryContent) return; summaryContent.innerHTML = `<div class="summary-row"><span class="summary-label">Cliente</span><span class="summary-value">${nome}</span></div><div class="summary-row"><span class="summary-label">Data Intervento</span><span class="summary-value">${data}</span></div><div class="summary-row"><span class="summary-label">Ora Intervento</span><span class="summary-value">${ora || '-'}</span></div><div class="summary-row"><span class="summary-label">Operatore</span><span class="summary-value">${op}</span></div><div class="summary-row"><span class="summary-label">Tipo Intervento</span><span class="summary-value">${tipo}</span></div><div class="summary-row"><span class="summary-label">Totale</span><span class="summary-value" style="color: var(--success); font-size: 1.2rem;">E ${tot}</span></div>`; },
+        collectData: () => { 
+            const count = parseInt(Utils.id('m_count').value) || 1; 
+            const machines = []; 
+            for (let i = 1; i <= count; i++) { 
+                const getVal = (name) => document.querySelector(`[name="m_${i}_${name}"]`)?.value || ''; 
+                machines.push({ 
+                    brand: getVal('brand'), model: getVal('model'), sn_int: getVal('sn_int'), sn_out: getVal('sn_out'), 
+                    gas: getVal('gas'), gas_qty: getVal('gas_qty'), gwp: getVal('gwp'), co2: getVal('co2'), btu: getVal('btu'), room: getVal('room')
+                }); 
+            } 
+            const techData = {}; 
+            const techIds = ['tech_imp_type', 'tech_drain', 'tech_pipe_length', 'tech_height_diff', 'tech_filters', 'tech_press_low', 'tech_press_high', 'tech_temp', 'tech_voltage', 'tech_amps', 'tech_gas_type', 'tech_gas_qty', 'tech_temp_out', 'tech_temp_in', 'tech_error', 'tech_part', 'tech_diagnosis', 'tech_req_type', 'tech_room', 'tech_power_btu', 'tech_notes', 'tech_heat_type', 'tech_power_kw', 'tech_flue', 'tech_co', 'tech_efficiency', 'tech_fumes_temp', 'tech_exchanger']; 
+            techIds.forEach(id => { const el = Utils.id(id); if (el) techData[id] = el.value; }); 
+            return { 
+                id: Utils.id('editId').value || Utils.generateId(), 
+                category: Utils.id('i_tipo').value, // Usa il tipo specifico di intervento 
+                status: 'sospeso', 
+                author: Auth.currentUser.username, 
+                client: { 
+                    nome: Utils.id('c_nome').value, 
+                    indirizzo: Utils.id('c_indirizzo').value, 
+                    dataIntervento: Utils.id('c_intervention_date').value,
+                    oraIntervento: Utils.id('c_intervention_time').value,
+                    date: Utils.id('c_date').value, 
+                    tel: Utils.id('c_tel').value, 
+                    email: Utils.id('c_email').value, 
+                    fiscal: Utils.id('c_fiscal').value, 
+                    receipt_no: Utils.id('c_receipt_no').value 
+                }, 
+                intervention: { 
+                    tipo: Utils.id('i_tipo').value, 
+                    tipo_label: Utils.id('i_tipo').selectedOptions[0]?.text, 
+                    note: Utils.id('i_note').value, 
+                    techData 
+                }, 
+                machines, 
+                materials: FormManager.materials, 
+                total: Utils.id('materialsTotal').innerText, 
+                signatures: { client: SignaturePad.getImage('sigClient'), tech: SignaturePad.getImage('sigTech') } 
+            }; 
+        },
+
+        // ========== FUNZIONI OCR ==========
+        scanDocument: () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.capture = 'environment';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                UI.showToast('Scansione in corso...', 'info');
+                
+                // Carica Tesseract.js se non è già caricato
+                if (!window.Tesseract) {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js';
+                    script.onload = () => FormManager.processOCR(file, 'document');
+                    document.head.appendChild(script);
+                } else {
+                    FormManager.processOCR(file, 'document');
+                }
+            };
+            input.click();
+        },
+
+        scanMachine: (machineIndex) => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.capture = 'environment';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                UI.showToast(`Scansione macchina #${machineIndex} in corso...`, 'info');
+                
+                // Carica Tesseract.js se non è già caricato
+                if (!window.Tesseract) {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js';
+                    script.onload = () => FormManager.processOCR(file, 'machine', machineIndex);
+                    document.head.appendChild(script);
+                } else {
+                    FormManager.processOCR(file, 'machine', machineIndex);
+                }
+            };
+            input.click();
+        },
+
+        processOCR: async (file, type, machineIndex = null) => {
+            try {
+                const result = await Tesseract.recognize(file, 'ita', {
+                    logger: m => console.log(m),
+                });
+
+                const text = result.data.text;
+                console.log('Testo OCR estratto:', text);
+
+                if (type === 'document') {
+                    FormManager.extractDocumentData(text);
+                } else if (type === 'machine') {
+                    FormManager.extractMachineData(text, machineIndex);
+                }
+
+                UI.showToast('Scansione completata!', 'success');
+            } catch (error) {
+                console.error('Errore OCR:', error);
+                UI.showToast('Errore durante la scansione OCR', 'error');
+            }
+        },
+
+        extractDocumentData: (text) => {
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            
+            // Estrae codice fiscale (16 caratteri alfanumerici)
+            const fiscalCodeMatch = text.match(/[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]/i);
+            if (fiscalCodeMatch) {
+                Utils.id('c_fiscal').value = fiscalCodeMatch[0].toUpperCase();
+                UI.showToast('Codice fiscale rilevato automaticamente', 'success');
+            }
+
+            // Estrae email
+            const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+            if (emailMatch) {
+                Utils.id('c_email').value = emailMatch[0];
+                UI.showToast('Email rilevata automaticamente', 'success');
+            }
+
+            // Estrae nome cliente (cerca pattern comuni)
+            const namePatterns = [
+                /(?:cliente|cliente|ragione\s+sociale|nome)[:\s]*([A-Za-z\s]+(?:[A-Z][a-z]+)*)/i,
+                /(?:spett\.\s*le|all[ae]\s+attn\.?\s*)([A-Za-z\s]+(?:[A-Z][a-z]+)*)/i
+            ];
+
+            for (const pattern of namePatterns) {
+                const match = text.match(pattern);
+                if (match && match[1]) {
+                    const name = match[1].trim();
+                    if (name.length > 3) {
+                        Utils.id('c_nome').value = name;
+                        UI.showToast('Nome cliente rilevato automaticamente', 'success');
+                        break;
+                    }
+                }
+            }
+        },
+
+        extractMachineData: (text, machineIndex) => {
+            const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+            
+            // Estrae marca (cerca marchi comuni)
+            const brands = ['SAMSUNG', 'LG', 'DAIKIN', 'MITSUBISHI', 'PANASONIC', 'HAIER', 'GREE', 'FERROLI', 'AERMEC', 'O GENERAL'];
+            const foundBrand = brands.find(brand => text.toUpperCase().includes(brand));
+            if (foundBrand) {
+                const brandInput = document.querySelector(`[name="m_${machineIndex}_brand"]`);
+                if (brandInput) {
+                    brandInput.value = foundBrand;
+                    UI.showToast(`Marca ${foundBrand} rilevata automaticamente`, 'success');
+                }
+            }
+
+            // Estrae modello (cerca pattern numerici/lettere)
+            const modelPatterns = [
+                /(?:modello|model|mod)[:\s]*([A-Z0-9\-\s\/]+)/i,
+                /([A-Z]{2,4}\d{2,4}[A-Z0-9\-\s\/]*)/i
+            ];
+
+            for (const pattern of modelPatterns) {
+                const match = text.match(pattern);
+                if (match && match[1]) {
+                    const model = match[1].trim();
+                    if (model.length > 3) {
+                        const modelInput = document.querySelector(`[name="m_${machineIndex}_model"]`);
+                        if (modelInput) {
+                            modelInput.value = model;
+                            UI.showToast('Modello rilevato automaticamente', 'success');
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Estrae numero di serie (cerca pattern di numeri e lettere)
+            const serialPatterns = [
+                /(?:matricola|serial|sn|s\.n\.?)[:\s]*([A-Z0-9\-\s\/]+)/i,
+                /([A-Z0-9]{8,20})/i
+            ];
+
+            for (const pattern of serialPatterns) {
+                const match = text.match(pattern);
+                if (match && match[1]) {
+                    const serial = match[1].trim().replace(/\s+/g, '');
+                    if (serial.length > 6) {
+                        // Prova a inserire nella matricola interna prima
+                        const snIntInput = document.querySelector(`[name="m_${machineIndex}_sn_int"]`);
+                        if (snIntInput && !snIntInput.value) {
+                            snIntInput.value = serial;
+                            UI.showToast('Matricola interna rilevata automaticamente', 'success');
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    // ========== PDF GENERATOR ==========
+    const PDF = {
+        generate: (data) => {
+            const { jsPDF } = window.jspdf; const doc = new jsPDF(); let y = 20; const left = 14; const pageWidth = doc.internal.pageSize.getWidth(); const contentWidth = pageWidth - (left * 2);
+            const primary = [14, 165, 233]; const dark = [30, 41, 59]; const gray = [100, 116, 139]; const lightGray = [241, 245, 249]; const coldColor = [6, 182, 212]; const hotColor = [249, 115, 22];
+            doc.setFillColor(...dark); doc.rect(0, 0, pageWidth, 45, 'F'); const catColor = data.category === 'riscaldamento' ? hotColor : coldColor; doc.setFillColor(...catColor); doc.rect(0, 45, pageWidth, 4, 'F');
+            doc.setTextColor(255); doc.setFontSize(24); doc.setFont('helvetica', 'bold'); doc.text('RAPPORTO INTERVENTO', left, 25);
+            doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.text(`Operatore: ${data.author}`, pageWidth - left, 20, {align: 'right'}); doc.text(`Data Intervento: ${data.client.dataIntervento || '-'}`, pageWidth - left, 28, {align: 'right'}); 
+            doc.text(`Data Scontrino: ${data.client.date || '-'}`, pageWidth - left, 36, {align: 'right'}); 
+            const catLabel = data.category === 'riscaldamento' ? 'RISCALDAMENTO' : 'REFRIGERAZIONE'; doc.setFillColor(...catColor); doc.roundedRect(left, 32, 45, 8, 2, 2, 'F'); doc.setTextColor(255); doc.setFontSize(8); doc.text(catLabel, left + 22.5, 37.5, {align: 'center'});
+            y = 60;
+            const drawSectionHeader = (text) => { if (y > 250) { doc.addPage(); y = 20; } doc.setFillColor(...primary); doc.roundedRect(left, y, contentWidth, 7, 1, 1, 'F'); doc.setTextColor(255); doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.text(text.toUpperCase(), left + 3, y + 5); y += 12; doc.setTextColor(...dark); doc.setFont('helvetica', 'normal'); };
+            drawSectionHeader('Dati Cliente'); 
+            const colX = left + 95; 
+            
+            doc.setFontSize(9); 
+            doc.setTextColor(...gray); 
+            doc.text('Cliente:', left, y); 
+            doc.setTextColor(...dark); 
+            doc.setFont('helvetica', 'bold'); 
+            doc.text(Utils.sanitize(data.client.nome), left + 25, y);
+            
+            doc.setTextColor(...gray); 
+            doc.setFont('helvetica', 'normal'); 
+            doc.text('Telefono:', colX, y); 
+            doc.setTextColor(...dark); 
+            doc.text(data.client.tel || '-', colX + 22, y); 
+            y += 6;
+            
+            doc.setTextColor(...gray); 
+            doc.text('Indirizzo:', left, y); 
+            doc.setTextColor(...dark); 
+            doc.text(Utils.sanitize(data.client.indirizzo), left + 25, y);
+            
+            doc.setTextColor(...gray); 
+            doc.text('Email:', colX, y); 
+            doc.setTextColor(...dark); 
+            doc.text(data.client.email || '-', colX + 25, y); 
+            y += 6;
+            
+            doc.setTextColor(...gray); 
+            doc.text('P.IVA/C.F.:', left, y); 
+            doc.setTextColor(...dark); 
+            doc.text(data.client.fiscal || '-', left + 25, y); 
+            y += 6;
+            
+            doc.setTextColor(...gray); 
+            doc.text('Data Acquisto:', left, y); 
+            doc.setTextColor(...dark); 
+            doc.text(data.client.date || '-', left + 30, y);
+            
+            doc.setTextColor(...gray); 
+            doc.text('N. Scontrino:', colX, y); 
+            doc.setTextColor(...dark); 
+            doc.text(data.client.receipt_no || '-', colX + 25, y); 
+            y += 10;
+            drawSectionHeader('Dettagli Intervento');
+            doc.setTextColor(...dark); doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text('Tipo: ', left, y); doc.setFont('helvetica', 'normal'); doc.text(data.intervention.tipo_label || '-', left + 15, y); y += 8;
+            if(data.intervention.note) { doc.setFontSize(9); doc.setTextColor(...gray); doc.text('Descrizione Lavoro:', left, y); y += 4; doc.setFillColor(...lightGray); doc.roundedRect(left, y, contentWidth, 20, 2, 2, 'F'); doc.setTextColor(...dark); y += 4; const lines = doc.splitTextToSize(Utils.sanitize(data.intervention.note), contentWidth - 6); doc.text(lines, left + 3, y); y += (lines.length * 5) + 6; }
+            const techLabels = { 'tech_imp_type': 'Tipologia', 'tech_drain': 'Condensa', 'tech_pipe_length': 'Tubi (m)', 'tech_height_diff': 'Dislivello (m)', 'tech_filters': 'Filtri', 'tech_press_low': 'Press. Bassa', 'tech_press_high': 'Press. Alta', 'tech_temp': 'Temp (°C)', 'tech_voltage': 'Tensione (V)', 'tech_gas_type': 'Gas', 'tech_gas_qty': 'Qty Gas', 'tech_error': 'Errore', 'tech_co': 'CO (ppm)', 'tech_efficiency': 'Rendimento' };
+            const techDataFiltered = Object.entries(data.intervention.techData).filter(([k, v]) => v);
+            if (techDataFiltered.length > 0) { if (y > 240) { doc.addPage(); y = 20; } doc.setFillColor(241, 245, 249); doc.roundedRect(left, y, contentWidth, 20, 2, 2, 'F'); y += 4; let items = techDataFiltered.map(([key, val]) => ({ label: techLabels[key] || key.replace('tech_', ''), value: val })); let currentX = left + 4; doc.setFontSize(8); items.forEach((item) => { if (currentX > left + 150) { currentX = left + 4; y += 8; } doc.setTextColor(...gray); doc.text(item.label + ':', currentX, y); doc.setTextColor(...dark); doc.text(Utils.sanitize(item.value), currentX + 30, y); currentX += 60; }); y += 14; }
+            if (data.machines.length > 0) { 
+                drawSectionHeader('Macchine / Impianti'); 
+                data.machines.forEach((m) => { 
+                    if (y > 220) { doc.addPage(); y = 20; } 
+                    doc.setFontSize(10); doc.setTextColor(...primary); doc.setFont('helvetica', 'bold'); 
+                    doc.text(`Unità`, left, y); 
+                    y += 6; 
+                    doc.autoTable({ 
+                        startY: y, 
+                        head: [['Marca', 'Modello', 'Matr. Int', 'Matr. Est', 'Gas', 'Qty(gr)']], 
+                        body: [[ 
+                            Utils.sanitize(m.brand), 
+                            Utils.sanitize(m.model), 
+                            m.sn_int || '-', 
+                            m.sn_out || '-', 
+                            m.gas || '-', 
+                            m.gas_qty || '-'
+                        ]], 
+                        theme: 'grid', 
+                        headStyles: { fillColor: dark, fontSize: 7, textColor: 255, fontStyle: 'bold' }, 
+                        styles: { fontSize: 7, cellPadding: 1.5, textColor: dark, lineColor: [230, 230, 230] }, 
+                        margin: { left: left } 
+                    });  
+                    y = doc.lastAutoTable.finalY + 10;
+                }); 
+            }
+            if (data.materials.length > 0) { drawSectionHeader('Materiali Utilizzati'); doc.autoTable({ startY: y, head: [['Descrizione', 'Q.tà', 'Prezzo', 'Totale']], body: data.materials.map(m => [ Utils.sanitize(m.desc), m.qta, `€ ${m.price.toFixed(2)}`, `€ ${m.total.toFixed(2)}` ]), theme: 'grid', headStyles: { fillColor: primary, fontSize: 9, textColor: 255 }, styles: { fontSize: 9, cellPadding: 3 }, margin: { left: left } }); y = doc.lastAutoTable.finalY + 5; doc.setFillColor(16, 185, 129); doc.roundedRect(pageWidth - left - 60, y, 60, 12, 2, 2, 'F'); doc.setTextColor(255); doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text(`TOTALE: € ${data.total}`, pageWidth - left - 30, y + 8, { align: 'center' }); y += 20; }
+            drawSectionHeader('Firme'); const sigWidth = 80; const sigHeight = 35; if (y > 230) { doc.addPage(); y = 20; } const sigY = y;
+            doc.setDrawColor(...gray); doc.setLineWidth(0.5); doc.setFillColor(...lightGray); doc.roundedRect(left, sigY, sigWidth, sigHeight, 2, 2, 'FD'); doc.setFontSize(8); doc.setTextColor(...gray); doc.text('Firma Cliente', left + sigWidth/2, sigY + sigHeight + 5, {align: 'center'});
+            if (data.signatures.client) { try { doc.addImage(data.signatures.client, 'PNG', left + 5, sigY + 5, sigWidth - 10, sigHeight - 10); } catch(e) {} }
+            const techSigX = left + sigWidth + 20; doc.roundedRect(techSigX, sigY, sigWidth, sigHeight, 2, 2, 'FD'); doc.text('Firma Operatore', techSigX + sigWidth/2, sigY + sigHeight + 5, {align: 'center'});
+            if (data.signatures.tech) { try { doc.addImage(data.signatures.tech, 'PNG', techSigX + 5, sigY + 5, sigWidth - 10, sigHeight - 10); } catch(e) {} }
+            const filename = `Intervento_${Utils.sanitize(data.client.nome).replace(/\s+/g, '_')}_${data.client.date}.pdf`; doc.save(filename); UI.showToast('PDF scaricato', 'success');
+        },
+
+        // Funzione per salvare PDF Covercare
+        generateCovercare: (covercareData) => {
+            const { jsPDF } = window.jspdf; 
+            const doc = new jsPDF(); 
+            let y = 20; 
+            const left = 14; 
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const primary = [0, 86, 179]; // Colore Covercare
+            const dark = [30, 41, 59];
+            const gray = [100, 116, 139];
+            const lightGray = [241, 245, 249];
+            
+            // Header Covercare
+            doc.setFillColor(...dark); 
+            doc.rect(0, 0, pageWidth, 45, 'F');
+            doc.setFillColor(...primary); 
+            doc.rect(0, 45, pageWidth, 4, 'F');
+            
+            doc.setTextColor(255); 
+            doc.setFontSize(24); 
+            doc.setFont('helvetica', 'bold'); 
+            doc.text('MODULO INTERVENTO COVERCARE', left, 25);
+            
+            doc.setFontSize(10); 
+            doc.setFont('helvetica', 'normal'); 
+            doc.text(`Tecnico: ${covercareData.tecnico || '-'}`, pageWidth - left, 20, {align: 'right'}); 
+            doc.text(`Data Intervento: ${covercareData.dataIntervento || '-'}`, pageWidth - left, 28, {align: 'right'}); 
+            doc.text(`Ticket: ${covercareData.ticket || '-'}`, pageWidth - left, 36, {align: 'right'}); 
+            
+            y = 60;
+            const drawSectionHeader = (text) => { 
+                if (y > 250) { doc.addPage(); y = 20; } 
+                doc.setFillColor(...primary); 
+                doc.roundedRect(left, y, pageWidth - (left * 2), 7, 1, 1, 'F'); 
+                doc.setTextColor(255); 
+                doc.setFontSize(10); 
+                doc.setFont('helvetica', 'bold'); 
+                doc.text(text.toUpperCase(), left + 3, y + 5); 
+                y += 12; 
+                doc.setTextColor(...dark); 
+                doc.setFont('helvetica', 'normal'); 
+            };
+            
+            // Dati Cliente
+            drawSectionHeader('DATI CLIENTE');
+            doc.setFontSize(9);
+            doc.setTextColor(...gray);
+            doc.text('Nome:', left, y);
+            doc.setTextColor(...dark);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${covercareData.nome || ''} ${covercareData.cognome || ''}`, left + 25, y);
+            y += 6;
+            
+            doc.setTextColor(...gray);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Indirizzo:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.indirizzo || '-', left + 30, y);
+            y += 6;
+            
+            doc.setTextColor(...gray);
+            doc.text('Città:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(`${covercareData.citta || ''} (${covercareData.provincia || ''})`, left + 20, y);
+            y += 6;
+            
+            doc.setTextColor(...gray);
+            doc.text('Telefono:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.telefono || '-', left + 30, y);
+            y += 6;
+            
+            doc.setTextColor(...gray);
+            doc.text('Email:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.email || '-', left + 25, y);
+            y += 6;
+            
+            doc.setTextColor(...gray);
+            doc.text('Codice Fiscale:', left, y);
+            doc.setTextColor(...dark);
+            doc.text(covercareData.cf || '-', left + 40, y);
+            y += 10;
+            
+            // Dettagli Impianti
+            drawSectionHeader('DETTAGLI IMPIANTI');
+            
+            // Climatizzatore
+            if (covercareData.clima_tipo) {
+                doc.setFontSize(10);
+                doc.setTextColor(...primary);
+                doc.setFont('helvetica', 'bold');
+                doc.text('❄️ CLIMATIZZATORE', left, y);
+                y += 8;
+                
+                doc.setFontSize(9);
+                doc.setTextColor(...gray);
+                doc.text('Tipologia:', left, y);
+                doc.setTextColor(...dark);
+                doc.setFont('helvetica', 'normal');
+                doc.text(covercareData.clima_tipo || '-', left + 35, y);
+                y += 6;
+                
+                doc.setTextColor(...gray);
+                doc.text('Marca:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.clima_marca || '-', left + 25, y);
+                y += 8;
+                
+                // Unità 1
+                doc.setTextColor(...dark);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Unità 1:', left, y);
+                y += 6;
+                
+                doc.setFontSize(8);
+                doc.setTextColor(...gray);
+                doc.text('Tipo U.E./U.I.:', left, y);
+                doc.setTextColor(...dark);
+                doc.setFont('helvetica', 'normal');
+                doc.text(covercareData.clima_tipo_ue || '-', left + 40, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Modello 1:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.clima_modello_1 || '-', left + 35, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Matricola 1:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.clima_matricola_1 || '-', left + 40, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Modello 2:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.clima_modello_2 || '-', left + 35, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Matricola 2:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.clima_matricola_2 || '-', left + 40, y);
+                y += 8;
+                
+                // Unità aggiuntive per Dual/Trial
+                const numUnita = covercareData.clima_tipo === 'Trial' ? 3 : (covercareData.clima_tipo === 'Dual' ? 2 : 1);
+                for (let i = 2; i <= numUnita; i++) {
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(`Unità ${i}:`, left, y);
+                    y += 6;
+                    
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(...gray);
+                    doc.text('Tipo U.E./U.I.:', left, y);
+                    doc.setTextColor(...dark);
+                    doc.text(covercareData[`clima_tipo_ue_${i}`] || '-', left + 40, y);
+                    y += 5;
+                    
+                    doc.setTextColor(...gray);
+                    doc.text('Modello 1:', left, y);
+                    doc.setTextColor(...dark);
+                    doc.text(covercareData[`clima_modello_${i}_1`] || '-', left + 35, y);
+                    y += 5;
+                    
+                    doc.setTextColor(...gray);
+                    doc.text('Matricola 1:', left, y);
+                    doc.setTextColor(...dark);
+                    doc.text(covercareData[`clima_matricola_${i}_1`] || '-', left + 40, y);
+                    y += 5;
+                    
+                    doc.setTextColor(...gray);
+                    doc.text('Modello 2:', left, y);
+                    doc.setTextColor(...dark);
+                    doc.text(covercareData[`clima_modello_${i}_2`] || '-', left + 35, y);
+                    y += 5;
+                    
+                    doc.setTextColor(...gray);
+                    doc.text('Matricola 2:', left, y);
+                    doc.setTextColor(...dark);
+                    doc.text(covercareData[`clima_matricola_${i}_2`] || '-', left + 40, y);
+                    y += 8;
+                }
+            }
+            
+            // Caldaia Nuova
+            if (covercareData.nuova_caldaia_marca) {
+                drawSectionHeader('🔥 NUOVA CALDAIA');
+                doc.setFontSize(9);
+                doc.setTextColor(...gray);
+                doc.text('Marca:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.nuova_caldaia_marca || '-', left + 25, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Tipo:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.nuova_caldaia_tipo || '-', left + 20, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Modello:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.nuova_caldaia_modello || '-', left + 25, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Matricola:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.nuova_caldaia_matricola || '-', left + 30, y);
+                y += 10;
+            }
+            
+            // Caldaia Sostituita
+            if (covercareData.vecchia_caldaia_marca) {
+                drawSectionHeader('⚙️ CALDAIA SOSTITUITA');
+                doc.setFontSize(9);
+                doc.setTextColor(...gray);
+                doc.text('Marca:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.vecchia_caldaia_marca || '-', left + 25, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Tipo:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.vecchia_caldaia_tipo || '-', left + 20, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Modello:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.vecchia_caldaia_modello || '-', left + 25, y);
+                y += 5;
+                
+                doc.setTextColor(...gray);
+                doc.text('Matricola:', left, y);
+                doc.setTextColor(...dark);
+                doc.text(covercareData.vecchia_caldaia_matricola || '-', left + 30, y);
+                y += 10;
+            }
+            
+            // Note intervento
+            if (covercareData.note) {
+                drawSectionHeader('NOTE INTERVENTO');
+                doc.setFontSize(9);
+                doc.setTextColor(...dark);
+                const lines = doc.splitTextToSize(covercareData.note, pageWidth - (left * 2) - 6);
+                doc.text(lines, left + 3, y);
+                y += (lines.length * 5) + 10;
+            }
+            
+            // Documentazione
+            const docs = [];
+            if (covercareData.doc_istruzioni) docs.push('Istruzioni prodotto');
+            if (covercareData.doc_conformita) docs.push('Dichiarazione conformità');
+            if (covercareData.doc_catasto) docs.push('Targatura catasto');
+            if (covercareData.doc_altro) docs.push('Altro');
+            
+            if (docs.length > 0) {
+                drawSectionHeader('DOCUMENTAZIONE CONSEGNATA');
+                doc.setFontSize(9);
+                docs.forEach((doc, index) => {
+                    doc.text(`• ${doc}`, left + 5, y);
+                    y += 5;
+                });
+                y += 5;
+            }
+            
+            // Firma
+            drawSectionHeader('FIRMA CLIENTE');
+            const sigWidth = 80;
+            const sigHeight = 35;
+            if (y > 230) { doc.addPage(); y = 20; }
+            const sigY = y;
+            
+            doc.setDrawColor(...gray);
+            doc.setLineWidth(0.5);
+            doc.setFillColor(...lightGray);
+            doc.roundedRect(left, sigY, sigWidth, sigHeight, 2, 2, 'FD');
+            doc.setFontSize(8);
+            doc.setTextColor(...gray);
+            doc.text('Firma Cliente', left + sigWidth/2, sigY + sigHeight + 5, {align: 'center'});
+            
+            // Filename con nome cliente
+            const nomeCliente = `${covercareData.cognome || 'Cognome'}_${covercareData.nome || 'Nome'}`.replace(/[^a-zA-Z0-9_]/g, '_');
+            const ticket = covercareData.ticket || '000000';
+            const data = new Date().toISOString().split('T')[0].replace(/-/g, '');
+            const filename = `Covercare_${nomeCliente}_${ticket}_${data}.pdf`;
+            
+            doc.save(filename);
+            UI.showToast('PDF Covercare scaricato', 'success');
+        }
+    };
+
+            
+    // ========== TIMBRA MANAGER ==========
+    const TimbraManager = {
+        html5QrCode: null,
+        currentScanMode: null,
+        pendingOpData: null,
+        localOperators: [],
+        localRecords: [],
+        ADMIN_PASS: 'Palermo4ever',
+        
+        init: () => {
+            // Inizializza Firebase per timbrature (usa la stessa istanza)
+            TimbraManager.showScreen('mainMenu');
+            TimbraManager.loadData();
+        },
+        
+        loadData: () => {
+            // Carica operatori
+            db.collection("operators").onSnapshot(snapshot => {
+                TimbraManager.localOperators = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                TimbraManager.renderAdminDashboard();
+            });
+            // Carica records
+            db.collection("records").orderBy("startTime", "desc").onSnapshot(snapshot => {
+                TimbraManager.localRecords = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                TimbraManager.renderAdminHistory();
+            });
+        },
+        
+        showScreen: (screenName) => {
+            document.querySelectorAll('#view-timbrature .timbra-screen').forEach(s => s.classList.add('hidden'));
+            const screenMap = {
+                'mainMenu': 'timbraMainMenu',
+                'scannerView': 'timbraScannerView',
+                'operatorDashboard': 'timbraOperatorDashboard',
+                'adminLogin': 'timbraAdminLogin',
+                'adminDashboard': 'timbraAdminDashboard'
+            };
+            const elementId = screenMap[screenName];
+            if (elementId) {
+                document.getElementById(elementId).classList.remove('hidden');
+            }
+        },
+        
+        closeModal: (modalId) => {
+            document.getElementById(modalId).style.display = 'none';
+        },
+        
+        openModal: (modalId) => {
+            document.getElementById(modalId).style.display = 'flex';
+        },
+        
+        startScanner: (mode) => {
+            TimbraManager.currentScanMode = mode;
+            TimbraManager.showScreen('scannerView');
+            TimbraManager.html5QrCode = new Html5Qrcode("timbraReader");
+            TimbraManager.html5QrCode.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                TimbraManager.onScanSuccess,
+                () => {}
+            ).catch(err => {
+                UI.showToast("Errore fotocamera: " + err, 'error');
+                TimbraManager.stopScanner();
+            });
+        },
+        
+        stopScanner: () => {
+            if (TimbraManager.html5QrCode && TimbraManager.html5QrCode.isScanning) {
+                TimbraManager.html5QrCode.stop().then(() => TimbraManager.showScreen('mainMenu'));
+            } else {
+                TimbraManager.showScreen('mainMenu');
+            }
+        },
+        
+        onScanSuccess: (decodedText) => {
+            const op = TimbraManager.localOperators.find(o => o.id === decodedText);
+            if (!op) {
+                UI.showToast("QR non valido o operatore inesistente.", 'error');
+                return;
+            }
+            TimbraManager.html5QrCode.stop().then(() => {
+                if (TimbraManager.currentScanMode === 'history') {
+                    TimbraManager.showOperatorHistory(op);
+                } else {
+                    TimbraManager.handleClock(op);
+                }
+            });
+        },
+        
+        handleClock: async (op) => {
+            const now = new Date();
+            const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+            const todayEnd = new Date(); todayEnd.setHours(23,59,59,999);
+            const openSession = TimbraManager.localRecords.find(r => r.opId === op.id && r.type === 'work' && !r.endTime);
+            
+            if (openSession) {
+                // USCITA
+                const oldTotals = TimbraManager.calculateTotals(op.id);
+                await db.collection("records").doc(openSession.id).update({
+                    endTime: now.getTime(),
+                    amount: op.dailyWage
+                });
+                TimbraManager.pendingOpData = {
+                    op: op,
+                    recordId: openSession.id,
+                    oldBalance: oldTotals.balance,
+                    dailyWage: op.dailyWage
+                };
+                document.getElementById('modalWagePreview').innerText = op.dailyWage.toFixed(2) + ' €';
+                document.getElementById('modalOldBalance').innerText = oldTotals.balance.toFixed(2) + ' €';
+                document.getElementById('expenseAmountInput').value = '';
+                document.getElementById('paymentAmountInput').value = '';
+                TimbraManager.openModal('modalPayment');
+                TimbraManager.showScreen('mainMenu');
+            } else {
+                // ENTRATA
+                const entryToday = TimbraManager.localRecords.find(r =>
+                    r.opId === op.id && r.type === 'work' &&
+                    r.startTime >= todayStart.getTime() && r.startTime <= todayEnd.getTime()
+                );
+                if (entryToday) {
+                    UI.showToast("Hai già effettuato l'entrata oggi.", 'warning');
+                    TimbraManager.showScreen('mainMenu');
+                    return;
+                }
+                const exitToday = TimbraManager.localRecords.find(r =>
+                    r.opId === op.id && r.type === 'work' && r.endTime &&
+                    r.endTime >= todayStart.getTime() && r.endTime <= todayEnd.getTime()
+                );
+                if (exitToday) {
+                    UI.showToast("Hai già registrato un'uscita oggi.", 'warning');
+                    TimbraManager.showScreen('mainMenu');
+                    return;
+                }
+                if (now.getHours() < 6 || now.getHours() >= 20) {
+                    UI.showToast("Entrata consentita solo tra le 06:00 e le 20:00.", 'warning');
+                    TimbraManager.showScreen('mainMenu');
+                    return;
+                }
+                await db.collection("records").add({
+                    opId: op.id,
+                    type: 'work',
+                    startTime: now.getTime(),
+                    endTime: null,
+                    amount: 0
+                });
+                UI.showToast(`Benvenuto ${op.name}! Inizio turno registrato.`, 'success');
+                TimbraManager.showScreen('mainMenu');
+            }
+        },
+        
+        confirmExit: async (save) => {
+            if (!save) {
+                TimbraManager.closeModal('modalPayment');
+                TimbraManager.pendingOpData = null;
+                return;
+            }
+            const expenses = parseFloat(document.getElementById('expenseAmountInput').value) || 0;
+            const payments = parseFloat(document.getElementById('paymentAmountInput').value) || 0;
+            const batch = db.batch();
+            if (expenses > 0) {
+                const expRef = db.collection("records").doc();
+                batch.set(expRef, {
+                    opId: TimbraManager.pendingOpData.op.id,
+                    type: 'expense',
+                    date: Date.now(),
+                    amount: expenses,
+                    note: 'Spese giornaliere'
+                });
+            }
+            if (payments > 0) {
+                const payRef = db.collection("records").doc();
+                batch.set(payRef, {
+                    opId: TimbraManager.pendingOpData.op.id,
+                    type: 'payment',
+                    date: Date.now(),
+                    amount: payments,
+                    note: 'Pagamento riscosso'
+                });
+            }
+            await batch.commit();
+            const newBalance = TimbraManager.pendingOpData.oldBalance + TimbraManager.pendingOpData.dailyWage + expenses - payments;
+            UI.showToast(`Turno chiuso. Saldo aggiornato: ${newBalance.toFixed(2)} €`, 'success');
+            TimbraManager.closeModal('modalPayment');
+            TimbraManager.pendingOpData = null;
+        },
+        
+        calculateTotals: (opId) => {
+            let earned = 0, paid = 0, expenses = 0;
+            TimbraManager.localRecords.filter(r => r.opId === opId).forEach(r => {
+                if (r.type === 'work' && r.endTime) earned += r.amount;
+                if (r.type === 'expense') expenses += r.amount;
+                if (r.type === 'payment') paid += r.amount;
+            });
+            return { earned, paid, expenses, balance: earned + expenses - paid };
+        },
+        
+        showOperatorHistory: (op) => {
+            document.getElementById('opDashTitle').innerText = op.name;
+            document.getElementById('opDailyWageDisplay').innerText = op.dailyWage.toFixed(2) + ' €';
+            db.collection("records").where("opId", "==", op.id).orderBy("startTime", "desc").onSnapshot(snapshot => {
+                const list = document.getElementById('opHistoryList');
+                list.innerHTML = '';
+                const totals = TimbraManager.calculateTotals(op.id);
+                document.getElementById('opRemaining').innerText = totals.balance.toFixed(2) + ' €';
+                document.getElementById('opEarned').innerText = totals.earned.toFixed(2) + ' €';
+                document.getElementById('opExpenses').innerText = totals.expenses.toFixed(2) + ' €';
+                document.getElementById('opPaid').innerText = totals.paid.toFixed(2) + ' €';
+                snapshot.docs.forEach(doc => {
+                    const r = doc.data();
+                    let dateStr, desc, sign, colorClass;
+                    if (r.type === 'work') {
+                        const d = r.endTime ? new Date(r.endTime) : new Date(r.startTime);
+                        dateStr = d.toLocaleString('it-IT');
+                        desc = r.endTime ? `Lavoro (${r.amount.toFixed(2)}€)` : "🔴 In Corso...";
+                        sign = '+'; colorClass = 'work';
+                    } else if (r.type === 'expense') {
+                        dateStr = new Date(r.date).toLocaleString('it-IT');
+                        desc = "Spese"; sign = '+'; colorClass = 'expense';
+                    } else {
+                        dateStr = new Date(r.date).toLocaleString('it-IT');
+                        desc = "Pagamento"; sign = '-'; colorClass = 'payment';
+                    }
+                    list.innerHTML += `
+                        <div class="timbra-list-item ${colorClass}">
+                            <div><div style="font-weight:bold">${desc}</div><div style="font-size:11px; color:#666">${dateStr}</div></div>
+                            <div style="font-size:16px; font-weight:bold">${sign}${r.amount.toFixed(2)}€</div>
+                        </div>`;
+                });
+            });
+            TimbraManager.showScreen('operatorDashboard');
+        },
+        
+        loginAdmin: () => {
+            if (document.getElementById('adminPassInput').value === TimbraManager.ADMIN_PASS) {
+                document.getElementById('adminLoginError').style.display = 'none';
+                TimbraManager.renderAdminDashboard();
+                TimbraManager.showScreen('adminDashboard');
+            } else {
+                document.getElementById('adminLoginError').style.display = 'block';
+            }
+        },
+        
+        logoutAdmin: () => {
+            TimbraManager.showScreen('mainMenu');
+        },
+        
+        showAdminTab: (tab) => {
+            document.querySelectorAll('#view-timbrature .admin-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('adminTabOperators').classList.add('hidden');
+            document.getElementById('adminTabHistory').classList.add('hidden');
+            document.getElementById('adminTab' + (tab === 'operators' ? 'Operators' : 'History')).classList.remove('hidden');
+        },
+        
+        renderAdminDashboard: () => {
+            const list = document.getElementById('operatorsList');
+            list.innerHTML = '';
+            TimbraManager.localOperators.forEach(op => {
+                const totals = TimbraManager.calculateTotals(op.id);
+                list.innerHTML += `
+                    <div class="timbra-list-item" style="flex-direction: column; align-items: start;">
+                        <div style="width:100%; display:flex; justify-content:space-between;">
+                            <strong>${op.name}</strong>
+                            <span style="color:${totals.balance >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${totals.balance.toFixed(2)}€</span>
+                        </div>
+                        <div style="font-size:12px; color:#666;">Paga: ${op.dailyWage}€/gg</div>
+                        <div style="margin-top:10px; width:100%; display:flex; gap:5px;">
+                            <button class="btn-timbra btn-timbra-warning btn-timbra-small" onclick="TimbraManager.openOperatorModal('${op.id}')">Modifica</button>
+                            <button class="btn-timbra btn-timbra-danger btn-timbra-small" onclick="TimbraManager.deleteOperator('${op.id}')">Elimina</button>
+                        </div>
+                    </div>
+                `;
+            });
+        },
+        
+        clearSearch: () => {
+            document.getElementById('searchName').value = '';
+            document.getElementById('searchDateFrom').value = '';
+            document.getElementById('searchDateTo').value = '';
+            TimbraManager.renderAdminHistory();
+        },
+        
+        renderAdminHistory: () => {
+            const list = document.getElementById('adminGlobalHistory');
+            list.innerHTML = '';
+            const nameFilter = document.getElementById('searchName').value.toLowerCase();
+            const dateFrom = document.getElementById('searchDateFrom').value ? new Date(document.getElementById('searchDateFrom').value).getTime() : 0;
+            const dateTo = document.getElementById('searchDateTo').value ? new Date(document.getElementById('searchDateTo').value).setHours(23,59,59) : Date.now() + 999999999;
+            const filteredRecords = TimbraManager.localRecords.filter(r => {
+                const recTime = r.type === 'work' ? r.startTime : r.date;
+                if (recTime < dateFrom || recTime > dateTo) return false;
+                if (nameFilter) {
+                    const op = TimbraManager.localOperators.find(o => o.id === r.opId);
+                    if (!op || !op.name.toLowerCase().includes(nameFilter)) return false;
+                }
+                return true;
+            });
+            filteredRecords.forEach(r => {
+                const op = TimbraManager.localOperators.find(o => o.id === r.opId);
+                const opName = op ? op.name : 'Sconosciuto';
+                let dateStr, desc, sign, colorClass;
+                if (r.type === 'work') {
+                    dateStr = r.startTime ? new Date(r.startTime).toLocaleString('it-IT') : 'N/D';
+                    desc = `LAVORO (${r.amount.toFixed(2)}€)`;
+                    sign = '+'; colorClass = 'work';
+                } else if (r.type === 'expense') {
+                    dateStr = new Date(r.date).toLocaleString('it-IT');
+                    desc = "SPESA"; sign = '+'; colorClass = 'expense';
+                } else {
+                    dateStr = new Date(r.date).toLocaleString('it-IT');
+                    desc = "PAGAMENTO"; sign = '-'; colorClass = 'payment';
+                }
+                list.innerHTML += `
+                    <div class="timbra-list-item ${colorClass}" style="cursor:pointer" onclick="TimbraManager.openEditRecordModal('${r.id}')">
+                        <div style="flex:1">
+                            <div style="font-weight:bold">${opName}</div>
+                            <div style="font-size:12px">${desc}</div>
+                            <div style="font-size:11px; color:#666">${dateStr}</div>
+                        </div>
+                        <div style="font-weight:bold; font-size:16px">${sign}${r.amount.toFixed(2)}€</div>
+                    </div>
+                `;
+            });
+        },
+        
+        closeOperatorModal: () => {
+            document.getElementById('editOpId').value = '';
+            document.getElementById('modalOpName').value = '';
+            document.getElementById('modalOpWage').value = '';
+            document.getElementById('modalOpName').disabled = false;
+            document.getElementById('qrCodeContainer').innerHTML = '';
+            document.getElementById('qrInstruction').style.display = 'none';
+            TimbraManager.closeModal('modalOperator');
+        },
+        
+        openOperatorModal: (id = null) => {
+            TimbraManager.closeOperatorModal();
+            TimbraManager.openModal('modalOperator');
+            if (id) {
+                const op = TimbraManager.localOperators.find(o => o.id === id);
+                document.getElementById('modalOpTitle').innerText = "Modifica Paga";
+                document.getElementById('editOpId').value = id;
+                document.getElementById('modalOpName').value = op.name;
+                document.getElementById('modalOpName').disabled = true;
+                document.getElementById('modalOpWage').value = op.dailyWage;
+                TimbraManager.generateQR(id);
+                document.getElementById('qrInstruction').style.display = 'block';
+            }
+        },
+        
+        saveOperator: async () => {
+            const id = document.getElementById('editOpId').value;
+            const name = document.getElementById('modalOpName').value;
+            const wage = parseFloat(document.getElementById('modalOpWage').value);
+            if (!wage) { UI.showToast('Inserisci la paga', 'error'); return; }
+            if (id) {
+                await db.collection("operators").doc(id).update({ dailyWage: wage });
+                TimbraManager.closeOperatorModal();
+            } else {
+                if (!name) { UI.showToast('Inserisci il nome', 'error'); return; }
+                const docRef = await db.collection("operators").add({ name: name, dailyWage: wage });
+                document.getElementById('modalOpTitle').innerText = "Operatore Creato!";
+                TimbraManager.generateQR(docRef.id);
+                document.getElementById('qrInstruction').style.display = 'block';
+                document.getElementById('modalOpName').disabled = true;
+                document.getElementById('editOpId').value = docRef.id;
+            }
+        },
+        
+        deleteOperator: async (id) => {
+            if (confirm('Eliminare operatore e TUTTI i suoi dati?')) {
+                const batch = db.batch();
+                const records = await db.collection("records").where("opId", "==", id).get();
+                records.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                await db.collection("operators").doc(id).delete();
+            }
+        },
+        
+        generateQR: (id) => {
+            const container = document.getElementById('qrCodeContainer');
+            container.innerHTML = '';
+            new QRCode(container, { text: id, width: 150, height: 150 });
+        },
+        
+        toggleRecFields: () => {
+            const type = document.getElementById('modalRecType').value;
+            document.getElementById('recWorkFields').style.display = (type === 'work') ? 'block' : 'none';
+        },
+        
+        openAddRecordModal: () => {
+            document.getElementById('modalRecTitle').innerText = "Aggiungi Voce Manuale";
+            document.getElementById('editRecId').value = '';
+            const sel = document.getElementById('modalRecOpId');
+            sel.innerHTML = '';
+            TimbraManager.localOperators.forEach(o => sel.innerHTML += `<option value="${o.id}">${o.name}</option>`);
+            document.getElementById('modalRecType').value = 'work';
+            document.getElementById('modalRecAmount').value = '';
+            document.getElementById('recWorkFields').style.display = 'block';
+            TimbraManager.toggleRecFields();
+            TimbraManager.openModal('modalRecord');
+        },
+        
+        openEditRecordModal: (id) => {
+            const r = TimbraManager.localRecords.find(rec => rec.id === id);
+            document.getElementById('modalRecTitle').innerText = "Modifica Voce";
+            document.getElementById('editRecId').value = id;
+            const sel = document.getElementById('modalRecOpId');
+            sel.innerHTML = '';
+            TimbraManager.localOperators.forEach(o => sel.innerHTML += `<option value="${o.id}">${o.name}</option>`);
+            sel.value = r.opId;
+            document.getElementById('modalRecType').value = r.type;
+            document.getElementById('modalRecAmount').value = r.amount;
+            if (r.type === 'work') {
+                document.getElementById('recWorkFields').style.display = 'block';
+                document.getElementById('modalRecStart').value = r.startTime ? new Date(r.startTime).toISOString().slice(0, 16) : '';
+                document.getElementById('modalRecEnd').value = r.endTime ? new Date(r.endTime).toISOString().slice(0, 16) : '';
+            } else {
+                document.getElementById('recWorkFields').style.display = 'none';
+            }
+            TimbraManager.toggleRecFields();
+            TimbraManager.openModal('modalRecord');
+        },
+        
+        saveRecordAdmin: async () => {
+            const id = document.getElementById('editRecId').value;
+            const opId = document.getElementById('modalRecOpId').value;
+            const amount = parseFloat(document.getElementById('modalRecAmount').value);
+            const type = document.getElementById('modalRecType').value;
+            let data = { opId, amount, type };
+            if (type === 'work') {
+                const start = document.getElementById('modalRecStart').value;
+                const end = document.getElementById('modalRecEnd').value;
+                data.startTime = start ? new Date(start).getTime() : null;
+                data.endTime = end ? new Date(end).getTime() : null;
+            } else {
+                data.date = Date.now();
+            }
+            if (id) {
+                await db.collection("records").doc(id).update(data);
+            } else {
+                await db.collection("records").add(data);
+            }
+            TimbraManager.closeModal('modalRecord');
+        },
+        
+        deleteRecordAdmin: async () => {
+            const id = document.getElementById('editRecId').value;
+            if (confirm('Eliminare questa voce?')) {
+                await db.collection("records").doc(id).delete();
+                TimbraManager.closeModal('modalRecord');
+            }
+        }
+    };
+
+    // Event Listener per chiusura dropdown materiali
+    document.addEventListener('click', (e) => { const dropdown = Utils.id('materialDropdown'); const searchInput = Utils.id('materialSearch'); if (dropdown && !dropdown.contains(e.target) && e.target !== searchInput) { dropdown.classList.remove('show'); } });
+
+    // VIRTUAL ASSISTANT
+    const VirtualAssistant = {
+        isOpen: false,
+        
+        toggleChat() {
+            const chatWindow = Utils.id('chatWindow');
+            const chatButton = Utils.id('chatButton');
+            
+            if (this.isOpen) {
+                chatWindow.classList.add('hidden');
+                chatButton.style.transform = 'scale(1)';
+            } else {
+                chatWindow.classList.remove('hidden');
+                chatButton.style.transform = 'scale(0.9)';
+                Utils.id('chatInput').focus();
+            }
+            this.isOpen = !this.isOpen;
+        },
+        
+        sendMessage() {
+            const input = Utils.id('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            this.addMessage(message, 'user');
+            input.value = '';
+            
+            // Simula risposta dell'assistente
+            setTimeout(() => {
+                const response = this.generateResponse(message);
+                this.addMessage(response, 'assistant');
+            }, 1000);
+        },
+        
+        sendQuickMessage(message) {
+            this.addMessage(message, 'user');
+            
+            // Simula risposta dell'assistente
+            setTimeout(() => {
+                const response = this.generateResponse(message);
+                this.addMessage(response, 'assistant');
+            }, 1000);
+        },
+        
+        addMessage(text, sender) {
+            const messagesContainer = Utils.id('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            const time = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+            
+            messageDiv.innerHTML = `
+                <div class="message-avatar">
+                    <i class="fas fa-${sender === 'user' ? 'user' : 'robot'}"></i>
+                </div>
+                <div class="message-content">
+                    <p>${text}</p>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        },
+        
+        generateResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Risposte predefinite per domande comuni
+            if (lowerMessage.includes('refrigerazione') || lowerMessage.includes('climatizzatore') || lowerMessage.includes('frigo')) {
+                return 'Per la refrigerazione, puoi accedere al modulo specifico dalla dashboard. Lì potrai registrare interventi su climatizzatori, frigoriferi e celle frigorifere. Hai bisogno di aiuto per qualche procedura specifica?';
+            }
+            
+            if (lowerMessage.includes('domicilio') || lowerMessage.includes('consegna') || lowerMessage.includes('ticket')) {
+                return 'Per creare un ticket domicilio, vai alla sezione Domicilio dalla dashboard. Potrai inserire i dati del cliente, l\'indirizzo e assegnare l\'intervento a un operatore. Solo gli amministratori possono creare nuovi ticket.';
+            }
+            
+            if (lowerMessage.includes('timbra') || lowerMessage.includes('timbratura') || lowerMessage.includes('ingresso')) {
+                return 'Per timbrare l\'ingresso o l\'uscita, clicca sulla card "Timbra" nella dashboard. Potrai registrare automaticamente orario e data del tuo turno di lavoro.';
+            }
+            
+            if (lowerMessage.includes('covercare')) {
+                return 'Covercare è un modulo speciale per interventi specifici. Puoi accedervi dalla dashboard cliccando sulla card Covercare. Il modulo è personalizzato per le esigenze di Covercare Spa a Socio Unico.';
+            }
+            
+            if (lowerMessage.includes('admin') || lowerMessage.includes('amministratore')) {
+                return 'Le funzioni admin sono disponibili solo per utenti con privilegi di amministratore. Se sei un admin, vedrai le card aggiuntive nella dashboard per gestione magazzino, attrezzature, mezzi e pannello admin.';
+            }
+            
+            if (lowerMessage.includes('aiuto') || lowerMessage.includes('help') || lowerMessage.includes('supporto')) {
+                return 'Sono qui per aiutarti! Puoi farmi domande su: refrigerazione, riscaldamento, timbrature, ticket domicilio, covercare, o funzioni admin. Usa anche i pulsanti rapidi qui sotto per domande comuni.';
+            }
+            
+            // Risposta di default
+            return 'Capisco la tua domanda. Posso aiutarti con informazioni su refrigerazione, riscaldamento, timbrature, ticket domicilio, covercare e funzioni admin. Prova a essere più specifico o usa i pulsanti rapidi per domande comuni.';
+        },
+        
+        handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                this.sendMessage();
+            }
+        }
+    };
+
+    // ========== INTERVENTI MANAGER ==========
+    const InterventiManager = {
+        currentStatusFilter: '',
+        currentCategoryFilter: '',
+        
+        init: () => {
+            InterventiManager.updateStats();
+            InterventiManager.render();
+        },
+        
+        updateStats: () => {
+            const interventions = Store.getAll();
+            const total = interventions.length;
+            const completati = interventions.filter(i => i.status === 'completato' || i.status === 'chiuso').length;
+            const inCorso = interventions.filter(i => i.status === 'in corso').length;
+            const assegnati = interventions.filter(i => i.status === 'assegnato').length;
+            
+            Utils.id('interventiTotali').innerText = total;
+            Utils.id('interventiCompletati').innerText = completati;
+            Utils.id('interventiInCorso').innerText = inCorso;
+            Utils.id('interventiAssegnati').innerText = assegnati;
+        },
+        
+        filterStatus: (status) => {
+            InterventiManager.currentStatusFilter = status;
+            
+            // Aggiorna l'aspetto dei pulsanti
+            document.querySelectorAll('#interventiStatusFilter .category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            InterventiManager.render();
+        },
+        
+        getInterventiFiltrati: () => {
+            let interventions = Store.getAll();
+            
+            // Filtra per stato
+            if (InterventiManager.currentStatusFilter) {
+                interventions = interventions.filter(i => i.status === InterventiManager.currentStatusFilter);
+            }
+            
+            // Filtra per categoria
+            const categoryFilter = Utils.id('filterInterventiCategory').value;
+            if (categoryFilter) {
+                interventions = interventions.filter(i => i.category === categoryFilter);
+            }
+            
+            // Filtra per testo di ricerca
+            const searchText = Utils.id('searchInterventi').value.toLowerCase();
+            if (searchText) {
+                interventions = interventions.filter(i => 
+                    (i.client && i.client.nome && i.client.nome.toLowerCase().includes(searchText)) ||
+                    (i.client && i.client.indirizzo && i.client.indirizzo.toLowerCase().includes(searchText)) ||
+                    (i.intervention && i.intervention.tipo && i.intervention.tipo.toLowerCase().includes(searchText)) ||
+                    (i.author && i.author.toLowerCase().includes(searchText))
+                );
+            }
+            
+            // Filtra per utente se non è admin
+            if (Auth.currentUser && Auth.currentUser.role !== 'admin') {
+                interventions = interventions.filter(i => 
+                    (i.author === Auth.currentUser.username) || 
+                    (i.assignedTo === Auth.currentUser.username)
+                );
+                
+                // Nasconde le commesse completate/chiusure agli operatori standard
+                interventions = interventions.filter(i => 
+                    i.status !== 'completato' && i.status !== 'chiuso'
+                );
+            }
+            
+            return interventions.sort((a, b) => {
+                const dateA = a.client?.dataIntervento ? new Date(a.client.dataIntervento.split('/').reverse().join('-')) : new Date(0);
+                const dateB = b.client?.dataIntervento ? new Date(b.client.dataIntervento.split('/').reverse().join('-')) : new Date(0);
+                return dateB - dateA;
+            });
+        },
+        
+        render: () => {
+            const tbody = Utils.id('interventiTableBody');
+            const interventions = InterventiManager.getInterventiFiltrati();
+            
+            if (interventions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-secondary);">Nessun intervento trovato</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = interventions.map(item => {
+                const statusBadge = InterventiManager.getStatusBadge(item.status);
+                const categoryBadge = InterventiManager.getCategoryBadge(item.category);
+                const date = item.client?.dataIntervento ? new Date(item.client.dataIntervento.split('/').reverse().join('-')).toLocaleDateString('it-IT') : 'N/D';
+                const time = item.client?.oraIntervento || 'N/D';
+                const isToday = item.client?.dataIntervento ? 
+                    new Date(item.client.dataIntervento.split('/').reverse().join('-')).toLocaleDateString('it-IT') === new Date().toLocaleDateString('it-IT') : false;
+                
+                return `
+                    <tr data-id="${item.id}">
+                        <td>${date} ${time !== 'N/D' ? `<br><small style="color: var(--text-secondary);">${time}</small>` : ''}</td>
+                        <td>${item.client.nome || 'N/D'}</td>
+                        <td>${item.client.indirizzo || 'N/D'}</td>
+                        <td>${item.intervention.tipo || 'N/D'}</td>
+                        <td>${categoryBadge}</td>
+                        <td>${item.author || 'N/D'}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                ${Auth.currentUser && Auth.currentUser.role === 'admin' ? `
+                                    <button class="btn btn-sm btn-outline" onclick="App.downloadPDF('${item.id}')" title="Scarica PDF">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline" onclick="App.loadEdit('${item.id}')" title="Modifica">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="App.deleteItem('${item.id}')" title="Elimina">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-sm ${isToday ? 'btn-primary' : 'btn-secondary'}" 
+                                            onclick="${isToday ? `App.executeIntervention('${item.id}')` : ''}" 
+                                            title="${isToday ? 'Esegui Intervento' : 'Non eseguibile: non è oggi'}"
+                                            ${!isToday ? 'disabled' : ''}>
+                                        <i class="fas fa-${isToday ? 'play' : 'lock'}"></i> ${isToday ? 'Esegui' : time}
+                                    </button>
+                                `}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Aggiorna le statistiche
+        },
+        
+        getCategoryBadge: (category) => {
+            const badges = {
+                'refrigerazione': '<span class="badge badge-cold">❄️ Refrigerazione</span>',
+                'riscaldamento': '<span class="badge badge-hot">🔥 Riscaldamento</span>',
+                'default': '<span class="badge badge-secondary">' + (category || 'N/D') + '</span>'
+            };
+            return badges[category] || badges.default;
+        },
+        
+        getStatusBadge: (status) => {
+            const badges = {
+                'completato': '<span class="badge badge-success">Completato</span>',
+                'chiuso': '<span class="badge badge-success">Completato</span>',
+                'in corso': '<span class="badge badge-warning">In Corso</span>',
+                'assegnato': '<span class="badge badge-danger">Assegnato</span>',
+                'default': '<span class="badge badge-secondary">' + (status || 'N/D') + '</span>'
+            };
+
+            return badges[status] || badges.default;
+        },
+        
+        saveOrder: () => {
+            const rows = Utils.id('interventiTableBody').querySelectorAll('tr');
+            if (rows.length === 0) return;
+
+            const today = Utils.today();
+            const batch = db.batch();
+            let count = 0;
+
+            rows.forEach((row, index) => {
+                const id = row.getAttribute('data-id');
+                if (!id) return;
+                
+                // Recupera l'intervento per verificare la data
+                const intervention = Store.getById(id);
+                if (!intervention) return;
+                
+                // Salva l'ordine solo per le commesse di oggi
+                if (intervention.client?.dataIntervento === today) {
+                    const ref = db.collection("interventions").doc(id);
+                    batch.update(ref, { 
+                        orderNumber: index + 1,
+                        orderIndex: index 
+                    });
+                    count++;
+                }
+            });
+
+            if (count === 0) {
+                UI.showToast('Nessuna commessa di oggi da ordinare', 'warning');
+                return;
+            }
+
+            batch.commit().then(() => {
+                UI.showToast(`Ordine salvato per ${count} commesse di oggi!`, 'success');
+                Store.addLog(`Ordine commesse aggiornato per ${count} commesse del ${today}`);
+                InterventiManager.render();
+            }).catch(err => {
+                console.error("Errore batch:", err);
+                UI.showToast('Errore critico salvataggio ordine', 'error');
+            });
+        },
+        
+        generateDailyReport: () => {
+            const today = Utils.today();
+            const interventions = Store.getAll().filter(i => 
+                i.client?.dataIntervento === today && 
+                (i.status === 'completato' || i.status === 'chiuso')
+            );
+
+            if (interventions.length === 0) {
+                UI.showToast('Nessun intervento completato oggi', 'warning');
+                return;
+            }
+
+            // Mostra dialog per inserire dati manuali
+            InterventiManager.showReportDataDialog(interventions);
+        },
+
+        showReportDataDialog: (interventions) => {
+            const dialogHtml = `
+                <div style="max-width: 600px; padding: 20px;">
+                    <h3 style="margin: 0 0 20px 0; color: var(--primary);">Dati Report Giornaliero</h3>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Veicoli Utilizzati</label>
+                        <input type="text" id="reportVehicles" placeholder="Esempio: AA123BB Fiat Ducato, CC456DD Iveco Daily" style="width: 100%; padding: 8px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Operatori Coinvolti</label>
+                        <input type="text" id="reportOperators" placeholder="Esempio: Mario Rossi, Luca Bianchi, Paolo Verdi" style="width: 100%; padding: 8px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Rifornimento Carburante (€)</label>
+                        <input type="number" id="reportFuel" placeholder="0.00" step="0.01" style="width: 100%; padding: 8px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Pedaggi (€)</label>
+                        <input type="number" id="reportTolls" placeholder="0.00" step="0.01" style="width: 100%; padding: 8px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Altre Spese (€)</label>
+                        <input type="number" id="reportOther" placeholder="0.00" step="0.01" style="width: 100%; padding: 8px;">
+                        <small style="color: var(--text-secondary);">Esempio: pranzi, parcheggi, ecc.</small>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 30px;">
+                        <button class="btn btn-secondary" onclick="UI.closeModal('reportDataModal')" style="margin-right: 10px;">Annulla</button>
+                        <button class="btn btn-primary" onclick="InterventiManager.generateCompleteReport(${JSON.stringify(interventions).replace(/"/g, '&quot;')})">Genera Report</button>
+                    </div>
+                </div>
+            `;
+
+            // Crea modal temporaneo
+            const modal = document.createElement('div');
+            modal.id = 'reportDataModal';
+            modal.className = 'modal';
+            modal.innerHTML = dialogHtml;
+            modal.style.display = 'flex';
+            document.body.appendChild(modal);
+            document.body.classList.add('modal-open');
+        },
+
+        generateCompleteReport: (interventions) => {
+            // Recupera dati dal form
+            const vehicles = Utils.id('reportVehicles').value;
+            const operators = Utils.id('reportOperators').value;
+            const fuelCost = parseFloat(Utils.id('reportFuel').value) || 0;
+            const tollsCost = parseFloat(Utils.id('reportTolls').value) || 0;
+            const otherCost = parseFloat(Utils.id('reportOther').value) || 0;
+            const totalExpenses = fuelCost + tollsCost + otherCost;
+
+            // Chiudi modal
+            UI.closeModal('reportDataModal');
+            const modal = Utils.id('reportDataModal');
+            if (modal) modal.remove();
+
+            // Ordina per ora di intervento
+            interventions.sort((a, b) => {
+                const timeA = a.client?.oraIntervento || '00:00';
+                const timeB = b.client?.oraIntervento || '00:00';
+                return timeA.localeCompare(timeB);
+            });
+
+            // Calcola statistiche finanziarie
+            const totalRevenue = interventions.reduce((sum, i) => sum + (parseFloat(i.total) || 0), 0);
+            const totalMaterials = interventions.reduce((sum, i) => {
+                const materials = i.materials || [];
+                return sum + materials.reduce((matSum, m) => matSum + (parseFloat(m.total) || 0), 0);
+            }, 0);
+            const totalLabor = totalRevenue - totalMaterials;
+            const netProfit = totalLabor - totalExpenses;
+
+            // Genera HTML del report esteso
+            const reportHtml = `
+                <div style="font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px;">
+                    <div style="text-align: center; border-bottom: 3px solid #007bff; padding-bottom: 20px; margin-bottom: 30px;">
+                        <h1 style="color: #007bff; margin: 0;">REPORT GIORNALIERO INTERVENTI COMPLETO</h1>
+                        <h2 style="color: #333; margin: 10px 0;">Data: ${new Date().toLocaleDateString('it-IT')}</h2>
+                        <p style="color: #666; margin: 5px 0;">Generato da: ${Auth.currentUser.username}</p>
+                        <p style="color: #666; margin: 5px 0;">Ora generazione: ${new Date().toLocaleTimeString('it-IT')}</p>
+                    </div>
+                    
+                    <!-- Riepilogo Finanziario -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                            <h3 style="color: #333; margin: 0 0 15px 0;">Riepilogo Interventi</h3>
+                            <p style="margin: 5px 0;"><strong>Totale interventi:</strong> ${interventions.length}</p>
+                            <p style="margin: 5px 0;"><strong>Operatori coinvolti:</strong> ${operators || 'N/D'}</p>
+                            <p style="margin: 5px 0;"><strong>Veicoli utilizzati:</strong> ${vehicles || 'N/D'}</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff;">
+                            <h3 style="color: #333; margin: 0 0 15px 0;">Riepilogo Finanziario</h3>
+                            <p style="margin: 5px 0;"><strong>Fatturato totale:</strong> <span style="color: #28a745;">€ ${totalRevenue.toFixed(2)}</span></p>
+                            <p style="margin: 5px 0;"><strong>Costo materiali:</strong> <span style="color: #dc3545;">€ ${totalMaterials.toFixed(2)}</span></p>
+                            <p style="margin: 5px 0;"><strong>Manodopera netta:</strong> <span style="color: #007bff;">€ ${totalLabor.toFixed(2)}</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Tabella Interventi Dettagliata -->
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background: #007bff; color: white;">
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">#</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Ora</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Cliente</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Indirizzo</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Telefono</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Tipo Intervento</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Operatore</th>
+                                <th style="padding: 12px; text-align: left; border: 1px solid #ddd;">Incassato</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${interventions.map((intervention, index) => {
+                                const payment = parseFloat(intervention.total) || 0;
+                                return `
+                                    <tr style="${index % 2 === 0 ? 'background: #f8f9fa;' : ''}">
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${index + 1}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${intervention.client?.oraIntervento || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">${intervention.client?.nome || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${intervention.client?.indirizzo || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${intervention.client?.telefono || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${intervention.intervention?.tipo || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd;">${intervention.author || 'N/D'}</td>
+                                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold; color: #28a745;">€ ${payment.toFixed(2)}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+
+                    <!-- Dettaglio Materiali -->
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #333; margin: 0 0 15px 0; border-bottom: 2px solid #007bff; padding-bottom: 5px;">Dettaglio Materiali Utilizzati</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #6c757d; color: white;">
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Intervento</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Materiale</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Quantità</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Prezzo Unit.</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Totale</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${interventions.flatMap((intervention, idx) => {
+                                    const materials = intervention.materials || [];
+                                    if (materials.length === 0) return [];
+                                    return materials.map((material, matIdx) => `
+                                        <tr style="${(idx + matIdx) % 2 === 0 ? 'background: #f8f9fa;' : ''}">
+                                            <td style="padding: 8px; border: 1px solid #ddd;">${intervention.client?.nome || 'N/D'}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">${material.desc || 'N/D'}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">${material.qta || 0}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd;">€ ${(material.price || 0).toFixed(2)}</td>
+                                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold;">€ ${(material.total || 0).toFixed(2)}</td>
+                                        </tr>
+                                    `);
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Spese Extra -->
+                    <div style="background: #f8d7da; padding: 15px; border-radius: 8px; border-left: 4px solid #dc3545; margin-bottom: 30px;">
+                        <h3 style="color: #721c24; margin: 0 0 15px 0;">Spese Extra del Giorno</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                            <div><strong>Rifornimenti:</strong> <span style="color: #dc3545;">€ ${fuelCost.toFixed(2)}</span></div>
+                            <div><strong>Pedaggi:</strong> <span style="color: #dc3545;">€ ${tollsCost.toFixed(2)}</span></div>
+                            <div><strong>Altre spese:</strong> <span style="color: #dc3545;">€ ${otherCost.toFixed(2)}</span></div>
+                        </div>
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #dc3545;">
+                            <strong>Totale spese:</strong> <span style="color: #dc3545; font-weight: bold;">€ ${totalExpenses.toFixed(2)}</span>
+                        </div>
+                    </div>
+
+                    <!-- Riepilogo Finale -->
+                    <div style="background: #d4edda; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin-bottom: 20px;">
+                        <h3 style="color: #155724; margin: 0 0 15px 0;">Riepilogo Economico Finale</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                            <div>
+                                <p style="margin: 5px 0;"><strong>Fatturato:</strong> € ${totalRevenue.toFixed(2)}</p>
+                                <p style="margin: 5px 0;"><strong>Costo materiali:</strong> € ${totalMaterials.toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p style="margin: 5px 0;"><strong>Spese veicolo:</strong> € ${totalExpenses.toFixed(2)}</p>
+                                <p style="margin: 5px 0;"><strong>Costi totali:</strong> € ${(totalMaterials + totalExpenses).toFixed(2)}</p>
+                            </div>
+                            <div>
+                                <p style="margin: 5px 0;"><strong>Manodopera:</strong> € ${totalLabor.toFixed(2)}</p>
+                                <p style="margin: 5px 0;"><strong>Guadagno netto:</strong> <span style="color: #28a745; font-weight: bold;">€ ${netProfit.toFixed(2)}</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; text-align: center; color: #666; font-size: 12px;">
+                        <p>Report generato automaticamente dal sistema GIPRO</p>
+                        <p>Tutti i dati sono relativi agli interventi completati in data ${new Date().toLocaleDateString('it-IT')}</p>
+                    </div>
+                </div>
+            `;
+
+            // Crea una finestra temporanea per il report
+            const reportWindow = window.open('', '_blank');
+            reportWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Report Giornaliero Interventi - ${new Date().toLocaleDateString('it-IT')}</title>
+                    <style>
+                        @media print {
+                            body { margin: 0; }
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${reportHtml}
+                    <div class="no-print" style="text-align: center; margin: 20px 0;">
+                        <button onclick="window.print()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; margin-right: 10px;">Stampa Report</button>
+                        <button onclick="window.close()" style="background: #6c757d; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Chiudi</button>
+                    </div>
+                </body>
+                </html>
+            `);
+            reportWindow.document.close();
+
+            UI.showToast(`Report completo generato per ${interventions.length} interventi! Fatturato: € ${totalRevenue.toFixed(2)}, Guadagno netto: € ${netProfit.toFixed(2)}`, 'success');
+            Store.addLog(`Report giornaliero completo generato da ${Auth.currentUser.username} - ${interventions.length} interventi, fatturato € ${totalRevenue.toFixed(2)}, guadagno € ${netProfit.toFixed(2)} del ${Utils.today()}`);
+        }
+    };
+
+    // Inizializzazione Store e Auth
+    Store.setup();
+    window.onload = Auth.init;
+</script>
+<!-- VIRTUAL ASSISTANT -->
+</body>
+</html>
