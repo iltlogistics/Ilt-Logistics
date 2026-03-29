@@ -703,7 +703,7 @@
     <!-- Video Introduttivo -->
     <div class="video-intro" id="videoIntro">
         <div class="video-container">
-            <video class="intro-video" id="introVideo" autoplay muted>
+            <video class="intro-video" id="introVideo" autoplay muted playsinline>
                 <source src="loading-video.mp4.mp4" type="video/mp4">
                 Il tuo browser non supporta il tag video.
             </video>
@@ -860,31 +860,37 @@
                     </div>
                     <div class="contact-item">
                         <i class="fas fa-envelope"></i>
-                        <a href="mailto:iltlogistics@pec.it">iltlogistics@pec.it</a>
+                        <a href="mailto:info@iltlogisticssrl.it">info@iltlogisticssrl.it</a>
                     </div>
                     <div class="contact-item">
                         <i class="fas fa-map-marker-alt"></i>
                         <div>
-                            Via Sperone 3, Palermo<br>
-                            Via Sardegna 13, Pieve Emanuele (MI)
+                            <strong>📍 Milano:</strong> Via Sardegna 13, Pieve Emanuele (MI)<br>
+                            <strong>📍 Palermo:</strong> Via Sperone 3, Palermo
                         </div>
                     </div>
                     <div class="contact-item">
                         <i class="fas fa-clock"></i>
-                        <span>Lun - Ven: 08:00 - 18:00</span>
+                        <span>Lun - Ven: 08:00 - 17:00<br>Sab: 08:00 - 13:00</span>
                     </div>
                     
                     <!-- PULSANTE WHATSAPP -->
                     <a href="https://wa.me/393898735341?text=Salve,%20vorrei%20richiedere%20un%20intervento." class="whatsapp-btn" target="_blank">
                         <i class="fab fa-whatsapp"></i> Contattaci su WhatsApp
                     </a>
+                    
+                    <!-- LINK FACEBOOK -->
+                    <a href="https://www.facebook.com/profile.php?id=61577502702793" class="facebook-btn" target="_blank" style="display: inline-flex; align-items: center; gap: 10px; background: #1877F2; color: white; padding: 12px 20px; border-radius: 25px; text-decoration: none; font-weight: 500; margin-top: 15px; transition: transform 0.3s;">
+                        <i class="fab fa-facebook-f"></i> Seguici su Facebook
+                    </a>
                 </div>
 
                 <!-- Colonna Form -->
-                <form class="contact-form" onsubmit="event.preventDefault(); alert('Messaggio inviato!');">
-                    <input type="text" placeholder="Nome" required>
-                    <input type="tel" placeholder="Telefono" required>
-                    <textarea rows="4" placeholder="Messaggio"></textarea>
+                <form class="contact-form" action="https://formspree.io/f/info@iltlogisticssrl.it" method="POST">
+                    <input type="text" name="nome" placeholder="Nome" required>
+                    <input type="tel" name="telefono" placeholder="Telefono" required>
+                    <textarea name="messaggio" rows="4" placeholder="Messaggio" required></textarea>
+                    <input type="hidden" name="_subject" value="Nuova richiesta di intervento da sito web">
                     <button type="submit">Invia Richiesta</button>
                 </form>
             </div>
@@ -1267,11 +1273,11 @@
     
     function getActionResponse(action) {
         const responses = {
-            'phone': 'Ecco i nostri numeri di telefono:<br><br>📞 <strong>+39 389 873 5341</strong><br>📞 <strong>+39 331 164 0977</strong><br><br>Siamo disponibili Lun - Ven: 08:00 - 18:00',
-            'email': 'Il nostro indirizzo email è:<br><br>📧 <strong>iltlogistics@pec.it</strong><br><br>Invia una email per richiedere informazioni o preventivi.',
+            'phone': 'Ecco i nostri numeri di telefono:<br><br>📞 <strong>+39 389 873 5341</strong><br>📞 <strong>+39 331 164 0977</strong><br><br>Siamo disponibili Lun - Ven: 08:00 - 17:00, Sab: 08:00 - 13:00',
+            'email': 'Il nostro indirizzo email è:<br><br>📧 <strong>info@iltlogisticssrl.it</strong><br><br>Invia una email per richiedere informazioni o preventivi.',
             'whatsapp': 'Puoi contattarci direttamente su WhatsApp:<br><br>💬 <a href="https://wa.me/393898735341?text=Salve,%20vorrei%20richiedere%20un%20intervento." target="_blank" style="color: #25D366; text-decoration: none; font-weight: bold;">Clicca qui per avviare la chat</a><br><br>Ti risponderemo il prima possibile!',
-            'preventivo': 'Per richiedere un preventivo:<br><br>📞 <strong>Chiama subito:</strong> +39 389 873 5341<br>📧 <strong>Email:</strong> iltlogistics@pec.it<br>💬 <strong>WhatsApp:</strong> Invia foto/descrizione<br><br>⏰ <strong>Tempi risposta:</strong><br>• Urgenti: 1-2 ore<br>• Standard: 4-8 ore<br>• Complessi: 24 ore<br><br>🎯 <strong>Sconto 10%</strong> menzionando che ci hai trovato online!',
-            'orari': 'I nostri orari di apertura:<br><br>📅 <strong>Lunedì - Venerdì:</strong> 08:00 - 18:00<br>📅 <strong>Sabato:</strong> Chiuso (solo urgenze)<br>📅 <strong>Domenica:</strong> Chiuso<br>📅 <strong>Festivi:</strong> Chiusi<br><br>🚨 <strong>Urgenze:</strong><br>• Tel: +39 331 164 0977<br>• Costo aggiuntivo: €50<br>• Solo interventi programmati<br><br>📍 <strong>Aree copertura:</strong><br>• Milano e provincia: completa<br>• Palermo: parziale',
+            'preventivo': 'Per richiedere un preventivo:<br><br>📞 <strong>Chiama subito:</strong> +39 389 873 5341<br>📧 <strong>Email:</strong> info@iltlogisticssrl.it<br>💬 <strong>WhatsApp:</strong> Invia foto/descrizione<br><br>⏰ <strong>Tempi risposta:</strong><br>• Urgenti: 1-2 ore<br>• Standard: 4-8 ore<br>• Complessi: 24 ore<br><br>🎯 <strong>Sconto 10%</strong> menzionando che ci hai trovato online!',
+            'orari': 'I nostri orari di apertura:<br><br>📅 <strong>Lunedì - Venerdì:</strong> 08:00 - 17:00<br>📅 <strong>Sabato:</strong> 08:00 - 13:00<br>📅 <strong>Domenica:</strong> Chiuso<br>📅 <strong>Festivi:</strong> Chiusi<br><br>🚨 <strong>Urgenze:</strong><br>• Tel: +39 331 164 0977<br>• Costo aggiuntivo: €50<br>• Solo interventi programmati<br><br>📍 <strong>Aree copertura:</strong><br>• Milano e provincia: completa<br>• Palermo: parziale',
             'tracking': 'Per tracciare la tua consegna:<br><br>🔍 <strong>Come fare:</strong><br>1. Usa il codice ricevuto via email/SMS<br>2. Inseriscilo nel form "Traccia consegna"<br>3. Oppure chiamaci al +39 389 873 5341<br><br>📱 <strong>Formato codice:</strong><br>• Generalmente 4 cifre (es: 0001)<br>• Trovalo nella conferma d\'ordine<br>• Ricevuto anche via WhatsApp<br><br>⏱️ <strong>Informazioni disponibili:</strong><br>• Stato consegna in tempo reale<br>• Posizione corriere<br>• Orario stimato arrivo'
         };
         return responses[action] || 'Come posso aiutarti?';
@@ -1410,7 +1416,7 @@
                 
                 response += `📞 <strong>Per un preventivo personalizzato:</strong><br>
                 Chiama i nostri tecnici al +39 389 873 5341<br>
-                O invia una email a iltlogistics@pec.it`;
+                O invia una email a info@iltlogisticssrl.it`;
                 
                 return response;
             }
@@ -1444,7 +1450,7 @@
                 📋 <strong>Come ottenere un preventivo:</strong><br>
                 1. <strong>Chiamata diretta:</strong> +39 389 873 5341<br>
                 2. <strong>WhatsApp:</strong> Invia foto/descrizione<br>
-                3. <strong>Email:</strong> iltlogistics@pec.it<br>
+                3. <strong>Email:</strong> info@iltlogisticssrl.it<br>
                 4. <strong>Sito web:</strong> Form contatti qui sotto<br><br>
                 
                 💡 <strong>Info utili per il preventivo:</strong><br>
@@ -1472,13 +1478,22 @@
                 let statusText = '';
                 
                 if (day >= 1 && day <= 5) { // Lun-Ven
-                    if (hour >= 8 && hour < 18) {
+                    if (hour >= 8 && hour < 17) {
                         isOpen = true;
                         statusText = '🟢 <strong>Siamo APERTI ora!</strong>';
                     } else if (hour < 8) {
                         statusText = '🟡 <strong>Apriamo tra poco</strong> (08:00)';
                     } else {
                         statusText = '🔴 <strong>Siamo chiusi</strong> (riapriamo domani 08:00)';
+                    }
+                } else if (day === 6) { // Sabato
+                    if (hour >= 8 && hour < 13) {
+                        isOpen = true;
+                        statusText = '🟢 <strong>Siamo APERTI ora!</strong> (orario ridotto)';
+                    } else if (hour < 8) {
+                        statusText = '🟡 <strong>Apriamo tra poco</strong> (08:00)';
+                    } else {
+                        statusText = '🔴 <strong>Siamo chiusi</strong> (riapriamo Lunedì 08:00)';
                     }
                 } else {
                     statusText = '🔴 <strong>Siamo chiusi</strong> (riapriamo Lunedì 08:00)';
@@ -1488,8 +1503,8 @@
                 ${statusText}<br><br>
                 
                 📅 <strong>Orari di apertura:</strong><br>
-                • <strong>Lunedì - Venerdì:</strong> 08:00 - 18:00<br>
-                • <strong>Sabato:</strong> Chiuso (solo urgenze)<br>
+                • <strong>Lunedì - Venerdì:</strong> 08:00 - 17:00<br>
+                • <strong>Sabato:</strong> 08:00 - 13:00<br>
                 • <strong>Domenica:</strong> Chiuso<br>
                 • <strong>Festivi:</strong> Chiuso<br><br>
                 
@@ -1530,7 +1545,7 @@
                 📞 <strong>Contatti diretti:</strong><br>
                 • <strong>Ufficio:</strong> +39 389 873 5341<br>
                 • <strong>Urgenze:</strong> +39 331 164 0977<br>
-                • <strong>Email:</strong> iltlogistics@pec.it`;
+                • <strong>Email:</strong> info@iltlogisticssrl.it`;
             }
             
             // Supporto tecnico e problemi
@@ -1588,11 +1603,11 @@
                 📱 <strong>Telefono:</strong><br>
                 • <strong>Ufficio:</strong> +39 389 873 5341<br>
                 • <strong>Urgenze:</strong> +39 331 164 0977<br>
-                • <strong>Orario:</strong> Lun-Ven 08:00-18:00<br><br>
+                • <strong>Orario:</strong> Lun-Ven 08:00-17:00, Sab 08:00-13:00<br><br>
                 
                 📧 <strong>Email:</strong><br>
-                • <strong>Generale:</strong> iltlogistics@pec.it<br>
-                • <strong>Preventivi:</strong> iltlogistics@pec.it<br>
+                • <strong>Generale:</strong> info@iltlogisticssrl.it<br>
+                • <strong>Preventivi:</strong> info@iltlogisticssrl.it<br>
                 • <strong>Risposta:</strong> entro 4 ore lavorative<br><br>
                 
                 💬 <strong>WhatsApp:</strong><br>
@@ -1646,7 +1661,7 @@
                 💡 <strong>Suggerimento:</strong><br>
                 Prova a scrivere parole come "installazione", "consegna", "preventivo", "orario" o "contatto"<br><br>
                 O contattaci direttamente:<br>
-                📞 +39 389 873 5341 | 📧 iltlogistics@pec.it`;
+                📞 +39 389 873 5341 | 📧 info@iltlogisticssrl.it`;
             }
         }
 </script>
