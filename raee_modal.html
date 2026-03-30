@@ -1,0 +1,437 @@
+<!-- ==================== RAEE MODAL ==================== -->
+<!-- Modale Gestione RAEE - Appare alla chiusura di ogni intervento -->
+<div id="raeeModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 650px; max-height: 90vh; overflow-y: auto;">
+        <div style="display: flex; align-items: center; justify-content: between; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px;">
+            <div style="flex: 1;">
+                <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--success); margin: 0;">
+                    <i class="fas fa-recycle" style="margin-right: 10px;"></i>Gestione RAEE
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 5px 0 0 0;">Rifiuti di Apparecchiature Elettriche ed Elettroniche</p>
+            </div>
+            <button onclick="skipRaeeModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 5px;" title="Salta RAEE">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="raeeForm" onsubmit="saveRaee(event)">
+            <input type="hidden" id="raeeTicketId">
+            <input type="hidden" id="raeeInterventionType">
+            
+            <!-- Info Intervento -->
+            <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
+                    <strong style="color: var(--text-primary);">Intervento:</strong> <span id="raeeInterventionInfo">-</span>
+                </p>
+            </div>
+
+            <!-- Tipologia RAEE -->
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">
+                    Tipologia RAEE * <span style="font-weight: 400; color: var(--text-secondary);">(seleziona quelli ritirati)</span>
+                </label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
+                        <input type="checkbox" name="raeeType" value="grandi" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
+                        <span style="font-size: 0.9rem;">R1 - Frigoriferi/Freezer</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
+                        <input type="checkbox" name="raeeType" value="clima" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
+                        <span style="font-size: 0.9rem;">R2 - Climatizzatori/PdC</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
+                        <input type="checkbox" name="raeeType" value="lavatrici" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
+                        <span style="font-size: 0.9rem;">R3 - Lavatrici/Lavastoviglie</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
+                        <input type="checkbox" name="raeeType" value="televisori" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
+                        <span style="font-size: 0.9rem;">R4 - TV e Monitor</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
+                        <input type="checkbox" name="raeeType" value="informatica" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
+                        <span style="font-size: 0.9rem;">R5 - PC e Informatica</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
+                        <input type="checkbox" name="raeeType" value="piccoli" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
+                        <span style="font-size: 0.9rem;">R6 - Piccoli Elettrodomestici</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
+                        <input type="checkbox" name="raeeType" value="lampade" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
+                        <span style="font-size: 0.9rem;">R7 - Lampade</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
+                        <input type="checkbox" name="raeeType" value="fotovoltaico" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
+                        <span style="font-size: 0.9rem;">R8 - Pannelli Fotovoltaici</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; grid-column: span 2;" class="raee-checkbox">
+                        <input type="checkbox" name="raeeType" value="nessuno" id="raeeNessuno" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--secondary);" onchange="toggleNessunoRaee()">
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);"><i class="fas fa-ban" style="margin-right: 5px;"></i>Nessun RAEE da ritirare</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Quantità e Peso (mostrato solo se ci sono RAEE) -->
+            <div id="raeeDetailsSection" style="margin-bottom: 15px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Quantità pezzi *</label>
+                        <input type="number" id="raeeQty" min="1" value="1" required style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-body); color: var(--text-primary); font-size: 1rem;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Peso stimato (kg) *</label>
+                        <input type="number" id="raeeWeight" step="0.1" min="0" required placeholder="0.0" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-body); color: var(--text-primary); font-size: 1rem;">
+                    </div>
+                </div>
+
+                <!-- Marca e Modello -->
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Marca/Modello (opzionale)</label>
+                    <input type="text" id="raeeBrand" placeholder="Es: Samsung RTX5000, LG DirectCool..." style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-body); color: var(--text-primary); font-size: 1rem;">
+                </div>
+            </div>
+
+            <!-- Foto RAEE -->
+            <div id="raeePhotoSection" style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">Foto RAEE (opzionale)</label>
+                <div style="border: 2px dashed var(--border-color); border-radius: var(--radius-sm); padding: 20px; text-align: center; cursor: pointer; background: var(--bg-body); transition: border-color 0.3s;" onclick="document.getElementById('raeePhotoInput').click()" ondragover="this.style.borderColor='var(--success)';" ondragleave="this.style.borderColor='var(--border-color)';" id="raeeDropZone">
+                    <div id="raeePhotoPreview" style="display: none;">
+                        <img id="raeePhotoImg" src="" alt="RAEE" style="max-width: 100%; max-height: 200px; border-radius: var(--radius-sm); margin-bottom: 10px;">
+                        <br>
+                        <button type="button" onclick="event.stopPropagation(); removeRaeePhoto();" style="background: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.85rem;">
+                            <i class="fas fa-trash"></i> Rimuovi
+                        </button>
+                    </div>
+                    <div id="raeePhotoPlaceholder">
+                        <i class="fas fa-camera" style="font-size: 2.5rem; color: var(--text-secondary); margin-bottom: 10px;"></i>
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">Clicca per caricare o trascina una foto</p>
+                    </div>
+                </div>
+                <input type="file" id="raeePhotoInput" accept="image/*" style="display: none;" onchange="handleRaeePhotoUpload(event)">
+            </div>
+
+            <!-- Note -->
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Note</label>
+                <textarea id="raeeNotes" rows="2" placeholder="Informazioni aggiuntive sullo smaltimento..." style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-body); color: var(--text-primary); font-size: 1rem; resize: vertical; font-family: inherit;"></textarea>
+            </div>
+
+            <!-- Bottoni -->
+            <div style="display: flex; gap: 12px;">
+                <button type="button" onclick="skipRaeeModal()" style="flex: 1; padding: 14px; background: transparent; border: 2px solid var(--border-color); color: var(--text-secondary); border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                    <i class="fas fa-forward" style="margin-right: 8px;"></i>Salta
+                </button>
+                <button type="submit" style="flex: 2; padding: 14px; background: linear-gradient(135deg, var(--success), #059669); border: none; color: white; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                    <i class="fas fa-save" style="margin-right: 8px;"></i>Registra RAEE
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+/* RAEE Modal Styles */
+#raeeModal.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    backdrop-filter: blur(5px);
+}
+
+#raeeModal.modal-overlay.active {
+    display: flex !important;
+}
+
+#raeeModal .modal-content {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 30px;
+    width: 100%;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+#raeeModal .raee-checkbox:hover {
+    border-color: var(--success) !important;
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+
+#raeeModal .raee-checkbox input:checked + span {
+    color: var(--success);
+    font-weight: 600;
+}
+
+#raeeModal .raee-checkbox:has(input:checked) {
+    border-color: var(--success) !important;
+    background: rgba(16, 185, 129, 0.15) !important;
+}
+
+@media (max-width: 600px) {
+    #raeeModal .modal-content {
+        padding: 20px;
+        margin: 10px;
+    }
+    
+    #raeeModal label[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+
+<script>
+// ==================== RAEE MODAL MANAGEMENT ====================
+(function() {
+    'use strict';
+    
+    // Variabili globali RAEE
+    window.raeePhotoData = null;
+    window.currentTicketForRaee = null;
+    
+    // Toggle "Nessun RAEE"
+    window.toggleNessunoRaee = function() {
+        const nessunoChecked = document.getElementById('raeeNessuno').checked;
+        const detailsSection = document.getElementById('raeeDetailsSection');
+        const photoSection = document.getElementById('raeePhotoSection');
+        const checkboxes = document.querySelectorAll('input[name="raeeType"]:not(#raeeNessuno)');
+        
+        if (nessunoChecked) {
+            detailsSection.style.display = 'none';
+            photoSection.style.display = 'none';
+            checkboxes.forEach(cb => {
+                cb.checked = false;
+                cb.disabled = true;
+            });
+        } else {
+            detailsSection.style.display = 'block';
+            photoSection.style.display = 'block';
+            checkboxes.forEach(cb => {
+                cb.disabled = false;
+            });
+        }
+    };
+    
+    // Apri modale RAEE
+    window.openRaeeModal = function(ticketId, interventionType, clientInfo) {
+        const modal = document.getElementById('raeeModal');
+        const form = document.getElementById('raeeForm');
+        
+        // Reset form
+        form.reset();
+        window.raeePhotoData = null;
+        window.currentTicketForRaee = ticketId;
+        
+        // Reset UI
+        document.getElementById('raeeDetailsSection').style.display = 'block';
+        document.getElementById('raeePhotoSection').style.display = 'block';
+        document.querySelectorAll('input[name="raeeType"]').forEach(cb => {
+            cb.disabled = false;
+        });
+        document.getElementById('raeePhotoPreview').style.display = 'none';
+        document.getElementById('raeePhotoPlaceholder').style.display = 'block';
+        
+        // Popola info
+        document.getElementById('raeeTicketId').value = ticketId || '';
+        document.getElementById('raeeInterventionType').value = interventionType || '';
+        document.getElementById('raeeInterventionInfo').textContent = clientInfo || 'Intervento completato';
+        
+        // Mostra modale
+        modal.classList.add('active');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // Log
+        if (typeof Store !== 'undefined' && Store.addLog) {
+            Store.addLog(`Apertura modale RAEE per ticket: ${ticketId}`);
+        }
+    };
+    
+    // Chiudi modale RAEE (salta)
+    window.skipRaeeModal = function() {
+        const modal = document.getElementById('raeeModal');
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        
+        if (typeof Store !== 'undefined' && Store.addLog && window.currentTicketForRaee) {
+            Store.addLog(`RAEE saltato per ticket: ${window.currentTicketForRaee}`);
+        }
+        
+        window.currentTicketForRaee = null;
+        window.raeePhotoData = null;
+    };
+    
+    // Gestione upload foto
+    window.handleRaeePhotoUpload = function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            window.raeePhotoData = e.target.result;
+            document.getElementById('raeePhotoImg').src = window.raeePhotoData;
+            document.getElementById('raeePhotoPreview').style.display = 'block';
+            document.getElementById('raeePhotoPlaceholder').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    };
+    
+    // Rimuovi foto
+    window.removeRaeePhoto = function() {
+        window.raeePhotoData = null;
+        document.getElementById('raeePhotoInput').value = '';
+        document.getElementById('raeePhotoPreview').style.display = 'none';
+        document.getElementById('raeePhotoPlaceholder').style.display = 'block';
+    };
+    
+    // Salva RAEE
+    window.saveRaee = function(event) {
+        event.preventDefault();
+        
+        const ticketId = document.getElementById('raeeTicketId').value;
+        const nessuno = document.getElementById('raeeNessuno').checked;
+        
+        // Raccogli tipologie selezionate
+        const selectedTypes = [];
+        document.querySelectorAll('input[name="raeeType"]:checked').forEach(cb => {
+            if (cb.value !== 'nessuno') {
+                selectedTypes.push(cb.value);
+            }
+        });
+        
+        // Validazione
+        if (!nessuno && selectedTypes.length === 0) {
+            if (typeof UI !== 'undefined' && UI.showToast) {
+                UI.showToast('Seleziona almeno una tipologia RAEE o "Nessun RAEE"', 'error');
+            } else {
+                alert('Seleziona almeno una tipologia RAEE o "Nessun RAEE"');
+            }
+            return;
+        }
+        
+        if (!nessuno) {
+            const qty = document.getElementById('raeeQty').value;
+            const weight = document.getElementById('raeeWeight').value;
+            
+            if (!qty || qty < 1) {
+                if (typeof UI !== 'undefined' && UI.showToast) {
+                    UI.showToast('Inserisci la quantità', 'error');
+                }
+                return;
+            }
+            if (!weight || weight <= 0) {
+                if (typeof UI !== 'undefined' && UI.showToast) {
+                    UI.showToast('Inserisci il peso', 'error');
+                }
+                return;
+            }
+        }
+        
+        // Prepara dati
+        const raeeData = {
+            id: 'RAEE-' + Date.now(),
+            ticketId: ticketId,
+            interventionType: document.getElementById('raeeInterventionType').value,
+            types: nessuno ? [] : selectedTypes,
+            nessunoRaee: nessuno,
+            qty: nessuno ? 0 : parseInt(document.getElementById('raeeQty').value),
+            weight: nessuno ? 0 : parseFloat(document.getElementById('raeeWeight').value),
+            brand: document.getElementById('raeeBrand').value.trim(),
+            photo: window.raeePhotoData,
+            notes: document.getElementById('raeeNotes').value.trim(),
+            createdAt: new Date().toISOString(),
+            createdBy: typeof Auth !== 'undefined' && Auth.currentUser ? Auth.currentUser.username : 'unknown'
+        };
+        
+        // Salva in Firestore se disponibile
+        if (typeof db !== 'undefined' && db.collection) {
+            db.collection("raee").doc(raeeData.id).set(raeeData)
+                .then(() => {
+                    console.log('RAEE salvato su Firestore');
+                })
+                .catch(err => {
+                    console.error('Errore salvataggio RAEE:', err);
+                });
+        }
+        
+        // Salva in localStorage
+        const savedRaee = JSON.parse(localStorage.getItem('raeeRecords') || '[]');
+        savedRaee.push(raeeData);
+        localStorage.setItem('raeeRecords', JSON.stringify(savedRaee));
+        
+        // Log
+        if (typeof Store !== 'undefined' && Store.addLog) {
+            Store.addLog(`RAEE registrato per ticket ${ticketId}: ${nessuno ? 'Nessuno' : selectedTypes.join(', ')}`);
+        }
+        
+        // Notifica
+        if (typeof UI !== 'undefined' && UI.showToast) {
+            UI.showToast(nessuno ? 'RAEE registrato: nessun ritiro' : 'RAEE registrato con successo!', 'success');
+        }
+        
+        // Chiudi modale
+        const modal = document.getElementById('raeeModal');
+        modal.classList.remove('active');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        
+        window.currentTicketForRaee = null;
+        window.raeePhotoData = null;
+        
+        // Procedi con il flusso normale
+        if (typeof DomicileManager !== 'undefined' && DomicileManager.moveToNextTicket) {
+            // Il flusso continua normalmente
+        }
+    };
+    
+    // Drag & drop support
+    const dropZone = document.getElementById('raeeDropZone');
+    if (dropZone) {
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--success)';
+        });
+        
+        dropZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--border-color)';
+        });
+        
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--border-color)';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    window.raeePhotoData = event.target.result;
+                    document.getElementById('raeePhotoImg').src = window.raeePhotoData;
+                    document.getElementById('raeePhotoPreview').style.display = 'block';
+                    document.getElementById('raeePhotoPlaceholder').style.display = 'none';
+                };
+                reader.readAsDataURL(files[0]);
+            }
+        });
+    }
+    
+    // Chiudi con ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('raeeModal');
+            if (modal && modal.classList.contains('active')) {
+                skipRaeeModal();
+            }
+        }
+    });
+    
+    console.log('✅ RAEE Modal System initialized');
+})();
+</script>
+<!-- ==================== END RAEE MODAL ==================== -->
