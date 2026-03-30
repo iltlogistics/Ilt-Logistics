@@ -11,7 +11,6 @@
     
     <!-- FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
     <!-- Font Awesome -->
@@ -42,7 +41,6 @@
             --timbra: #3b82f6;
             --domicile: #f59e0b;
             --covercare: #0056b3; /* Nuovo colore per Covercare */
-            --shop: #22c55e; /* Colore per ruolo Negoziante (Shop) */
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -58,8 +56,6 @@
         body.modal-open { overflow: hidden; }
         body.is-admin .admin-only { display: block; }
         .admin-only { display: none; }
-        body.is-shop .shop-only { display: block; }
-        .shop-only { display: none; }
 
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: var(--bg-body); }
@@ -77,39 +73,33 @@
         #intro-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         
         .intro-container { text-align: center; }
-        
-        .intro-logo {
-            font-size: 4rem;
-            color: var(--primary);
-            margin-bottom: 20px;
-            animation: pulse-logo 2s infinite;
+        .intro-video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40vw;
+            max-width: 500px;
+            height: calc(40vw * 16 / 9);
+            max-height: 80vh;
+            object-fit: cover;
+            z-index: 99998;
+            background: #000;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
         }
-        
-        .intro-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 10px;
-        }
-        
-        .intro-subtitle {
-            font-size: 1rem;
-            color: var(--text-secondary);
-            margin-bottom: 30px;
-        }
-        
         .intro-status { 
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 99999;
             background: rgba(0,0,0,0.7);
             color: white;
             padding: 15px 30px;
             border-radius: 25px;
             font-size: 1rem;
             backdrop-filter: blur(10px);
-        }
-        
-        @keyframes pulse-logo {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.8; }
         }
         
         /* LOGIN SCREEN */
@@ -259,40 +249,6 @@
             background: rgba(14, 165, 233, 0.1);
             border-color: var(--primary);
             animation: pulse 2s infinite;
-        }
-        
-        /* Lampeggiamento per ticket da assegnare */
-        .ticket-pending {
-            animation: blink-yellow 1.5s infinite;
-        }
-        
-        @keyframes blink-yellow {
-            0%, 100% { 
-                background: rgba(245, 158, 11, 0.1); 
-                border-color: var(--warning);
-            }
-            50% { 
-                background: rgba(245, 158, 11, 0.3); 
-                border-color: var(--warning);
-                box-shadow: 0 0 15px rgba(245, 158, 11, 0.5);
-            }
-        }
-        
-        /* Lampeggiamento rosso per Consegna Expressa/Prioritaria */
-        .ticket-urgent {
-            animation: blink-red 1s infinite;
-        }
-        
-        @keyframes blink-red {
-            0%, 100% { 
-                background: rgba(239, 68, 68, 0.15); 
-                border-color: var(--danger);
-            }
-            50% { 
-                background: rgba(239, 68, 68, 0.4); 
-                border-color: var(--danger);
-                box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
-            }
         }
         
         .delivery-number {
@@ -485,7 +441,6 @@
         .badge-ok { background: rgba(16, 185, 129, 0.15); color: var(--success); }
         .badge-domicile { background: rgba(245, 158, 11, 0.15); color: var(--domicile); }
         .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-        .badge-shop { background: rgba(34, 197, 94, 0.15); color: var(--shop); }
 
         /* TECH BOX & SUMMARY */
         .tech-box, .summary-box { background: rgba(14, 165, 233, 0.05); border: 1px solid var(--border-color); padding: 22px; border-radius: var(--radius-sm); margin-top: 20px; }
@@ -1252,12 +1207,11 @@
 
     <div id="intro-screen">
         <div class="intro-container">
-            <div class="intro-logo">
-                <i class="fas fa-cogs"></i>
-            </div>
-            <div class="intro-title">Gestione Interventi Pro</div>
-            <div class="intro-subtitle">Soluzione completa per la gestione tecnica</div>
-            <div class="intro-status" id="intro-status">Inizializzazione in corso...</div>
+            <video class="intro-video" autoplay muted playsinline onended="Auth.onVideoEnded()">
+                <source src="loading-video.mp4.mp4" type="video/mp4">
+                Il tuo browser non supporta il video.
+            </video>
+            <div class="intro-status" id="intro-status">Inizializzazione e sincronizzazione...</div>
         </div>
     </div>
 
@@ -1316,7 +1270,6 @@
             <select id="editUserRole" style="margin-bottom:12px;">
                 <option value="user">Utente Standard</option>
                 <option value="admin">Amministratore</option>
-                <option value="shop">Negoziante (Shop)</option>
             </select>
             <select id="editUserLocation" style="margin-bottom:12px;">
                 <option value="">-- Seleziona Sede --</option>
@@ -1338,53 +1291,6 @@
             <div class="modal-actions row">
                 <button class="btn btn-outline" onclick="UI.closeModal('pwModal')">Annulla</button>
                 <button class="btn btn-primary" onclick="Auth.changePassword()">Cambia</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- View Shop Ticket Modal -->
-    <div id="viewShopTicketModal" class="modal-overlay">
-        <div class="modal" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
-            <h3 style="color: var(--shop); margin-bottom: 20px;">🎫 Dettaglio Ticket Shop</h3>
-            <div id="viewShopTicketContent">
-                <!-- Contenuto inserito via JS -->
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button class="btn btn-secondary" onclick="UI.closeModal('viewShopTicketModal')">Chiudi</button>
-                <button class="btn btn-primary" onclick="InterventiManager.editShopTicketFromModal()">
-                    <i class="fas fa-edit"></i> Modifica
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Assign Ticket Modal -->
-    <div id="assignTicketModal" class="modal-overlay">
-        <div class="modal" style="max-width: 500px;">
-            <h3 style="color: var(--primary); margin-bottom: 20px;">🎯 Assegna Intervento</h3>
-            <div id="assignTicketInfo" style="margin-bottom: 20px; padding: 15px; background: var(--bg-body); border-radius: 8px;">
-                <!-- Info ticket inserite via JS -->
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">📅 Data Intervento *</label>
-                <input type="date" id="assignDate" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-body); color: var(--text-primary);" required>
-            </div>
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">🕐 Ora Intervento *</label>
-                <input type="time" id="assignTime" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-body); color: var(--text-primary);" required>
-            </div>
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 600;">👤 Operatore *</label>
-                <select id="assignOperator" style="width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-body); color: var(--text-primary);" required>
-                    <option value="">-- Seleziona Operatore --</option>
-                </select>
-            </div>
-            <input type="hidden" id="assignTicketId">
-            <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button class="btn btn-secondary" onclick="UI.closeModal('assignTicketModal')">Annulla</button>
-                <button class="btn btn-primary" onclick="InterventiManager.salvaAssegnazione()">
-                    <i class="fas fa-check"></i> Conferma Assegnazione
-                </button>
             </div>
         </div>
     </div>
@@ -1620,122 +1526,6 @@
         </div>
     </div>
 
-    <!-- Create Ticket Modal (for Interventi) -->
-    <div id="createTicketModal" class="modal-overlay">
-        <div class="modal" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
-            <h3 style="color: var(--shop); margin-bottom: 20px;"><i class="fas fa-plus-circle"></i> Crea Nuovo Ticket</h3>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Nome Cliente *</label>
-                    <input type="text" id="modal_shop_client_name" placeholder="Nome e Cognome cliente">
-                </div>
-                <div class="form-group">
-                    <label>Telefono 1 *</label>
-                    <input type="tel" id="modal_shop_client_phone" placeholder="Es. 333 1234567">
-                </div>
-                <div class="form-group">
-                    <label>Telefono 2</label>
-                    <input type="tel" id="modal_shop_client_phone2" placeholder="Secondo numero (opzionale)">
-                </div>
-                <div class="form-group">
-                    <label>Città *</label>
-                    <input type="text" id="modal_shop_client_city" placeholder="Es. Milano, Roma, Napoli" required>
-                </div>
-                <div class="form-group" style="grid-column: 1 / -1;">
-                    <label>Indirizzo *</label>
-                    <input type="text" id="modal_shop_client_address" placeholder="Via, Numero civico, CAP">
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="modal_shop_client_email" placeholder="email@esempio.com">
-                </div>
-                <div class="form-group">
-                    <label>Tipo Intervento *</label>
-                    <select id="modal_shop_intervention_type">
-                        <option value="">-- Seleziona --</option>
-                        <option value="consegna_installazione_pro">📦 Consegna Installazione Pro</option>
-                        <option value="installazione_pro">🔧 Installazione Pro</option>
-                        <option value="sopralluogo">📋 Sopralluogo</option>
-                        <option value="reclamo">⚠️ Reclamo</option>
-                        <option value="consegna_base">📦 Consegna Base</option>
-                        <option value="consegna_con_incasso">📺 Consegna con Incasso</option>
-                        <option value="incasso">🔌 Incasso</option>
-                        <option value="consegna_prioritaria">🚀 Consegna Prioritaria</option>
-                        <option value="consegna_express">⚡ Consegna Expressa</option>
-                        <option value="sostituzione">🔄 Sostituzione</option>
-                        <option value="riparazione">🔧 Riparazione</option>
-                        <option value="ritiro">📦 Ritiro</option>
-                        <option value="consegna">🚚 Consegna</option>
-                    </select>
-                </div>
-                <div class="form-group" style="grid-column: 1 / -1;">
-                    <label>Descrizione *</label>
-                    <textarea id="modal_shop_description" rows="3" placeholder="Indirizzo (Scala, Piano, Interno) o altre info utili alla consegna..."></textarea>
-                </div>
-                <div class="form-group" style="grid-column: 1 / -1;">
-                    <label>Ubicazione Merce</label>
-                    <input type="text" id="modal_shop_ubicazione_merce" placeholder="Es. Magazzino, Retro negozio, Piano terra...">
-                </div>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="modal_shop_zona_ztl" style="width: auto; margin: 0;">
-                        <span>Zona ZTL</span>
-                    </label>
-                </div>
-                <div class="form-group">
-                    <label>Piano Consegna</label>
-                    <select id="modal_shop_piano_consegna">
-                        <option value="">-- Seleziona --</option>
-                        <option value="piano_terra">Piano Terra</option>
-                        <option value="1">1° Piano</option>
-                        <option value="2">2° Piano</option>
-                        <option value="3">3° Piano</option>
-                        <option value="4">4° Piano</option>
-                        <option value="5">5° Piano</option>
-                        <option value="6_plus">6° Piano o superiore</option>
-                        <option value="interrato">Interrato</option>
-                        <option value="mansarda">Mansarda</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" id="modal_shop_presenza_raee" style="width: auto; margin: 0;">
-                        <span>Presenza RAEE</span>
-                    </label>
-                </div>
-                <div class="form-group" style="grid-column: 1 / -1;">
-                    <label>Note Interne</label>
-                    <textarea id="modal_shop_internal_notes" rows="2" placeholder="Note aggiuntive per gli amministratori..."></textarea>
-                </div>
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                <button class="btn btn-secondary" onclick="UI.closeModal('createTicketModal')">Annulla</button>
-                <button class="btn btn-success" onclick="InterventiManager.createTicketFromModal()">
-                    <i class="fas fa-paper-plane"></i> Crea Ticket
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Category Choice Modal -->
-    <div id="categoryChoiceModal" class="modal-overlay">
-        <div class="modal" style="max-width: 400px; text-align: center;">
-            <h3 style="margin-bottom: 20px;">❄️ Scegli la Categoria 🔥</h3>
-            <p style="margin-bottom: 20px; color: var(--text-secondary);">Seleziona il tipo di intervento da eseguire</p>
-            <div style="display: flex; gap: 15px; justify-content: center;">
-                <button class="btn" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 15px 30px; font-size: 16px;" onclick="InterventiManager.chooseCategory('refrigerazione')">
-                    ❄️ Refrigerazione
-                </button>
-                <button class="btn" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 15px 30px; font-size: 16px;" onclick="InterventiManager.chooseCategory('riscaldamento')">
-                    🔥 Riscaldamento
-                </button>
-            </div>
-            <div style="margin-top: 20px;">
-                <button class="btn btn-outline" onclick="UI.closeModal('categoryChoiceModal')">Annulla</button>
-            </div>
-        </div>
-    </div>
-
     <!-- VIEW: DASHBOARD -->
     <div id="view-dashboard" class="view">
         <div class="container">
@@ -1823,228 +1613,6 @@
         </div>
     </div>
 
-    <!-- VIEW: SHOP - Dashboard Negoziante -->
-    <div id="view-shop" class="view">
-        <div class="container">
-            <div class="dashboard-header">
-                <h1 style="color: var(--shop);">🏪 Portale Negoziante</h1>
-                <p>Crea ticket per interventi tecnici</p>
-            </div>
-
-            <!-- FORM CREAZIONE TICKET -->
-            <div class="card" style="border-left: 4px solid var(--shop);">
-                <div class="flex-between mb-2">
-                    <h2 style="margin:0; color: var(--shop);"><i class="fas fa-plus-circle"></i> Nuovo Ticket</h2>
-                </div>
-                
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Nome Cliente *</label>
-                        <input type="text" id="shop_client_name" placeholder="Nome e Cognome cliente">
-                    </div>
-                    <div class="form-group">
-                        <label>Telefono 1 *</label>
-                        <input type="tel" id="shop_client_phone" placeholder="Es. 333 1234567">
-                    </div>
-                    <div class="form-group">
-                        <label>Telefono 2</label>
-                        <input type="tel" id="shop_client_phone2" placeholder="Secondo numero (opzionale)">
-                    </div>
-                    <div class="form-group">
-                        <label>Città *</label>
-                        <input type="text" id="shop_client_city" placeholder="Es. Milano, Roma, Napoli" required>
-                    </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Indirizzo *</label>
-                        <input type="text" id="shop_client_address" placeholder="Via, Numero civico, CAP">
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="shop_client_email" placeholder="email@esempio.com">
-                    </div>
-                    <div class="form-group">
-                        <label>Data Creazione Ticket</label>
-                        <input type="date" id="shop_ticket_date" readonly style="background: var(--bg-body); cursor: not-allowed;">
-                    </div>
-                    <div class="form-group">
-                        <label>Tipo Intervento *</label>
-                        <select id="shop_intervention_type">
-                            <option value="">-- Seleziona --</option>
-                            <option value="consegna_installazione_pro">📦 Consegna Installazione Pro</option>
-                            <option value="installazione_pro">🔧 Installazione Pro</option>
-                            <option value="sopralluogo">📋 Sopralluogo</option>
-                            <option value="reclamo">⚠️ Reclamo</option>
-                            <option value="consegna_base">📦 Consegna Base</option>
-                            <option value="consegna_con_incasso">📺 Consegna con Incasso</option>
-                            <option value="incasso">🔌 Incasso</option>
-                            <option value="consegna_prioritaria">🚀 Consegna Prioritaria</option>
-                            <option value="consegna_express">⚡ Consegna Expressa</option>
-                            <option value="sostituzione">🔄 Sostituzione</option>
-                            <option value="riparazione">🔧 Riparazione</option>
-                            <option value="ritiro">📦 Ritiro</option>
-                            <option value="consegna">🚚 Consegna</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Prodotti * <span style="font-weight: normal; color: var(--text-secondary);">(seleziona uno o più prodotti con quantità)</span></label>
-                        <div id="shop_products_container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 8px;">
-                            <div class="product-item" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
-                                <input type="checkbox" id="prod_clima" value="clima" style="width: auto;" onchange="ShopManager.toggleProductQty('clima')">
-                                <label for="prod_clima" style="margin: 0; flex: 1; cursor: pointer;">❄️ Clima</label>
-                                <input type="number" id="qty_clima" min="1" value="1" style="width: 50px; padding: 4px; text-align: center; display: none;">
-                            </div>
-                            <div class="product-item" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
-                                <input type="checkbox" id="prod_caldaia" value="caldaia" style="width: auto;" onchange="ShopManager.toggleProductQty('caldaia')">
-                                <label for="prod_caldaia" style="margin: 0; flex: 1; cursor: pointer;">🔥 Caldaia</label>
-                                <input type="number" id="qty_caldaia" min="1" value="1" style="width: 50px; padding: 4px; text-align: center; display: none;">
-                            </div>
-                            <div class="product-item" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
-                                <input type="checkbox" id="prod_tv" value="tv" style="width: auto;" onchange="ShopManager.toggleProductQty('tv')">
-                                <label for="prod_tv" style="margin: 0; flex: 1; cursor: pointer;">📺 Tv</label>
-                                <input type="number" id="qty_tv" min="1" value="1" style="width: 50px; padding: 4px; text-align: center; display: none;">
-                            </div>
-                            <div class="product-item" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
-                                <input type="checkbox" id="prod_lavatrice" value="lavatrice" style="width: auto;" onchange="ShopManager.toggleProductQty('lavatrice')">
-                                <label for="prod_lavatrice" style="margin: 0; flex: 1; cursor: pointer;">🫧 Lavatrice</label>
-                                <input type="number" id="qty_lavatrice" min="1" value="1" style="width: 50px; padding: 4px; text-align: center; display: none;">
-                            </div>
-                            <div class="product-item" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
-                                <input type="checkbox" id="prod_lavastoviglie" value="lavastoviglie" style="width: auto;" onchange="ShopManager.toggleProductQty('lavastoviglie')">
-                                <label for="prod_lavastoviglie" style="margin: 0; flex: 1; cursor: pointer;">🍽️ Lavastoviglie</label>
-                                <input type="number" id="qty_lavastoviglie" min="1" value="1" style="width: 50px; padding: 4px; text-align: center; display: none;">
-                            </div>
-                            <div class="product-item" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
-                                <input type="checkbox" id="prod_asciugatrice" value="asciugatrice" style="width: auto;" onchange="ShopManager.toggleProductQty('asciugatrice')">
-                                <label for="prod_asciugatrice" style="margin: 0; flex: 1; cursor: pointer;">💨 Asciugatrice</label>
-                                <input type="number" id="qty_asciugatrice" min="1" value="1" style="width: 50px; padding: 4px; text-align: center; display: none;">
-                            </div>
-                            <div class="product-item" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
-                                <input type="checkbox" id="prod_frigo" value="frigo" style="width: auto;" onchange="ShopManager.toggleProductQty('frigo')">
-                                <label for="prod_frigo" style="margin: 0; flex: 1; cursor: pointer;">🧊 Frigo</label>
-                                <input type="number" id="qty_frigo" min="1" value="1" style="width: 50px; padding: 4px; text-align: center; display: none;">
-                            </div>
-                            <div class="product-item" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
-                                <input type="checkbox" id="prod_sidebyside" value="sidebyside" style="width: auto;" onchange="ShopManager.toggleProductQty('sidebyside')">
-                                <label for="prod_sidebyside" style="margin: 0; flex: 1; cursor: pointer;">🧊❄️ Side By Side</label>
-                                <input type="number" id="qty_sidebyside" min="1" value="1" style="width: 50px; padding: 4px; text-align: center; display: none;">
-                            </div>
-                            <div class="product-item" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
-                                <input type="checkbox" id="prod_piano_cottura" value="piano_cottura" style="width: auto;" onchange="ShopManager.toggleProductQty('piano_cottura')">
-                                <label for="prod_piano_cottura" style="margin: 0; flex: 1; cursor: pointer;">🔥 Piano Cottura</label>
-                                <input type="number" id="qty_piano_cottura" min="1" value="1" style="width: 50px; padding: 4px; text-align: center; display: none;">
-                            </div>
-                            <div class="product-item" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
-                                <input type="checkbox" id="prod_piano_induzione" value="piano_induzione" style="width: auto;" onchange="ShopManager.toggleProductQty('piano_induzione')">
-                                <label for="prod_piano_induzione" style="margin: 0; flex: 1; cursor: pointer;">⚡ Piano Induzione</label>
-                                <input type="number" id="qty_piano_induzione" min="1" value="1" style="width: 50px; padding: 4px; text-align: center; display: none;">
-                            </div>
-                            <div class="product-item" style="display: flex; align-items: center; gap: 8px; padding: 8px; background: var(--bg-body); border-radius: 8px; border: 1px solid var(--border-color);">
-                                <input type="checkbox" id="prod_altro" value="altro" style="width: auto;" onchange="ShopManager.toggleProductQty('altro')">
-                                <label for="prod_altro" style="margin: 0; flex: 1; cursor: pointer;">📝 Altro</label>
-                                <input type="number" id="qty_altro" min="1" value="1" style="width: 50px; padding: 4px; text-align: center; display: none;">
-                            </div>
-                        </div>
-                        <div id="shop_altro_specifica_container" style="margin-top: 10px; display: none;">
-                            <input type="text" id="shop_altro_specifica" placeholder="Specifica il prodotto (es. Forno microonde)" style="width: 100%;">
-                        </div>
-                    </div>
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Descrizione *</label>
-                        <textarea id="shop_description" rows="4" placeholder="Indirizzo (Scala, Piano, Interno) o altre info utili alla consegna..."></textarea>
-                    </div>
-                    
-                    <!-- Nuovi campi logistici -->
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Ubicazione Merce</label>
-                        <input type="text" id="shop_ubicazione_merce" placeholder="Es. Magazzino, Retro negozio, Piano terra...">
-                    </div>
-                    <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" id="shop_zona_ztl" style="width: auto; margin: 0;">
-                            <span>Zona ZTL ( Traffico Limitato)</span>
-                        </label>
-                    </div>
-                    <div class="form-group">
-                        <label>Piano Consegna</label>
-                        <select id="shop_piano_consegna">
-                            <option value="">-- Seleziona --</option>
-                            <option value="piano_terra">Piano Terra</option>
-                            <option value="1">1° Piano</option>
-                            <option value="2">2° Piano</option>
-                            <option value="3">3° Piano</option>
-                            <option value="4">4° Piano</option>
-                            <option value="5">5° Piano</option>
-                            <option value="6_plus">6° Piano o superiore</option>
-                            <option value="interrato">Interrato</option>
-                            <option value="mansarda">Mansarda</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            <input type="checkbox" id="shop_presenza_raee" style="width: auto; margin: 0;">
-                            <span>Presenza RAEE da ritirare</span>
-                        </label>
-                    </div>
-                    
-                    <div class="form-group" style="grid-column: 1 / -1;">
-                        <label>Note Interne (visibili agli amministratori)</label>
-                        <textarea id="shop_internal_notes" rows="2" placeholder="Note aggiuntive per gli amministratori (es. urgenza, preferenze orario, etc.)"></textarea>
-                    </div>
-                </div>
-
-                <div class="text-right mt-2">
-                    <button class="btn btn-success" onclick="ShopManager.createTicket()">
-                        <i class="fas fa-paper-plane"></i> Invia Richiesta
-                    </button>
-                </div>
-            </div>
-
-            <!-- STORICO TICKET CREATI -->
-            <div class="card">
-                <div class="flex-between mb-2">
-                    <h2 style="margin:0; color: var(--shop);"><i class="fas fa-history"></i> I Miei Ticket</h2>
-                    <div class="action-group">
-                        <button class="category-btn active" onclick="ShopManager.filterStatus('')">Tutti</button>
-                        <button class="category-btn" onclick="ShopManager.filterStatus('in attesa')">In Attesa</button>
-                        <button class="category-btn" onclick="ShopManager.filterStatus('assegnato')">Assegnato</button>
-                        <button class="category-btn" onclick="ShopManager.filterStatus('completato')">Completato</button>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Data Invio</th>
-                                <th>Cliente</th>
-                                <th>Tipo</th>
-                                <th>Data Creazione</th>
-                                <th>Stato</th>
-                                <th>Azioni</th>
-                            </tr>
-                        </thead>
-                        <tbody id="shopTicketsTableBody"></tbody>
-                    </table>
-                </div>
-                <div id="shopEmptyState" class="text-center mt-2" style="color: var(--text-secondary);">
-                    <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; display: block;"></i>
-                    Nessun ticket creato. Compila il form sopra per inviare la tua prima richiesta.
-                </div>
-            </div>
-
-            <!-- INFO BOX -->
-            <div class="card" style="background: rgba(34, 197, 94, 0.05); border-color: var(--shop);">
-                <h4 style="margin:0 0 15px; color: var(--shop);"><i class="fas fa-info-circle"></i> Come funziona</h4>
-                <ol style="color: var(--text-secondary); padding-left: 20px; line-height: 1.8;">
-                    <li>Compila il form con i dati del cliente e la richiesta</li>
-                    <li>Invia la richiesta - riceverai conferma immediata</li>
-                    <li>Gli amministratori esaminano la richiesta e la assegnano a un tecnico</li>
-                    <li>Puoi monitorare lo stato dei tuoi ticket in questa pagina</li>
-                    <li>Riceverai notifica quando l'intervento viene completato</li>
-                </ol>
-            </div>
-        </div>
-    </div>
-
     <!-- VIEW: DOMICILIO -->
     <div id="view-domicile" class="view">
         <div class="container">
@@ -2065,15 +1633,53 @@
                     <button class="btn btn-secondary" onclick="App.goToDashboard()">Torna alla Home</button>
                 </div>
 
-                <!-- FORM CREA TICKET RIMOSSO - spostato in Interventi -->
-                
+                <!-- CAMBIATO: Aggiunta classe 'admin-only' per nascondere il form agli utenti standard -->
+                <div class="admin-only card" style="background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.3); margin-bottom: 25px; margin-top: 20px;">
+                    <h3 style="margin:0 0 20px; color: var(--domicile);">Crea Nuovo Ticket</h3>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Nome Cliente *</label><input type="text" id="dom_client_name" placeholder="Nome e Cognome"></div>
+                        <div class="form-group"><label>Indirizzo *</label><input type="text" id="dom_address" placeholder="Via, Numero, Città"></div>
+                        <div class="form-group"><label>Telefono/Numero *</label><input type="text" id="dom_phone" placeholder="Numero di contatto"></div>
+                        <div class="form-group"><label>Data Consegna *</label><input type="date" id="dom_date" value=""></div>
+                        <div class="form-group">
+                            <label>Tipologia Intervento *</label>
+                            <select id="dom_type">
+                                <option value="consegna">Consegna</option>
+                                <option value="consegna_express">Consegna Express</option>
+                                <option value="consegna_incasso">Consegna e Incasso</option>
+                                <option value="incasso">Incasso</option>
+                                <option value="reclamo">Reclamo</option>
+                                <option value="rendi_prendi">Rendi / Prendi</option>
+                                <option value="trasferimento_merci">Trasferimento Merci</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Tipologia Prodotto *</label><input type="text" id="dom_product" placeholder="Es. Condizionatore, Caldaia..."></div>
+                        <div class="form-group"><label>Quantità Prodotto *</label><input type="number" id="dom_quantity" placeholder="Es. 1, 2, 3..." min="1" value="1"></div>
+                        <div class="form-group"><label>Pagamento alla Consegna</label><input type="text" id="dom_payment" placeholder="Es. 150€ in contanti"></div>
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 8px;">
+                                <input type="checkbox" id="dom_raee" style="width: auto;">
+                                RAEE (Rifiuto Apparecchiature Elettriche/Elettroniche)
+                            </label>
+                        </div>
+                        <div class="form-group"><label>Ubicazione merce</label><input type="text" id="dom_ubicazione" placeholder="Es. Magazzino Palermo, Box 12..."></div>
+                        <div class="form-group"><label>Note Aggiuntive</label><textarea id="dom_ticket_notes" rows="2" placeholder="Note per l'operatore o per il ticket..."></textarea></div>
+                        <div class="form-group"><label>Assegna a Operatore *</label><select id="dom_operator"></select></div>
+                    </div>
+                    <div class="text-right mt-2">
+                        <button class="btn btn-primary" onclick="DomicileManager.createTicket()">Crea Ticket</button>
+                    </div>
+                </div>
+            
             <!-- FILTRI E RICERCA -->
             <div class="flex-between mb-2" style="flex-wrap: wrap; gap: 15px; align-items: center;">
                 <input type="text" id="searchDomicile" placeholder="Cerca cliente, indirizzo o prodotto..." onkeyup="DomicileManager.render()" style="padding:12px 16px; border-radius:30px; border: 2px solid var(--border-color); background: var(--bg-body); width: 100%; max-width: 400px; color: var(--text-primary);">
                 
                 <div class="action-group" style="flex-wrap: wrap;">
                     <div class="category-filter" id="domicileStatusFilter" style="margin-bottom: 0; margin-right: 10px;">
-                        <button class="category-btn active" onclick="DomicileManager.filterStatus('assegnato')">Assegnato</button>
+                        <button class="category-btn active" onclick="DomicileManager.filterStatus('')">Tutti</button>
+                        <button class="category-btn" onclick="DomicileManager.filterStatus('assegnato')">Assegnato</button>
+                        <button class="category-btn" onclick="DomicileManager.filterStatus('completato')">Completato</button>
                         <button class="category-btn" onclick="DomicileManager.filterStatus('reclamo')">Reclamo</button>
                     </div>
                     <!-- CAMBIATO: Aggiunta classe 'admin-only' per nascondere il filtro operatore agli utenti standard -->
@@ -2788,9 +2394,6 @@
                 <div class="flex-between mb-2">
                     <h2 style="margin:0; color: var(--primary);">🔧 Gestione Interventi</h2>
                     <div style="display: flex; gap: 10px;">
-                        <button class="btn btn-success" onclick="UI.openModal('createTicketModal')">
-                            <i class="fas fa-plus"></i> Crea Ticket
-                        </button>
                         <button class="btn btn-secondary" onclick="App.goToDashboard()">Torna alla Home</button>
                     </div>
                 </div>
@@ -2840,7 +2443,6 @@
                         <thead>
                             <tr>
                                 <th>Data</th>
-                                <th>Negozio</th>
                                 <th>Cliente</th>
                                 <th>Indirizzo</th>
                                 <th>Tipo</th>
@@ -2884,37 +2486,11 @@
         let db = null;
         let firebaseReady = false;
         let isTrackingMode = false;
-        let firebaseAuthReady = false; // Traccia se l'auth Firebase è completa
         
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
             firebaseReady = true;
-            
-            // Verifica se siamo in protocollo file:// (non supportato da Firebase Auth)
-            const isFileProtocol = window.location.protocol === 'file:';
-            
-            if (isFileProtocol) {
-                console.log('⚠️ Protocollo file:// rilevato - Firebase Auth disabilitato');
-                firebaseAuthReady = false; // Non usare Firebase Auth da file://
-                // Emetti evento subito per permettere query Firestore (se le regole lo permettono)
-                setTimeout(() => {
-                    window.dispatchEvent(new CustomEvent('firebaseAuthReady', { detail: null }));
-                }, 500);
-            } else {
-                // Gestione autenticazione Firebase - aspetta che l'auth sia pronta
-                firebase.auth().onAuthStateChanged((user) => {
-                    if (user) {
-                        console.log('✅ Utente autenticato Firebase:', user.uid);
-                        firebaseAuthReady = true;
-                        // Emetti evento per notificare che l'auth è pronta
-                        window.dispatchEvent(new CustomEvent('firebaseAuthReady', { detail: user }));
-                    } else {
-                        console.log('❌ Utente Firebase non autenticato');
-                        firebaseAuthReady = false;
-                    }
-                });
-            }
         } catch (error) { console.error("Firebase initialization error:", error); }
 
         // ========== UTILITIES ==========
@@ -2928,7 +2504,7 @@
         // ========== UI MANAGER ==========
         const UI = {
             showToast: (msg, type = 'info') => { const container = Utils.id('toast-container'); const el = document.createElement('div'); el.className = `toast ${type}`; el.innerText = msg; container.appendChild(el); setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(100%)'; setTimeout(() => el.remove(), 300); }, 4500); },
-            confirm: (title, msg, callback) => { Utils.id('modalTitle').innerText = title; Utils.id('modalMessage').innerText = msg; const btn = Utils.id('modalConfirmBtn'); UI.openModal('confirmModal'); const newBtn = btn.cloneNode(true); btn.parentNode.replaceChild(newBtn, btn); newBtn.onclick = () => { UI.closeModal('confirmModal'); if (typeof callback === 'function') callback(); }; },
+            confirm: (title, msg, callback) => { Utils.id('modalTitle').innerText = title; Utils.id('modalMessage').innerText = msg; const btn = Utils.id('modalConfirmBtn'); UI.openModal('confirmModal'); const newBtn = btn.cloneNode(true); btn.parentNode.replaceChild(newBtn, btn); newBtn.onclick = () => { UI.closeModal('confirmModal'); callback(); }; },
             openModal: (id) => { Utils.id(id).style.display = 'flex'; document.body.classList.add('modal-open'); },
             closeModal: (id) => { Utils.id(id).style.display = 'none'; document.body.classList.remove('modal-open'); },
             showView: (id) => { 
@@ -2952,33 +2528,11 @@
                     setTimeout(() => { Auth.checkLocalSession(); }, 1000);
                     return;
                 }
-                Utils.id('intro-status').innerText = "Autenticazione in corso...";
-                
-                // Aspetta che l'autenticazione Firebase sia pronta prima di fare query
-                const setupQueries = () => {
-                    console.log('🔧 Setup query Firestore...');
-                    db.collection("users").onSnapshot(snapshot => {
-                        Store.localUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                        if (!Auth.initComplete) { Auth.checkLocalSession(); }
-                    }, (err) => { console.error(err); Auth.checkLocalSession(); });
-                };
-                
-                if (firebaseAuthReady) {
-                    // Auth già pronta, fai subito le query
-                    setupQueries();
-                } else {
-                    // Aspetta l'evento di auth pronta
-                    window.addEventListener('firebaseAuthReady', () => {
-                        setupQueries();
-                    }, { once: true });
-                    // Fallback: controlla sessione locale dopo un timeout
-                    setTimeout(() => {
-                        if (!Auth.initComplete) { 
-                            console.warn("Timeout Auth, forzo caricamento locale.");
-                            Auth.checkLocalSession(); 
-                        }
-                    }, 5000);
-                }
+                Utils.id('intro-status').innerText = "Sincronizzazione dati...";
+                db.collection("users").onSnapshot(snapshot => {
+                    Store.localUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    if (!Auth.initComplete) { Auth.checkLocalSession(); }
+                }, (err) => { console.error(err); Auth.checkLocalSession(); });
             },
             checkLocalSession: () => {
                 if (Auth.initComplete) return;
@@ -2988,184 +2542,70 @@
                      return; 
                 }
 
-                // Verifica sessione esistente
+                // Avvia il video quando non è in modalità tracking
+                const video = Utils.id('intro-video');
+                if (video) {
+                    video.play().catch(e => {
+                        console.log('Autoplay video bloccato:', e);
+                        // Se l'autoplay è bloccato, mostra un pulsante per avviare il video
+                        video.style.cursor = 'pointer';
+                        video.addEventListener('click', () => {
+                            video.play();
+                        }, { once: true });
+                    });
+                }
+
+                // Non nascondere la schermata subito, aspetta la fine del video
                 const session = localStorage.getItem('session_gipro');
                 if (session) {
                     try {
                         const user = JSON.parse(session);
                         if (Store.localUsers.find(u => u.id === user.id) || (user.username.toLowerCase() === 'admin')) {
                             Auth.currentUser = user;
+                            // Salva l'utente ma non avviare la sessione subito
+                            // La sessione partirà dopo la fine del video
+                            return;
                         }
                     } catch (e) { localStorage.removeItem('session_gipro'); }
                 }
-
-                // Attendi 2 secondi e prosegui con la transizione
-                Utils.id('intro-status').innerText = "Caricamento completato";
-                setTimeout(() => {
-                    Auth.initComplete = true;
-                    if (Auth.currentUser) {
-                        // Utente già loggato, autentica con Firebase e vai alla dashboard (solo se non file://)
-                        if (firebase.auth && window.location.protocol !== 'file:' && false) { // DISABLED: auth anonimo disabilitato
-                            firebase.auth().signInAnonymously().then(() => {
-                                console.log('✅ Sessione esistente - autenticato con Firebase');
-                                Auth.startSession();
-                                Utils.id('intro-screen').classList.add('hidden');
-                            }).catch(err => {
-                                console.error('❌ Errore auth Firebase sessione:', err);
-                                Auth.startSession();
-                                Utils.id('intro-screen').classList.add('hidden');
-                            });
-                        } else {
-                            // Protocollo file:// o Firebase non disponibile, procedi senza auth
-                            Auth.startSession();
-                            Utils.id('intro-screen').classList.add('hidden');
-                        }
-                    } else {
-                        // Nessuna sessione, mostra la schermata di login
-                        Utils.id('intro-screen').classList.add('hidden');
-                        Utils.id('login-screen').classList.add('active');
-                    }
-                }, 2000);
+                // Se non c'è sessione valida, la schermata di login apparirà dopo il video
             },
             login: () => {
                 const u = Utils.id('login_user').value.trim(); const p = Utils.id('login_pass').value;
-                
-                const doLogin = (user) => {
-                    Auth.currentUser = user;
-                    localStorage.setItem('session_gipro', JSON.stringify(user));
-                    Utils.id('login-error').style.display = 'none';
-                    Utils.id('login-screen').classList.remove('active');
-                    Store.addLog(`Login effettuato da ${user.username}`);
-                    Auth.startSession();
-                };
-                
-                // Admin master
-                if (u.toLowerCase() === 'admin' && p === 'Palermo4ever') {
-                    const adminUser = { id: 'master_admin', username: 'Admin', role: 'admin' };
-                    // Timeout di sicurezza per Firebase auth
-                    let loginDone = false;
-                    const safeDoLogin = () => {
-                        if (!loginDone) {
-                            loginDone = true;
-                            doLogin(adminUser);
-                        }
-                    };
-                    
-                    // Autentica con Firebase Auth anonimamente o con email
-                    if (firebase.auth && window.location.protocol !== 'file:' && false) { // DISABLED: auth anonimo disabilitato
-                        firebase.auth().signInAnonymously().then(() => {
-                            console.log('✅ Admin autenticato con Firebase');
-                            safeDoLogin();
-                        }).catch(err => {
-                            console.error('❌ Errore auth Firebase:', err);
-                            safeDoLogin(); // Continua comunque
-                        });
-                        // Timeout di sicurezza: procedi dopo 2 secondi max
-                        setTimeout(safeDoLogin, 2000);
-                    } else {
-                        safeDoLogin();
-                    }
-                    return;
-                }
-                
-                // Utente normale
+                if (u.toLowerCase() === 'admin' && p === 'Palermo4ever') { Auth.currentUser = { id: 'master_admin', username: 'Admin', role: 'admin' }; localStorage.setItem('session_gipro', JSON.stringify(Auth.currentUser)); Utils.id('login-error').style.display = 'none'; Utils.id('login-screen').classList.remove('active'); Store.addLog(`Login Master Admin effettuato`); Auth.startSession(); return; }
                 const user = Store.localUsers.find(x => x.username.toLowerCase() === u.toLowerCase() && x.password === p);
-                if (user) {
-                    let loginDone = false;
-                    const safeDoLogin = () => {
-                        if (!loginDone) {
-                            loginDone = true;
-                            doLogin(user);
-                        }
-                    };
-                    
-                    if (firebase.auth && window.location.protocol !== 'file:' && false) { // DISABLED: auth anonimo disabilitato
-                        firebase.auth().signInAnonymously().then(() => {
-                            console.log('✅ Utente autenticato con Firebase');
-                            safeDoLogin();
-                        }).catch(err => {
-                            console.error('❌ Errore auth Firebase:', err);
-                            safeDoLogin(); // Continua comunque
-                        });
-                        // Timeout di sicurezza: procedi dopo 2 secondi max
-                        setTimeout(safeDoLogin, 2000);
-                    } else {
-                        safeDoLogin();
-                    }
-                } else {
-                    Utils.id('login-error').style.display = 'block';
-                    Utils.id('login_pass').value = '';
-                }
+                if (user) { Auth.currentUser = user; localStorage.setItem('session_gipro', JSON.stringify(user)); Utils.id('login-error').style.display = 'none'; Utils.id('login-screen').classList.remove('active'); Store.addLog(`Login effettuato da ${user.username}`); Auth.startSession(); } else { Utils.id('login-error').style.display = 'block'; Utils.id('login_pass').value = ''; }
             },
-            logout: () => { 
-                if (Auth.currentUser) { Store.addLog(`Logout utente ${Auth.currentUser.username}`); } 
-                Auth.currentUser = null; 
-                localStorage.removeItem('session_gipro'); 
-                // Logout da Firebase Auth
-                if (firebase.auth) {
-                    firebase.auth().signOut().then(() => {
-                        console.log('✅ Logout Firebase completato');
-                        location.reload();
-                    }).catch(err => {
-                        console.error('❌ Errore logout Firebase:', err);
-                        location.reload();
-                    });
+            logout: () => { if (Auth.currentUser) { Store.addLog(`Logout utente ${Auth.currentUser.username}`); } Auth.currentUser = null; localStorage.removeItem('session_gipro'); location.reload(); },
+            onVideoEnded: () => {
+                console.log('Video intro terminato, avvio il processo di login');
+                Auth.initComplete = true;
+                
+                // Controlla se c'è già una sessione attiva
+                if (Auth.currentUser) {
+                    // Utente già loggato, vai direttamente alla dashboard
+                    Auth.startSession();
+                    Utils.id('intro-screen').classList.add('hidden');
                 } else {
-                    location.reload();
+                    // Nessuna sessione, mostra la schermata di login
+                    Utils.id('intro-screen').classList.add('hidden');
+                    Utils.id('login-screen').classList.add('active');
                 }
             },
             startSession: () => {
-                Utils.id('userBadge').classList.add('visible'); 
-                Utils.id('loggedUser').innerText = Auth.currentUser.username; 
-                Utils.id('op_name').value = Auth.currentUser.username;
-                
-                const role = Auth.currentUser.role;
-                const badgeRole = Utils.id('badgeRole');
-                
-                // Reset classi e visibilità
-                document.body.classList.remove('is-admin', 'is-shop');
-                Utils.id('adminQuickLink').classList.add('hidden');
-                badgeRole.style.display = 'none';
-                
-                if (role === 'admin') {
-                    // Admin - accesso completo
-                    Utils.id('adminQuickLink').classList.remove('hidden');
-                    badgeRole.style.display = 'inline';
-                    badgeRole.innerText = 'ADMIN';
-                    badgeRole.className = 'badge badge-admin';
-                    document.body.classList.add('is-admin');
-                    App.init(); 
-                    UI.showView('view-dashboard');
-                } else if (role === 'shop') {
-                    // Shop - accesso limitato a creazione ticket
-                    badgeRole.style.display = 'inline';
-                    badgeRole.innerText = 'SHOP';
-                    badgeRole.className = 'badge badge-shop';
-                    document.body.classList.add('is-shop');
-                    App.initShop();
-                    UI.showView('view-shop');
-                } else {
-                    // User standard - operatore tecnico
-                    badgeRole.style.display = 'none';
-                    App.init(); 
-                    UI.showView('view-dashboard');
-                }
+                Utils.id('userBadge').classList.add('visible'); Utils.id('loggedUser').innerText = Auth.currentUser.username; Utils.id('op_name').value = Auth.currentUser.username;
+                if (Auth.currentUser.role === 'admin') { Utils.id('adminQuickLink').classList.remove('hidden'); Utils.id('badgeRole').style.display = 'inline'; document.body.classList.add('is-admin'); } else { Utils.id('adminQuickLink').classList.add('hidden'); Utils.id('badgeRole').style.display = 'none'; document.body.classList.remove('is-admin'); }
+                App.init(); UI.showView('view-dashboard');
             },
             changePassword: () => { const p1 = Utils.id('newPass1').value; const p2 = Utils.id('newPass2').value; if (p1 !== p2) { UI.showToast('Le password non coincidono', 'error'); return; } if (p1.length < 4) { UI.showToast('Password troppo corta', 'error'); return; } if (db && Auth.currentUser.id !== 'master_admin') { db.collection("users").doc(Auth.currentUser.id).update({ password: p1 }).then(() => { Store.addLog(`${Auth.currentUser.username} ha cambiato password`); UI.showToast('Password aggiornata', 'success'); UI.closeModal('pwModal'); }).catch(err => UI.showToast('Errore aggiornamento', 'error')); } else { UI.showToast('Password master non modificabile da qui', 'warning'); } }
         };
 
         // ========== DATA STORE ==========
         const Store = {
-            localInterventions: [], localUsers: [], localLogs: [], localWarehouse: [], localMaterialHistory: [], localMessages: [], localDomicileTickets: [], localRAEEForms: [], localShopTickets: [],
+            localInterventions: [], localUsers: [], localLogs: [], localWarehouse: [], localMaterialHistory: [], localMessages: [], localDomicileTickets: [], localRAEEForms: [],
             setup: () => {
                 if (!firebaseReady || !db) return;
-                
-                // Aspetta che l'autenticazione Firebase sia pronta prima di fare query
-                const doSetup = () => {
-                    console.log('🔧 Store.setup() - auth pronta, inizio query Firestore');
-                    db.collection("interventions")
-                        // .orderBy("client.dataIntervento", "desc") // TEMPORANEAMENTE DISABILITATO per vedere tutti gli interventi
-                        .onSnapshot(snapshot => { 
+                db.collection("interventions").orderBy("client.dataIntervento", "desc").onSnapshot(snapshot => { 
     Store.localInterventions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); 
     
     // Controllo automatico: cambia stato da 'assegnato' a 'in corso' se la data è odierna
@@ -3207,26 +2647,6 @@
                         DomicileManager.render();
                     }
                 }, err => console.error('[STORE] Errore onSnapshot domicile_tickets:', err));
-                
-                // Aggiungi onSnapshot per shopTickets
-                db.collection("shopTickets").orderBy("createdAt", "desc").onSnapshot(snapshot => {
-                    console.log('[STORE] onSnapshot shopTickets - docs:', snapshot.docs.length);
-                    Store.localShopTickets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    // Sincronizza con localStorage per accesso offline
-                    localStorage.setItem('shopTickets', JSON.stringify(Store.localShopTickets));
-                }, err => console.error('[STORE] Errore onSnapshot shopTickets:', err));
-                };
-                
-                if (firebaseAuthReady) {
-                    // Auth già pronta, fai subito le query
-                    doSetup();
-                } else {
-                    // Aspetta l'evento di auth pronta
-                    window.addEventListener('firebaseAuthReady', () => {
-                        doSetup();
-                    }, { once: true });
-                    console.log('⏳ Store.setup() - in attesa di autenticazione Firebase...');
-                }
             },
             getUsers: () => Store.localUsers,
             addLog: (msg) => { if (!db) return; const entry = { time: new Date().toLocaleString('it-IT'), msg }; db.collection("logs").add(entry).catch(err => console.error(err)); },
@@ -3268,8 +2688,7 @@
             },
             deleteMessage: (id) => { if (!db) return; db.collection("messages").doc(id).delete().catch(err => console.error(err)); },
             markMessageRead: (id) => { if (!db) return; db.collection("messages").doc(id).update({ read: true }).catch(err => console.error(err)); },
-            getDomicileTickets: () => Store.localDomicileTickets,
-            getShopTickets: () => Store.localShopTickets
+            getDomicileTickets: () => Store.localDomicileTickets
         };
 
         // ========== APP CONTROLLER ==========
@@ -3464,29 +2883,8 @@
             },
 
             executeIntervention: (id) => {
-                let item = Store.getById(id);
-                
-                // Se non trovato nelle commesse standard, cerca nei ticket shop
-                if (!item) {
-                    const shopTickets = JSON.parse(localStorage.getItem('shopTickets') || '[]');
-                    item = shopTickets.find(t => t.id === id);
-                    if (item) {
-                        item.isFromShop = true;
-                    }
-                }
-                
+                const item = Store.getById(id);
                 if(!item) return;
-                
-                // Tipi speciali che richiedono scelta categoria
-                const specialTypes = ['consegna_installazione_pro', 'installazione_pro', 'reclamo', 'sopralluogo'];
-                const interventionType = item.intervention?.tipo || item.interventionType;
-                
-                if (item.isFromShop && specialTypes.includes(interventionType)) {
-                    // Salva l'ID per dopo la scelta della categoria
-                    InterventiManager.pendingTicketId = id;
-                    UI.openModal('categoryChoiceModal');
-                    return;
-                }
                 
                 // Cambia stato da 'assegnato' a 'in corso' se necessario
                 if (item.status === 'assegnato') {
@@ -3564,403 +2962,6 @@
                 App.loadEdit(id); 
                 
                 UI.showToast('Compila i dati tecnici e firma per chiudere la commessa', 'info');
-            },
-            
-            initShop: () => {
-                // Inizializza la dashboard shop
-                Utils.id('shop_ticket_date').value = Utils.today();
-                ShopManager.render();
-            }
-        };
-
-        // ========== SHOP MANAGER ==========
-        const ShopManager = {
-            currentFilter: '',
-            
-            createTicket: () => {
-                // Validazione campi obbligatori
-                const clientName = Utils.id('shop_client_name').value.trim();
-                const clientPhone = Utils.id('shop_client_phone').value.trim();
-                const clientCity = Utils.id('shop_client_city').value.trim();
-                const clientAddress = Utils.id('shop_client_address').value.trim();
-                const ticketDate = Utils.id('shop_ticket_date').value;
-                const interventionType = Utils.id('shop_intervention_type').value;
-                const description = Utils.id('shop_description').value.trim();
-                
-                if (!clientName || !clientPhone || !clientCity || !clientAddress || !interventionType || !description) {
-                    UI.showToast('Compila tutti i campi obbligatori (*)', 'error');
-                    return;
-                }
-                
-                // Validazione prodotti
-                const products = ShopManager.getSelectedProducts();
-                if (products.length === 0) {
-                    UI.showToast('Seleziona almeno un prodotto', 'error');
-                    return;
-                }
-                // Se "altro" è selezionato, verifica che sia specificato
-                const altroProduct = products.find(p => p.key === 'altro');
-                if (altroProduct && !Utils.id('shop_altro_specifica').value.trim()) {
-                    UI.showToast('Specifica il prodotto per "Altro"', 'error');
-                    return;
-                }
-                
-                // Controllo orari Consegna Expressa
-                if (interventionType === 'consegna_express') {
-                    const now = new Date();
-                    const day = now.getDay(); // 0=Domenica, 1=Lunedì, ..., 6=Sabato
-                    const hour = now.getHours();
-                    const minutes = now.getMinutes();
-                    const currentTime = hour * 60 + minutes; // tempo in minuti
-                    
-                    // Lun-Ven: 9:00-17:00 (540-1020 minuti)
-                    // Sab: 9:00-13:00 (540-780 minuti)
-                    const startTime = 9 * 60; // 9:00 = 540 minuti
-                    const endTimeWeekday = 17 * 60; // 17:00 = 1020 minuti
-                    const endTimeSaturday = 13 * 60; // 13:00 = 780 minuti
-                    
-                    let isValid = false;
-                    let errorMsg = '';
-                    
-                    if (day >= 1 && day <= 5) { // Lunedì-Venerdì
-                        if (currentTime >= startTime && currentTime <= endTimeWeekday) {
-                            isValid = true;
-                        } else {
-                            errorMsg = 'Consegna Expressa disponibile Lunedì-Venerdì dalle 9:00 alle 17:00';
-                        }
-                    } else if (day === 6) { // Sabato
-                        if (currentTime >= startTime && currentTime <= endTimeSaturday) {
-                            isValid = true;
-                        } else {
-                            errorMsg = 'Consegna Expressa disponibile Sabato dalle 9:00 alle 13:00';
-                        }
-                    } else { // Domenica
-                        errorMsg = 'Consegna Expressa non disponibile la Domenica';
-                    }
-                    
-                    if (!isValid) {
-                        UI.showToast(errorMsg, 'error');
-                        return;
-                    }
-                }
-                
-                const ticket = {
-                    id: Utils.generateId(),
-                    shopId: Auth.currentUser.id,
-                    shopName: Auth.currentUser.username,
-                    client: {
-                        nome: clientName,
-                        telefono: clientPhone,
-                        telefono2: Utils.id('shop_client_phone2').value.trim(),
-                        citta: clientCity,
-                        indirizzo: clientAddress,
-                        email: Utils.id('shop_client_email').value.trim()
-                    },
-                    intervention: {
-                        tipo: interventionType,
-                        dataCreazione: ticketDate,
-                        descrizione: description
-                    },
-                    logistica: {
-                        ubicazioneMerce: Utils.id('shop_ubicazione_merce').value.trim(),
-                        zonaZTL: Utils.id('shop_zona_ztl').checked,
-                        pianoConsegna: Utils.id('shop_piano_consegna').value,
-                        presenzaRAEE: Utils.id('shop_presenza_raee').checked
-                    },
-                    products: products,
-                    noteInterne: Utils.id('shop_internal_notes').value.trim(),
-                    status: 'in attesa',
-                    createdAt: new Date().toISOString(),
-                    createdAtDisplay: new Date().toLocaleString('it-IT'),
-                    assignedTo: null,
-                    completedAt: null,
-                    dataIntervento: null,
-                    oraIntervento: null,
-                    operatoreAssegnato: null,
-                    isFromShop: true
-                };
-                
-                // Salva su Firestore
-                if (db) {
-                    db.collection("shopTickets").doc(ticket.id).set(ticket)
-                        .then(() => {
-                            UI.showToast('Ticket inviato con successo!', 'success');
-                            ShopManager.clearForm();
-                            ShopManager.render();
-                            Store.addLog(`Ticket shop creato da ${Auth.currentUser.username} per ${clientName}`);
-                            
-                            // Notifica nelle comunicazioni interne per ticket urgenti
-                            if (['consegna_express', 'consegna_prioritaria'].includes(interventionType)) {
-                                const urgentMsg = {
-                                    content: `🚨 TICKET URGENTE!\n\nTipo: ${interventionType === 'consegna_express' ? '⚡ Consegna Expressa' : '🚀 Consegna Prioritaria'}\nCliente: ${clientName}\nCittà: ${clientCity}\nIndirizzo: ${clientAddress}\n\nTicket ID: ${ticket.id}`,
-                                    author: Auth.currentUser.username,
-                                    recipient: 'admin',
-                                    time: new Date().toLocaleString('it-IT'),
-                                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                                    read: false
-                                };
-                                Store.saveMessage(urgentMsg);
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Errore salvataggio ticket:', err);
-                            // Fallback su localStorage in caso di errore permessi Firebase
-                            let localTickets = JSON.parse(localStorage.getItem('shopTickets') || '[]');
-                            localTickets.push(ticket);
-                            localStorage.setItem('shopTickets', JSON.stringify(localTickets));
-                            UI.showToast('Ticket salvato localmente (errore server)', 'warning');
-                            ShopManager.clearForm();
-                            ShopManager.render();
-                        });
-                } else {
-                    // Modalità offline - salva in localStorage
-                    let localTickets = JSON.parse(localStorage.getItem('shopTickets') || '[]');
-                    localTickets.push(ticket);
-                    localStorage.setItem('shopTickets', JSON.stringify(localTickets));
-                    UI.showToast('Ticket salvato (modalità offline)', 'warning');
-                    ShopManager.clearForm();
-                    ShopManager.render();
-                }
-            },
-            
-            toggleProductQty: (product) => {
-                const checkbox = Utils.id(`prod_${product}`);
-                const qtyInput = Utils.id(`qty_${product}`);
-                if (checkbox && qtyInput) {
-                    if (checkbox.checked) {
-                        qtyInput.style.display = 'block';
-                    } else {
-                        qtyInput.style.display = 'none';
-                        qtyInput.value = 1;
-                    }
-                    // Gestione campo "Altro"
-                    if (product === 'altro') {
-                        const altroContainer = Utils.id('shop_altro_specifica_container');
-                        const altroInput = Utils.id('shop_altro_specifica');
-                        if (altroContainer && altroInput) {
-                            altroContainer.style.display = checkbox.checked ? 'block' : 'none';
-                            if (!checkbox.checked) altroInput.value = '';
-                        }
-                    }
-                }
-            },
-            
-            getSelectedProducts: () => {
-                const products = [];
-                const productMap = {
-                    'clima': '❄️ Clima',
-                    'caldaia': '🔥 Caldaia',
-                    'tv': '📺 Tv',
-                    'lavatrice': '🫧 Lavatrice',
-                    'lavastoviglie': '🍽️ Lavastoviglie',
-                    'asciugatrice': '💨 Asciugatrice',
-                    'frigo': '🧊 Frigo',
-                    'sidebyside': '🧊❄️ Side By Side',
-                    'piano_cottura': '🔥 Piano Cottura',
-                    'piano_induzione': '⚡ Piano Induzione',
-                    'altro': '📝 Altro'
-                };
-                
-                Object.keys(productMap).forEach(key => {
-                    const checkbox = Utils.id(`prod_${key}`);
-                    if (checkbox && checkbox.checked) {
-                        const qty = parseInt(Utils.id(`qty_${key}`).value) || 1;
-                        let name = productMap[key];
-                        // Se è "altro", usa il valore specificato
-                        if (key === 'altro') {
-                            const spec = Utils.id('shop_altro_specifica').value.trim();
-                            if (spec) name = `📝 ${spec}`;
-                        }
-                        products.push({ name, qty, key });
-                    }
-                });
-                return products;
-            },
-            
-            clearForm: () => {
-                Utils.id('shop_client_name').value = '';
-                Utils.id('shop_client_phone').value = '';
-                Utils.id('shop_client_phone2').value = '';
-                Utils.id('shop_client_city').value = '';
-                Utils.id('shop_client_address').value = '';
-                Utils.id('shop_client_email').value = '';
-                Utils.id('shop_ticket_date').value = Utils.today();
-                Utils.id('shop_intervention_type').value = '';
-                Utils.id('shop_description').value = '';
-                Utils.id('shop_ubicazione_merce').value = '';
-                Utils.id('shop_zona_ztl').checked = false;
-                Utils.id('shop_piano_consegna').value = '';
-                Utils.id('shop_presenza_raee').checked = false;
-                Utils.id('shop_internal_notes').value = '';
-                // Reset prodotti
-                const products = ['clima', 'caldaia', 'tv', 'lavatrice', 'lavastoviglie', 'asciugatrice', 'frigo', 'sidebyside', 'piano_cottura', 'piano_induzione', 'altro'];
-                products.forEach(p => {
-                    const cb = Utils.id(`prod_${p}`);
-                    const qty = Utils.id(`qty_${p}`);
-                    if (cb) { cb.checked = false; }
-                    if (qty) { qty.value = 1; qty.style.display = 'none'; }
-                });
-                const altroContainer = Utils.id('shop_altro_specifica_container');
-                const altroInput = Utils.id('shop_altro_specifica');
-                if (altroContainer) altroContainer.style.display = 'none';
-                if (altroInput) altroInput.value = '';
-            },
-            
-            filterStatus: (status) => {
-                ShopManager.currentFilter = status;
-                // Aggiorna bottoni attivi
-                const buttons = document.querySelectorAll('#view-shop .category-btn');
-                buttons.forEach(btn => btn.classList.remove('active'));
-                event.target.classList.add('active');
-                ShopManager.render();
-            },
-            
-            render: () => {
-                const tbody = Utils.id('shopTicketsTableBody');
-                if (!tbody) return;
-                
-                // Recupera ticket (da Firebase o localStorage)
-                ShopManager.getTickets().then(tickets => {
-                    // Filtra per negozio corrente
-                    let filtered = tickets.filter(t => t.shopId === Auth.currentUser.id);
-                    
-                    // Applica filtro stato
-                    if (ShopManager.currentFilter) {
-                        filtered = filtered.filter(t => t.status === ShopManager.currentFilter);
-                    }
-                    
-                    // Ordina per data creazione (più recenti prima)
-                    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                    
-                    if (filtered.length === 0) {
-                        tbody.innerHTML = '';
-                        Utils.id('shopEmptyState').style.display = 'block';
-                        return;
-                    }
-                    
-                    Utils.id('shopEmptyState').style.display = 'none';
-                    
-                    tbody.innerHTML = filtered.map(t => {
-                        const statusColors = {
-                            'in attesa': 'var(--warning)',
-                            'assegnato': 'var(--primary)',
-                            'in corso': 'var(--primary)',
-                            'completato': 'var(--success)',
-                            'rifiutato': 'var(--danger)'
-                        };
-                        
-                        const typeLabels = {
-                            'consegna_installazione_pro': '📦 Consegna Installazione Pro',
-                            'installazione_pro': '🔧 Installazione Pro',
-                            'sopralluogo': '📋 Sopralluogo',
-                            'reclamo': '⚠️ Reclamo',
-                            'consegna_base': '📦 Consegna Base',
-                            'consegna_con_incasso': '📺 Consegna con Incasso',
-                            'incasso': '🔌 Incasso',
-                            'consegna_prioritaria': '🚀 Consegna Prioritaria',
-                            'consegna_express': '⚡ Consegna Expressa',
-                            'sostituzione': '🔄 Sostituzione',
-                            'riparazione': '🔧 Riparazione'
-                        };
-                        
-                        return `
-                            <tr>
-                                <td>${t.createdAtDisplay}</td>
-                                <td>${t.client.nome}</td>
-                                <td>${typeLabels[t.intervention.tipo] || t.intervention.tipo}</td>
-                                <td>${t.intervention.dataCreazione}</td>
-                                <td><span class="badge" style="background: ${statusColors[t.status] || 'var(--secondary)'}20; color: ${statusColors[t.status] || 'var(--secondary)'};">${t.status.toUpperCase()}</span></td>
-                                <td>
-                                    <button class="btn btn-sm btn-outline" onclick="ShopManager.viewTicket('${t.id}')">
-                                        <i class="fas fa-eye"></i> Dettagli
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
-                });
-            },
-            
-            getTickets: async () => {
-                if (db) {
-                    try {
-                        const snapshot = await db.collection("shopTickets").get();
-                        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    } catch (err) {
-                        console.error('Errore recupero ticket:', err);
-                        return JSON.parse(localStorage.getItem('shopTickets') || '[]');
-                    }
-                }
-                return JSON.parse(localStorage.getItem('shopTickets') || '[]');
-            },
-            
-            viewTicket: (id) => {
-                ShopManager.getTickets().then(tickets => {
-                    const t = tickets.find(ticket => ticket.id === id);
-                    if (!t) return;
-                    
-                    const typeLabels = {
-                        'consegna_installazione_pro': '📦 Consegna Installazione Pro',
-                        'installazione_pro': '🔧 Installazione Pro',
-                        'sopralluogo': '📋 Sopralluogo',
-                        'reclamo': '⚠️ Reclamo',
-                        'consegna_base': '📦 Consegna Base',
-                        'consegna_con_incasso': '📺 Consegna con Incasso',
-                        'incasso': '🔌 Incasso',
-                        'consegna_prioritaria': '🚀 Consegna Prioritaria',
-                        'consegna_express': '⚡ Consegna Expressa',
-                        'sostituzione': '🔄 Sostituzione',
-                        'riparazione': '🔧 Riparazione'
-                    };
-                    
-                    let content = `
-                        <div style="text-align: left; line-height: 1.6;">
-                            <h4 style="color: var(--shop); margin-bottom: 15px;">🎫 Ticket #${t.id.slice(-6).toUpperCase()}</h4>
-                            <p><strong>Stato:</strong> <span style="color: var(--${t.status === 'completato' ? 'success' : t.status === 'in attesa' ? 'warning' : 'primary'});">${t.status.toUpperCase()}</span></p>
-                            <hr style="border-color: var(--border-color); margin: 15px 0;">
-                            <p><strong>Negozio:</strong> <span style="color: var(--shop); font-weight: 600;">${t.shopName || 'N/D'}</span></p>
-                            <p><strong>Cliente:</strong> ${t.client.nome}</p>
-                            <p><strong>Telefono 1:</strong> ${t.client.telefono}</p>
-                            ${t.client.telefono2 ? `<p><strong>Telefono 2:</strong> ${t.client.telefono2}</p>` : ''}
-                            <p><strong>Città:</strong> ${t.client.citta || '-'}</p>
-                            <p><strong>Indirizzo:</strong> ${t.client.indirizzo}</p>
-                            ${t.client.email ? `<p><strong>Email:</strong> ${t.client.email}</p>` : ''}
-                            <hr style="border-color: var(--border-color); margin: 15px 0;">
-                            <p><strong>Tipo:</strong> ${typeLabels[t.intervention.tipo] || t.intervention.tipo}</p>
-                            <p><strong>Data Creazione:</strong> ${t.intervention.dataCreazione}</p>
-                            ${t.products && t.products.length > 0 ? `
-                            <div style="margin: 15px 0;">
-                                <p><strong>Prodotti (${t.products.reduce((sum, p) => sum + p.qty, 0)} totali):</strong></p>
-                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
-                                    ${t.products.map(p => `<span style="background: var(--shop)20; color: var(--shop); padding: 4px 10px; border-radius: 12px; font-size: 0.9rem;">${p.name} x${p.qty}</span>`).join('')}
-                                </div>
-                            </div>
-                            ` : ''}
-                            <p><strong>Descrizione:</strong><br><span style="color: var(--text-secondary);">${t.intervention.descrizione}</span></p>
-                            ${t.logistica ? `
-                            <hr style="border-color: var(--border-color); margin: 15px 0;">
-                            <h5 style="color: var(--primary); margin-bottom: 15px;">📍 Info Logistiche</h5>
-                            ${t.logistica.ubicazioneMerce ? `<p><strong>Ubicazione Merce:</strong> ${t.logistica.ubicazioneMerce}</p>` : ''}
-                            ${t.logistica.zonaZTL ? `<p><strong>Zona ZTL:</strong> Sì</p>` : ''}
-                            ${t.logistica.pianoConsegna ? `<p><strong>Piano Consegna:</strong> ${t.logistica.pianoConsegna.replace('_', ' ')}</p>` : ''}
-                            ${t.logistica.presenzaRAEE ? `<p><strong>RAEE da ritirare:</strong> Sì</p>` : ''}
-                            ` : ''}
-                            ${(t.dataIntervento || t.operatoreAssegnato) ? `
-                            <hr style="border-color: var(--border-color); margin: 15px 0;">
-                            <h5 style="color: var(--success); margin-bottom: 15px;">✅ Assegnazione Confermata</h5>
-                            ${t.dataIntervento ? `<p><strong>📅 Data Intervento:</strong> ${t.dataIntervento}</p>` : ''}
-                            ${t.operatoreAssegnato ? `<p><strong>👤 Operatore Assegnato:</strong> <span style="color: var(--primary); font-weight: 600;">${t.operatoreAssegnato}</span></p>` : ''}
-                            ` : '<hr style="border-color: var(--border-color); margin: 15px 0;"><p><strong>📅 Data Intervento:</strong> <span style="color: var(--warning);">In attesa di assegnazione</span></p>'}
-                            ${t.noteInterne ? `<p><strong>Note Interne:</strong><br><span style="color: var(--text-secondary);">${t.noteInterne}</span></p>` : ''}
-                            ${t.completedAt ? `<p><strong>Completato il:</strong> ${new Date(t.completedAt).toLocaleString('it-IT')}</p>` : ''}
-                        </div>
-                    `;
-                    
-                    Utils.id('modalTitle').innerHTML = 'Dettaglio Ticket';
-                    Utils.id('modalMessage').innerHTML = content;
-                    Utils.id('modalConfirmBtn').style.display = 'none';
-                    UI.openModal('confirmModal');
-                });
             }
         };
         
@@ -4247,8 +3248,16 @@ www.iltlogistics.it`;
             draggedItem: null,
             
             init: () => { 
-                // Default filter to 'assegnato' - no create ticket form anymore
-                DomicileManager.currentStatusFilter = 'assegnato';
+                if (Utils.id('dom_date')) Utils.id('dom_date').value = Utils.today(); 
+                const select = Utils.id('dom_operator'); 
+                if (select && Auth.currentUser?.role === 'admin') { 
+                    select.innerHTML = ''; 
+                    Store.getUsers().forEach(u => { 
+                        if(u.username !== 'admin') { 
+                            select.innerHTML += `<option value="${u.username}">${u.username}</option>`; 
+                        } 
+                    }); 
+                } 
                 const filterSelect = Utils.id('filterDomicileOperator');
                 if (filterSelect && Auth.currentUser?.role === 'admin') {
                     filterSelect.innerHTML = '<option value="">Tutti gli Operatori</option>';
@@ -4278,13 +3287,11 @@ www.iltlogistics.it`;
                         t.ticketId?.toLowerCase().includes(search);
                     
                     const matchesStatus = !statusFilter || t.status === statusFilter;
-                    // Nascondi completati di default su Domicilio
-                    const isNotCompleted = t.status !== 'completato';
                     const matchesOperator = Auth.currentUser.role === 'admin' ? 
                         (!operatorFilter || t.operator === operatorFilter) : 
                         t.operator === currentUser;
                     
-                    return matchesSearch && matchesStatus && matchesOperator && isNotCompleted;
+                    return matchesSearch && matchesStatus && matchesOperator;
                 });
                 
                 // Ordina i ticket per data, poi per numero d'ordine, poi per cliente
@@ -5281,12 +4288,6 @@ Vuoi generare il resoconto giornaliero completo?`,
                         if (status === 'completato') {
                             DomicilePDF.generate(ticket);
                             DomicileManager.sendCompletionSMS(ticket);
-                            
-                            // Apri modale RAEE per registrare eventuale ritiro
-                            const clientInfo = `${ticket.clientName} - ${ticket.address} (${ticket.type})`;
-                            setTimeout(() => {
-                                openRaeeModal(ticket.id, ticket.type, clientInfo);
-                            }, 300);
                         }
                         
                         // Passa al prossimo ticket se esiste
@@ -6104,42 +5105,20 @@ Vuoi generare il resoconto giornaliero completo?`,
             if (id) { 
                 const data = { username, role, location }; 
                 if (pass) data.password = pass; 
-                db.collection("users").doc(id).update(data)
-                    .then(() => {
-                        Store.addLog(`Admin ha modificato l'utente ${username} (sede: ${location})`); 
-                        UI.showToast('Utente modificato!', 'success');
-                        UI.closeModal('userModal');
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        UI.showToast('Errore modifica: ' + err.message, 'error');
-                    });
+                db.collection("users").doc(id).update(data); 
+                Store.addLog(`Admin ha modificato l'utente ${username} (sede: ${location})`); 
+                UI.showToast('Utente modificato!', 'success');
             } else { 
                 if (!pass) { 
                     UI.showToast('Password obbligatoria per nuovi utenti', 'error'); 
                     return; 
                 } 
-                
-                // AGGIUNGI QUI UN LOG PER DEBUG
-                console.log("Tentativo creazione utente:", { username, role, location });
-
                 const newId = Utils.generateId(); 
-                db.collection("users").doc(newId).set({ id: newId, username, password: pass, role, location })
-                    .then(() => { 
-                        Store.addLog(`Admin ha creato l'utente ${username} (sede: ${location})`); 
-                        UI.showToast('Nuovo utente creato!', 'success');
-                        UI.closeModal('userModal');
-                    })
-                    .catch(err => {
-                        console.error("ERRORE GRAVE CREAZIONE UTENTE:", err);
-                        // Verifica se è un errore di permessi
-                        if (err.code === 'permission-denied') {
-                            UI.showToast('ERRORE CRITICO: Permesso negato da Firebase! Controlla le regole del database.', 'error');
-                        } else {
-                            UI.showToast('Errore creazione: ' + err.message, 'error');
-                        }
-                    }); 
+                db.collection("users").doc(newId).set({ id: newId, username, password: pass, role, location }); 
+                Store.addLog(`Admin ha creato l'utente ${username} (sede: ${location})`); 
+                UI.showToast('Nuovo utente creato!', 'success');
             } 
+            UI.closeModal('userModal'); 
         },
         deleteUser: (id) => {
             const u = Store.getUsers().find(x => x.id === id);
@@ -7584,31 +6563,8 @@ Vuoi generare il resoconto giornaliero completo?`,
             InterventiManager.render();
         },
         
-        getInterventiFiltrati: async () => {
-            // Combina interventi normali e ticket shop
-            let interventions = [...Store.getAll()];
-            
-            // Usa shopTickets dallo Store (già sincronizzati via onSnapshot)
-            let shopTickets = Store.getShopTickets();
-            
-            // Fallback a localStorage se lo Store è vuoto
-            if (shopTickets.length === 0) {
-                shopTickets = JSON.parse(localStorage.getItem('shopTickets') || '[]');
-            }
-            
-            if (shopTickets.length > 0) {
-                const shopInterventions = shopTickets.map(t => ({
-                    ...t,
-                    isFromShop: true,
-                    author: t.shopName || 'Shop',
-                    client: {
-                        ...t.client,
-                        dataIntervento: t.dataIntervento || null,
-                        oraIntervento: t.oraIntervento || null
-                    }
-                }));
-                interventions = [...interventions, ...shopInterventions];
-            }
+        getInterventiFiltrati: () => {
+            let interventions = Store.getAll();
             
             // Filtra per stato
             if (InterventiManager.currentStatusFilter) {
@@ -7636,8 +6592,7 @@ Vuoi generare il resoconto giornaliero completo?`,
             if (Auth.currentUser && Auth.currentUser.role !== 'admin') {
                 interventions = interventions.filter(i => 
                     (i.author === Auth.currentUser.username) || 
-                    (i.assignedTo === Auth.currentUser.username) ||
-                    (i.operatoreAssegnato === Auth.currentUser.username)
+                    (i.assignedTo === Auth.currentUser.username)
                 );
                 
                 // Nasconde le commesse completate/chiusure agli operatori standard
@@ -7647,36 +6602,18 @@ Vuoi generare il resoconto giornaliero completo?`,
             }
             
             return interventions.sort((a, b) => {
-                // Priorità: ticket "in attesa" (da assegnare) sempre in cima
-                const aInAttesa = a.status === 'in attesa' ? 1 : 0;
-                const bInAttesa = b.status === 'in attesa' ? 1 : 0;
-                
-                if (aInAttesa !== bInAttesa) {
-                    return bInAttesa - aInAttesa; // in attesa prima
-                }
-                
-                // Se entrambi in attesa, priorità Expressa/Prioritaria
-                if (aInAttesa && bInAttesa) {
-                    const aUrgente = ['consegna_express', 'consegna_prioritaria'].includes(a.intervention?.tipo) ? 1 : 0;
-                    const bUrgente = ['consegna_express', 'consegna_prioritaria'].includes(b.intervention?.tipo) ? 1 : 0;
-                    if (aUrgente !== bUrgente) {
-                        return bUrgente - aUrgente; // urgenti prima
-                    }
-                }
-                
-                // Ordinamento per data (più recenti prima)
                 const dateA = a.client?.dataIntervento ? new Date(a.client.dataIntervento.split('/').reverse().join('-')) : new Date(0);
                 const dateB = b.client?.dataIntervento ? new Date(b.client.dataIntervento.split('/').reverse().join('-')) : new Date(0);
                 return dateB - dateA;
             });
         },
         
-        render: async () => {
+        render: () => {
             const tbody = Utils.id('interventiTableBody');
-            const interventions = await InterventiManager.getInterventiFiltrati();
+            const interventions = InterventiManager.getInterventiFiltrati();
             
             if (interventions.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--text-secondary);">Nessun intervento trovato</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: var(--text-secondary);">Nessun intervento trovato</td></tr>';
                 return;
             }
             
@@ -7687,49 +6624,26 @@ Vuoi generare il resoconto giornaliero completo?`,
                 const time = item.client?.oraIntervento || 'N/D';
                 const isToday = item.client?.dataIntervento ? 
                     new Date(item.client.dataIntervento.split('/').reverse().join('-')).toLocaleDateString('it-IT') === new Date().toLocaleDateString('it-IT') : false;
-                const isFromShop = item.isFromShop || false;
-                const shopName = isFromShop ? (item.shopName || 'Shop') : '-';
-                
-                // Determina classe CSS per lampeggiamento
-                let rowClass = '';
-                if (isFromShop && item.status === 'in attesa') {
-                    const isUrgent = ['consegna_express', 'consegna_prioritaria'].includes(item.intervention?.tipo);
-                    rowClass = isUrgent ? 'ticket-urgent' : 'ticket-pending';
-                }
                 
                 return `
-                    <tr data-id="${item.id}" class="${rowClass}">
+                    <tr data-id="${item.id}">
                         <td>${date} ${time !== 'N/D' ? `<br><small style="color: var(--text-secondary);">${time}</small>` : ''}</td>
-                        <td>${shopName}</td>
                         <td>${item.client.nome || 'N/D'}</td>
                         <td>${item.client.indirizzo || 'N/D'}</td>
                         <td>${item.intervention.tipo || 'N/D'}</td>
                         <td>${categoryBadge}</td>
-                        <td>${item.operatoreAssegnato || item.author || 'N/D'}</td>
+                        <td>${item.author || 'N/D'}</td>
                         <td>${statusBadge}</td>
                         <td>
                             <div style="display: flex; gap: 5px;">
                                 ${Auth.currentUser && Auth.currentUser.role === 'admin' ? `
-                                    ${isFromShop && item.status === 'in attesa' ? `
-                                        <button class="btn btn-sm btn-primary" onclick="InterventiManager.assegnaTicket('${item.id}')" title="Assegna Intervento">
-                                            <i class="fas fa-user-check"></i> Assegna
-                                        </button>
-                                    ` : isFromShop ? `
-                                        <button class="btn btn-sm btn-outline" onclick="InterventiManager.viewShopTicket('${item.id}')" title="Visualizza Ticket">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline" onclick="InterventiManager.editShopTicket('${item.id}')" title="Modifica Ticket">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                    ` : `
-                                        <button class="btn btn-sm btn-outline" onclick="App.downloadPDF('${item.id}')" title="Scarica PDF">
-                                            <i class="fas fa-download"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline" onclick="App.loadEdit('${item.id}')" title="Modifica">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                    `}
-                                    <button class="btn btn-sm btn-danger" onclick="${isFromShop ? `InterventiManager.deleteShopTicket('${item.id}')` : `App.deleteItem('${item.id}')`}" title="Elimina">
+                                    <button class="btn btn-sm btn-outline" onclick="App.downloadPDF('${item.id}')" title="Scarica PDF">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline" onclick="App.loadEdit('${item.id}')" title="Modifica">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="App.deleteItem('${item.id}')" title="Elimina">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 ` : `
@@ -7764,7 +6678,6 @@ Vuoi generare il resoconto giornaliero completo?`,
                 'chiuso': '<span class="badge badge-success">Completato</span>',
                 'in corso': '<span class="badge badge-warning">In Corso</span>',
                 'assegnato': '<span class="badge badge-danger">Assegnato</span>',
-                'in attesa': '<span class="badge badge-info">In Attesa</span>',
                 'default': '<span class="badge badge-secondary">' + (status || 'N/D') + '</span>'
             };
 
@@ -7775,398 +6688,43 @@ Vuoi generare il resoconto giornaliero completo?`,
             const rows = Utils.id('interventiTableBody').querySelectorAll('tr');
             if (rows.length === 0) return;
 
-            let hasError = false;
-            
-            rows.forEach(row => {
+            const today = Utils.today();
+            const batch = db.batch();
+            let count = 0;
+
+            rows.forEach((row, index) => {
                 const id = row.getAttribute('data-id');
-                const item = Store.getById(id);
-                if (!item) return;
+                if (!id) return;
                 
-                const orderInput = row.querySelector('.order-input');
-                if (orderInput) {
-                    const orderValue = parseInt(orderInput.value, 10);
-                    if (isNaN(orderValue) || orderValue < 1) {
-                        hasError = true;
-                        row.style.background = 'rgba(239, 68, 68, 0.1)';
-                        return;
-                    }
-                    
-                    item.order = orderValue;
-                    Store.save(item);
-                    row.style.background = '';
-                }
-            });
-            
-            if (hasError) {
-                UI.showToast('Errore: inserisci numeri validi per tutte le commesse', 'error');
-                return;
-            }
-            
-            // Aggiorna la visualizzazione
-            InterventiManager.render();
-            UI.showToast('Ordine commesse salvato con successo', 'success');
-            Store.addLog(`Ordine commesse aggiornato da ${Auth.currentUser.username}`);
-        },
-
-        viewShopTicket: (ticketId) => {
-            const shopTickets = JSON.parse(localStorage.getItem('shopTickets') || '[]');
-            const ticket = shopTickets.find(t => t.id === ticketId);
-            if (!ticket) {
-                UI.showToast('Ticket non trovato', 'error');
-                return;
-            }
-            
-            // Salva riferimento per modifica da modal
-            InterventiManager.currentViewTicket = ticket;
-            
-            const typeLabels = {
-                'assistenza': { label: 'Assistenza Tecnica', icon: 'wrench' },
-                'ritiro': { label: 'Ritiro RAEE', icon: 'recycle' },
-                'sopralluogo': { label: 'Sopralluogo', icon: 'search' },
-                'consegna_express': { label: '⚡ Consegna Expressa', icon: 'shipping-fast' },
-                'consegna_prioritaria': { label: '🚀 Consegna Prioritaria', icon: 'rocket' }
-            };
-            const typeInfo = typeLabels[ticket.intervention?.tipo] || { label: ticket.intervention?.tipo, icon: 'tag' };
-            
-            Utils.id('viewShopTicketContent').innerHTML = `
-                <div style="text-align: left;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                        <div>
-                            <p style="color: var(--text-secondary); margin-bottom: 5px;">Stato</p>
-                            <span style="color: ${ticket.status === 'completato' ? 'var(--success)' : ticket.status === 'in attesa' ? 'var(--warning)' : 'var(--primary)'}; font-weight: 600;">
-                                ${ticket.status?.toUpperCase() || 'N/D'}
-                            </span>
-                        </div>
-                        <div>
-                            <p style="color: var(--text-secondary); margin-bottom: 5px;">Negozio</p>
-                            <span style="color: var(--shop); font-weight: 600;">${ticket.shopName || 'N/D'}</span>
-                        </div>
-                    </div>
-                    
-                    <hr style="border-color: var(--border-color); margin: 15px 0;">
-                    
-                    <h5 style="color: var(--primary); margin-bottom: 15px;">📋 Dati Cliente</h5>
-                    <p><strong>Nome:</strong> ${ticket.client?.nome || 'N/D'}</p>
-                    <p><strong>Telefono:</strong> ${ticket.client?.telefono || 'N/D'}</p>
-                    <p><strong>Email:</strong> ${ticket.client?.email || 'N/D'}</p>
-                    <p><strong>Città:</strong> ${ticket.client?.citta || 'N/D'}</p>
-                    <p><strong>Indirizzo:</strong> ${ticket.client?.indirizzo || 'N/D'}</p>
-                    
-                    <hr style="border-color: var(--border-color); margin: 15px 0;">
-                    
-                    <h5 style="color: var(--primary); margin-bottom: 15px;">🔧 Intervento</h5>
-                    <p><strong>Tipo:</strong> ${typeInfo.label}</p>
-                    <p><strong>Descrizione:</strong> ${ticket.intervention?.descrizione || 'N/D'}</p>
-                    
-                    <hr style="border-color: var(--border-color); margin: 15px 0;">
-                    
-                    <h5 style="color: var(--primary); margin-bottom: 15px;">📅 Assegnazione</h5>
-                    <p><strong>Data:</strong> ${ticket.dataIntervento || 'Non assegnata'}</p>
-                    <p><strong>Ora:</strong> ${ticket.oraIntervento || 'Non assegnata'}</p>
-                    <p><strong>Operatore:</strong> ${ticket.operatoreAssegnato || 'Non assegnato'}</p>
-                    
-                    ${ticket.noteInterne ? `
-                        <hr style="border-color: var(--border-color); margin: 15px 0;">
-                        <h5 style="color: var(--primary); margin-bottom: 15px;">📝 Note Interne</h5>
-                        <p>${ticket.noteInterne}</p>
-                    ` : ''}
-                    
-                    ${ticket.products && ticket.products.length > 0 ? `
-                        <hr style="border-color: var(--border-color); margin: 15px 0;">
-                        <h5 style="color: var(--primary); margin-bottom: 15px;">📦 Prodotti</h5>
-                        <ul style="margin: 0; padding-left: 20px;">
-                            ${ticket.products.map(p => `<li>${p.brand} ${p.model} - ${p.sn}</li>`).join('')}
-                        </ul>
-                    ` : ''}
-                </div>
-            `;
-            
-            UI.openModal('viewShopTicketModal');
-        },
-
-        editShopTicketFromModal: () => {
-            const ticket = InterventiManager.currentViewTicket;
-            if (!ticket) {
-                UI.showToast('Nessun ticket selezionato', 'error');
-                return;
-            }
-            UI.closeModal('viewShopTicketModal');
-            InterventiManager.editShopTicket(ticket.id);
-        },
-
-        editShopTicket: (ticketId) => {
-            const shopTickets = JSON.parse(localStorage.getItem('shopTickets') || '[]');
-            const ticket = shopTickets.find(t => t.id === ticketId);
-            if (!ticket) {
-                UI.showToast('Ticket non trovato', 'error');
-                return;
-            }
-            
-            // Redirect alla vista shop per modifica
-            ShopManager.editTicket = ticket;
-            UI.showView('view-shop');
-            ShopManager.render();
-        },
-
-        deleteShopTicket: (ticketId) => {
-            UI.confirm('Sei sicuro di voler eliminare questo ticket?', 'Questa azione non può essere annullata.', () => {
-                let shopTickets = JSON.parse(localStorage.getItem('shopTickets') || '[]');
-                shopTickets = shopTickets.filter(t => t.id !== ticketId);
-                localStorage.setItem('shopTickets', JSON.stringify(shopTickets));
+                // Recupera l'intervento per verificare la data
+                const intervention = Store.getById(id);
+                if (!intervention) return;
                 
-                // Elimina anche da Firestore se disponibile
-                if (db) {
-                    db.collection("shopTickets").doc(ticketId).delete()
-                        .catch(err => console.error('Errore eliminazione:', err));
-                }
-                
-                InterventiManager.render();
-                UI.showToast('Ticket eliminato con successo', 'success');
-                Store.addLog(`Ticket ${ticketId} eliminato da ${Auth.currentUser.username}`);
-            });
-        },
-
-        assegnaTicket: (ticketId) => {
-            // Recupera il ticket
-            const shopTickets = JSON.parse(localStorage.getItem('shopTickets') || '[]');
-            const ticket = shopTickets.find(t => t.id === ticketId);
-            
-            if (!ticket) {
-                UI.showToast('Ticket non trovato', 'error');
-                return;
-            }
-            
-            // Popola info ticket
-            Utils.id('assignTicketInfo').innerHTML = `
-                <p><strong>Cliente:</strong> ${ticket.client.nome}</p>
-                <p><strong>Indirizzo:</strong> ${ticket.client.indirizzo}, ${ticket.client.citta}</p>
-                <p><strong>Tipo:</strong> ${ticket.intervention.tipo}</p>
-                <p><strong>Negozio:</strong> ${ticket.shopName || 'Shop'}</p>
-            `;
-            
-            // Popola select operatori
-            const users = Store.getUsers ? Store.getUsers() : [];
-            const operators = users.filter(u => u.role === 'user').map(u => 
-                `<option value="${u.username}">${u.username}</option>`
-            ).join('');
-            Utils.id('assignOperator').innerHTML = '<option value="">-- Seleziona Operatore --</option>' + operators;
-            
-            // Imposta ID ticket
-            Utils.id('assignTicketId').value = ticketId;
-            
-            // Pulisci campi
-            Utils.id('assignDate').value = '';
-            Utils.id('assignTime').value = '';
-            
-            // Apri modal
-            UI.openModal('assignTicketModal');
-        },
-
-        salvaAssegnazione: () => {
-            const ticketId = Utils.id('assignTicketId').value;
-            const date = Utils.id('assignDate').value;
-            const time = Utils.id('assignTime').value;
-            const operator = Utils.id('assignOperator').value;
-            
-            if (!date || !time || !operator) {
-                UI.showToast('Compila tutti i campi obbligatori', 'error');
-                return;
-            }
-            
-            // Recupera e aggiorna il ticket
-            let shopTickets = JSON.parse(localStorage.getItem('shopTickets') || '[]');
-            const ticketIndex = shopTickets.findIndex(t => t.id === ticketId);
-            
-            if (ticketIndex === -1) {
-                UI.showToast('Ticket non trovato', 'error');
-                return;
-            }
-            
-            // Aggiorna il ticket
-            shopTickets[ticketIndex].dataIntervento = date;
-            shopTickets[ticketIndex].oraIntervento = time;
-            shopTickets[ticketIndex].operatoreAssegnato = operator;
-            shopTickets[ticketIndex].status = 'assegnato';
-            shopTickets[ticketIndex].assignedAt = new Date().toISOString();
-            shopTickets[ticketIndex].assignedBy = Auth.currentUser.username;
-            
-            // Salva in localStorage
-            localStorage.setItem('shopTickets', JSON.stringify(shopTickets));
-            
-            // Sincronizza con Firestore se disponibile
-            if (db) {
-                db.collection("shopTickets").doc(ticketId).update({
-                    dataIntervento: date,
-                    oraIntervento: time,
-                    operatoreAssegnato: operator,
-                    status: 'assegnato',
-                    assignedAt: new Date().toISOString(),
-                    assignedBy: Auth.currentUser.username
-                }).catch(err => console.error('Errore sincronizzazione:', err));
-            }
-            
-            UI.closeModal('assignTicketModal');
-            InterventiManager.render();
-            UI.showToast(`Intervento assegnato a ${operator} per il ${date} alle ${time}`, 'success');
-            Store.addLog(`Ticket ${ticketId} assegnato a ${operator} da ${Auth.currentUser.username}`);
-        },
-
-        createTicketFromModal: () => {
-            const clientName = Utils.id('modal_shop_client_name').value.trim();
-            const clientPhone = Utils.id('modal_shop_client_phone').value.trim();
-            const clientCity = Utils.id('modal_shop_client_city').value.trim();
-            const clientAddress = Utils.id('modal_shop_client_address').value.trim();
-            const interventionType = Utils.id('modal_shop_intervention_type').value;
-            const description = Utils.id('modal_shop_description').value.trim();
-            
-            if (!clientName || !clientPhone || !clientCity || !clientAddress || !interventionType || !description) {
-                UI.showToast('Compila tutti i campi obbligatori', 'error');
-                return;
-            }
-            
-            const ticket = {
-                id: Utils.generateId(),
-                shopId: Auth.currentUser.id,
-                shopName: Auth.currentUser.username,
-                client: {
-                    nome: clientName,
-                    telefono: clientPhone,
-                    telefono2: Utils.id('modal_shop_client_phone2').value.trim(),
-                    email: Utils.id('modal_shop_client_email').value.trim(),
-                    citta: clientCity,
-                    indirizzo: clientAddress
-                },
-                intervention: {
-                    tipo: interventionType,
-                    descrizione: description
-                },
-                logistica: {
-                    ubicazioneMerce: Utils.id('modal_shop_ubicazione_merce').value.trim(),
-                    zonaZTL: Utils.id('modal_shop_zona_ztl').checked,
-                    pianoConsegna: Utils.id('modal_shop_piano_consegna').value,
-                    presenzaRAEE: Utils.id('modal_shop_presenza_raee').checked
-                },
-                noteInterne: Utils.id('modal_shop_internal_notes').value.trim(),
-                status: 'in attesa',
-                createdAt: new Date().toISOString(),
-                createdAtDisplay: new Date().toLocaleString('it-IT'),
-                assignedTo: null,
-                completedAt: null
-            };
-            
-            // Salva in localStorage
-            let shopTickets = JSON.parse(localStorage.getItem('shopTickets') || '[]');
-            shopTickets.push(ticket);
-            localStorage.setItem('shopTickets', JSON.stringify(shopTickets));
-            
-            // Sincronizza con Firestore se disponibile
-            if (db) {
-                db.collection("shopTickets").doc(ticket.id).set(ticket)
-                    .then(() => {
-                        UI.showToast('Ticket creato e sincronizzato', 'success');
-                    })
-                    .catch(err => {
-                        console.error('Errore sincronizzazione:', err);
-                        UI.showToast('Ticket salvato localmente', 'warning');
+                // Salva l'ordine solo per le commesse di oggi
+                if (intervention.client?.dataIntervento === today) {
+                    const ref = db.collection("interventions").doc(id);
+                    batch.update(ref, { 
+                        orderNumber: index + 1,
+                        orderIndex: index 
                     });
-            } else {
-                UI.showToast('Ticket creato con successo', 'success');
-            }
-            
-            Store.addLog(`Ticket creato da ${Auth.currentUser.username} per ${clientName}`);
-            
-            // Chiudi modal e pulisci campi
-            UI.closeModal('createTicketModal');
-            Utils.id('modal_shop_client_name').value = '';
-            Utils.id('modal_shop_client_phone').value = '';
-            Utils.id('modal_shop_client_phone2').value = '';
-            Utils.id('modal_shop_client_email').value = '';
-            Utils.id('modal_shop_client_city').value = '';
-            Utils.id('modal_shop_client_address').value = '';
-            Utils.id('modal_shop_intervention_type').value = '';
-            Utils.id('modal_shop_description').value = '';
-            Utils.id('modal_shop_ubicazione_merce').value = '';
-            Utils.id('modal_shop_zona_ztl').checked = false;
-            Utils.id('modal_shop_piano_consegna').value = '';
-            Utils.id('modal_shop_presenza_raee').checked = false;
-            Utils.id('modal_shop_internal_notes').value = '';
-            
-            // Aggiorna la lista
-            InterventiManager.render();
-        },
+                    count++;
+                }
+            });
 
-        chooseCategory: (category) => {
-            const ticketId = InterventiManager.pendingTicketId;
-            if (!ticketId) {
-                UI.showToast('Nessun ticket selezionato', 'error');
+            if (count === 0) {
+                UI.showToast('Nessuna commessa di oggi da ordinare', 'warning');
                 return;
             }
-            
-            // Recupera il ticket
-            const shopTickets = JSON.parse(localStorage.getItem('shopTickets') || '[]');
-            const ticket = shopTickets.find(t => t.id === ticketId);
-            
-            if (!ticket) {
-                UI.showToast('Ticket non trovato', 'error');
-                return;
-            }
-            
-            // Chiudi il modale
-            UI.closeModal('categoryChoiceModal');
-            
-            // Apri il form con la categoria selezionata
-            App.goToForm(category);
-            
-            // Precompila i dati cliente dal ticket (usa i corretti ID del form)
-            if (Utils.id('c_nome')) Utils.id('c_nome').value = ticket.client?.nome || '';
-            if (Utils.id('c_tel')) Utils.id('c_tel').value = ticket.client?.telefono || '';
-            if (Utils.id('c_email')) Utils.id('c_email').value = ticket.client?.email || '';
-            if (Utils.id('c_indirizzo')) Utils.id('c_indirizzo').value = ticket.client?.indirizzo || '';
-            
-            // Precompila data intervento se presente
-            if (ticket.dataIntervento && Utils.id('c_intervention_date')) {
-                Utils.id('c_intervention_date').value = ticket.dataIntervento;
-            }
-            if (ticket.oraIntervento && Utils.id('c_intervention_time')) {
-                Utils.id('c_intervention_time').value = ticket.oraIntervento;
-            }
-            
-            // Aggiungi note sul tipo intervento nel campo note generali
-            const tipoIntervento = ticket.intervention?.tipo || '';
-            const descrizione = ticket.intervention?.descrizione || '';
-            if (Utils.id('i_note')) {
-                Utils.id('i_note').value = `Tipo: ${tipoIntervento}\n${descrizione}`;
-            }
-            
-            // Cambia stato del ticket in 'in corso'
-            if (ticket.status === 'assegnato') {
-                ticket.status = 'in corso';
-                ticket.startedAt = new Date().toISOString();
-                ticket.startedBy = Auth.currentUser?.username;
-                
-                // Aggiorna in localStorage
-                const ticketIndex = shopTickets.findIndex(t => t.id === ticketId);
-                if (ticketIndex !== -1) {
-                    shopTickets[ticketIndex] = ticket;
-                    localStorage.setItem('shopTickets', JSON.stringify(shopTickets));
-                }
-                
-                // Sincronizza con Firestore
-                if (db) {
-                    db.collection("shopTickets").doc(ticketId).update({
-                        status: 'in corso',
-                        startedAt: new Date().toISOString(),
-                        startedBy: Auth.currentUser?.username
-                    }).catch(err => console.error('Errore aggiornamento stato:', err));
-                }
-                
-                UI.showToast('Intervento avviato! Compila i dati tecnici', 'success');
-            }
-            
-            // Pulisci il riferimento
-            InterventiManager.pendingTicketId = null;
-        },
 
+            batch.commit().then(() => {
+                UI.showToast(`Ordine salvato per ${count} commesse di oggi!`, 'success');
+                Store.addLog(`Ordine commesse aggiornato per ${count} commesse del ${today}`);
+                InterventiManager.render();
+            }).catch(err => {
+                console.error("Errore batch:", err);
+                UI.showToast('Errore critico salvataggio ordine', 'error');
+            });
+        },
         
         generateDailyReport: () => {
             const today = Utils.today();
@@ -8434,9 +6992,6 @@ Vuoi generare il resoconto giornaliero completo?`,
             const description = (data.description || data.product || '').toLowerCase();
             const clientNotes = (data.notes || '').toLowerCase();
             const interventionType = (data.type || '').toLowerCase();
-            const category = (data.category || '').toLowerCase();
-            const interventionTipo = (data.intervention?.tipo || '').toLowerCase();
-            const interventionCategoria = (data.intervention?.categoria || data.intervention?.category || '').toLowerCase();
             
             const hasRAEE = raeeKeywords.some(keyword => 
                 description.includes(keyword) || 
@@ -8444,45 +6999,34 @@ Vuoi generare il resoconto giornaliero completo?`,
                 interventionType.includes(keyword)
             );
             
-            // RAEE automatico per categoria refrigerazione
-            const isRefrigeration = category.includes('refrigerazione') || 
-                                   category.includes('condizionatore') ||
-                                   category.includes('clima') ||
-                                   interventionCategoria.includes('refrigerazione') ||
-                                   interventionCategoria.includes('condizionatore') ||
-                                   interventionTipo.includes('climatizzatore') ||
-                                   interventionTipo.includes('condizionatore') ||
-                                   interventionTipo.includes('frigorifero');
-            
-            if (!hasRAEE && !isRefrigeration) return null;
+            if (!hasRAEE) return null;
             
             // Determina categoria RAEE in base al tipo
-            let raeeCategory = 'R6'; // Default piccoli elettrodomestici
+            let category = 'R6'; // Default piccoli elettrodomestici
             let weight = 5; // Default peso kg
             
             if (description.includes('frigorifero') || description.includes('congelatore') || 
-                description.includes('climatizzatore') || description.includes('condizionatore') ||
-                isRefrigeration) {
-                raeeCategory = 'R1';
+                description.includes('climatizzatore') || description.includes('condizionatore')) {
+                category = 'R1';
                 weight = 50;
             } else if (description.includes('lavatrice') || description.includes('lavastoviglie') || 
                       description.includes('forno') || description.includes('microonde')) {
-                raeeCategory = 'R2';
+                category = 'R2';
                 weight = 30;
             } else if (description.includes('tv') || description.includes('televisione') || 
                       description.includes('monitor')) {
-                raeeCategory = 'R3';
+                category = 'R3';
                 weight = 15;
             } else if (description.includes('computer') || description.includes('pc') || 
                       description.includes('laptop') || description.includes('stampante')) {
-                raeeCategory = 'R4';
+                category = 'R4';
                 weight = 10;
             } else if (description.includes('lampada') || description.includes('led')) {
-                raeeCategory = 'R5';
+                category = 'R5';
                 weight = 2;
             }
             
-            return { category: raeeCategory, weight, detected: true };
+            return { category, weight, detected: true };
         },
         
         generateFromIntervention: (interventionData) => {
@@ -8901,361 +7445,5 @@ Per procedere è richiesta la firma digitale. Vuoi continuare?`,
         }
     };
 </script>
-
-<!-- ==================== RAEE MODAL ==================== -->
-<!-- Modale Gestione RAEE - Appare alla chiusura di ogni intervento -->
-<div id="raeeModal" class="modal-overlay" style="display: none;">
-    <div class="modal-content" style="max-width: 650px; max-height: 90vh; overflow-y: auto;">
-        <div style="display: flex; align-items: center; justify-content: between; margin-bottom: 20px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px;">
-            <div style="flex: 1;">
-                <h3 style="font-size: 1.4rem; font-weight: 700; color: var(--success); margin: 0;">
-                    <i class="fas fa-recycle" style="margin-right: 10px;"></i>Gestione RAEE
-                </h3>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 5px 0 0 0;">Rifiuti di Apparecchiature Elettriche ed Elettroniche</p>
-            </div>
-            <button onclick="skipRaeeModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 5px;" title="Salta RAEE">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-
-        <form id="raeeForm" onsubmit="saveRaee(event)">
-            <input type="hidden" id="raeeTicketId">
-            <input type="hidden" id="raeeInterventionType">
-            
-            <!-- Info Intervento -->
-            <div style="background: var(--bg-body); padding: 15px; border-radius: var(--radius-sm); margin-bottom: 20px;">
-                <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
-                    <strong style="color: var(--text-primary);">Intervento:</strong> <span id="raeeInterventionInfo">-</span>
-                </p>
-            </div>
-
-            <!-- Tipologia RAEE -->
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">
-                    Tipologia RAEE * <span style="font-weight: 400; color: var(--text-secondary);">(seleziona quelli ritirati)</span>
-                </label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
-                        <input type="checkbox" name="raeeType" value="grandi" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
-                        <span style="font-size: 0.9rem;">R1 - Frigoriferi/Freezer</span>
-                    </label>
-                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
-                        <input type="checkbox" name="raeeType" value="clima" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
-                        <span style="font-size: 0.9rem;">R2 - Climatizzatori/PdC</span>
-                    </label>
-                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
-                        <input type="checkbox" name="raeeType" value="lavatrici" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
-                        <span style="font-size: 0.9rem;">R3 - Lavatrici/Lavastoviglie</span>
-                    </label>
-                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
-                        <input type="checkbox" name="raeeType" value="televisori" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
-                        <span style="font-size: 0.9rem;">R4 - TV e Monitor</span>
-                    </label>
-                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
-                        <input type="checkbox" name="raeeType" value="informatica" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
-                        <span style="font-size: 0.9rem;">R5 - PC e Informatica</span>
-                    </label>
-                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
-                        <input type="checkbox" name="raeeType" value="piccoli" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
-                        <span style="font-size: 0.9rem;">R6 - Piccoli Elettrodomestici</span>
-                    </label>
-                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
-                        <input type="checkbox" name="raeeType" value="lampade" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
-                        <span style="font-size: 0.9rem;">R7 - Lampade</span>
-                    </label>
-                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s;" class="raee-checkbox">
-                        <input type="checkbox" name="raeeType" value="fotovoltaico" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--success);">
-                        <span style="font-size: 0.9rem;">R8 - Pannelli Fotovoltaici</span>
-                    </label>
-                    <label style="display: flex; align-items: center; padding: 12px; background: var(--bg-body); border: 2px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; grid-column: span 2;" class="raee-checkbox">
-                        <input type="checkbox" name="raeeType" value="nessuno" id="raeeNessuno" style="margin-right: 10px; width: 18px; height: 18px; accent-color: var(--secondary);" onchange="toggleNessunoRaee()">
-                        <span style="font-size: 0.9rem; color: var(--text-secondary);"><i class="fas fa-ban" style="margin-right: 5px;"></i>Nessun RAEE da ritirare</span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Quantità e Peso -->
-            <div id="raeeDetailsSection" style="margin-bottom: 15px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div>
-                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Quantità pezzi *</label>
-                        <input type="number" id="raeeQty" min="1" value="1" required style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-body); color: var(--text-primary); font-size: 1rem;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Peso stimato (kg) *</label>
-                        <input type="number" id="raeeWeight" step="0.1" min="0" required placeholder="0.0" style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-body); color: var(--text-primary); font-size: 1rem;">
-                    </div>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Marca/Modello (opzionale)</label>
-                    <input type="text" id="raeeBrand" placeholder="Es: Samsung RTX5000..." style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-body); color: var(--text-primary); font-size: 1rem;">
-                </div>
-            </div>
-
-            <!-- Foto RAEE -->
-            <div id="raeePhotoSection" style="margin-bottom: 20px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">Foto RAEE (opzionale)</label>
-                <div style="border: 2px dashed var(--border-color); border-radius: var(--radius-sm); padding: 20px; text-align: center; cursor: pointer; background: var(--bg-body); transition: border-color 0.3s;" onclick="document.getElementById('raeePhotoInput').click()" id="raeeDropZone">
-                    <div id="raeePhotoPreview" style="display: none;">
-                        <img id="raeePhotoImg" src="" alt="RAEE" style="max-width: 100%; max-height: 200px; border-radius: var(--radius-sm); margin-bottom: 10px;">
-                        <br>
-                        <button type="button" onclick="event.stopPropagation(); removeRaeePhoto();" style="background: var(--danger); color: white; border: none; padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.85rem;">
-                            <i class="fas fa-trash"></i> Rimuovi
-                        </button>
-                    </div>
-                    <div id="raeePhotoPlaceholder">
-                        <i class="fas fa-camera" style="font-size: 2.5rem; color: var(--text-secondary); margin-bottom: 10px;"></i>
-                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">Clicca per caricare o trascina una foto</p>
-                    </div>
-                </div>
-                <input type="file" id="raeePhotoInput" accept="image/*" style="display: none;" onchange="handleRaeePhotoUpload(event)">
-            </div>
-
-            <!-- Note -->
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-primary);">Note</label>
-                <textarea id="raeeNotes" rows="2" placeholder="Informazioni aggiuntive..." style="width: 100%; padding: 12px; border: 2px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-body); color: var(--text-primary); font-size: 1rem; resize: vertical; font-family: inherit;"></textarea>
-            </div>
-
-            <!-- Bottoni -->
-            <div style="display: flex; gap: 12px;">
-                <button type="button" onclick="skipRaeeModal()" style="flex: 1; padding: 14px; background: transparent; border: 2px solid var(--border-color); color: var(--text-secondary); border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; transition: all 0.3s;">
-                    <i class="fas fa-forward" style="margin-right: 8px;"></i>Salta
-                </button>
-                <button type="submit" style="flex: 2; padding: 14px; background: linear-gradient(135deg, var(--success), #059669); border: none; color: white; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
-                    <i class="fas fa-save" style="margin-right: 8px;"></i>Registra RAEE
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<style>
-/* RAEE Modal Styles */
-#raeeModal.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.85);
-    z-index: 9999;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    backdrop-filter: blur(5px);
-}
-#raeeModal.modal-overlay.active {
-    display: flex !important;
-}
-#raeeModal .raee-checkbox:hover {
-    border-color: var(--success) !important;
-    background: rgba(16, 185, 129, 0.1) !important;
-}
-#raeeModal .raee-checkbox:has(input:checked) {
-    border-color: var(--success) !important;
-    background: rgba(16, 185, 129, 0.15) !important;
-}
-@media (max-width: 600px) {
-    #raeeModal label[style*="grid-template-columns"] {
-        grid-template-columns: 1fr !important;
-    }
-}
-</style>
-
-<script>
-// ==================== RAEE MODAL ====================
-(function() {
-    'use strict';
-    window.raeePhotoData = null;
-    window.currentTicketForRaee = null;
-    
-    window.toggleNessunoRaee = function() {
-        const nessunoChecked = document.getElementById('raeeNessuno').checked;
-        const detailsSection = document.getElementById('raeeDetailsSection');
-        const photoSection = document.getElementById('raeePhotoSection');
-        const checkboxes = document.querySelectorAll('input[name="raeeType"]:not(#raeeNessuno)');
-        
-        if (nessunoChecked) {
-            detailsSection.style.display = 'none';
-            photoSection.style.display = 'none';
-            checkboxes.forEach(cb => { cb.checked = false; cb.disabled = true; });
-        } else {
-            detailsSection.style.display = 'block';
-            photoSection.style.display = 'block';
-            checkboxes.forEach(cb => { cb.disabled = false; });
-        }
-    };
-    
-    window.openRaeeModal = function(ticketId, interventionType, clientInfo) {
-        const modal = document.getElementById('raeeModal');
-        const form = document.getElementById('raeeForm');
-        form.reset();
-        window.raeePhotoData = null;
-        window.currentTicketForRaee = ticketId;
-        
-        document.getElementById('raeeDetailsSection').style.display = 'block';
-        document.getElementById('raeePhotoSection').style.display = 'block';
-        document.querySelectorAll('input[name="raeeType"]').forEach(cb => { cb.disabled = false; });
-        document.getElementById('raeePhotoPreview').style.display = 'none';
-        document.getElementById('raeePhotoPlaceholder').style.display = 'block';
-        
-        document.getElementById('raeeTicketId').value = ticketId || '';
-        document.getElementById('raeeInterventionType').value = interventionType || '';
-        document.getElementById('raeeInterventionInfo').textContent = clientInfo || 'Intervento completato';
-        
-        modal.classList.add('active');
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
-        
-        if (typeof Store !== 'undefined' && Store.addLog) {
-            Store.addLog(`Apertura modale RAEE per ticket: ${ticketId}`);
-        }
-    };
-    
-    window.skipRaeeModal = function() {
-        const modal = document.getElementById('raeeModal');
-        modal.classList.remove('active');
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-        
-        if (typeof Store !== 'undefined' && Store.addLog && window.currentTicketForRaee) {
-            Store.addLog(`RAEE saltato per ticket: ${window.currentTicketForRaee}`);
-        }
-        
-        window.currentTicketForRaee = null;
-        window.raeePhotoData = null;
-    };
-    
-    window.handleRaeePhotoUpload = function(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            window.raeePhotoData = e.target.result;
-            document.getElementById('raeePhotoImg').src = window.raeePhotoData;
-            document.getElementById('raeePhotoPreview').style.display = 'block';
-            document.getElementById('raeePhotoPlaceholder').style.display = 'none';
-        };
-        reader.readAsDataURL(file);
-    };
-    
-    window.removeRaeePhoto = function() {
-        window.raeePhotoData = null;
-        document.getElementById('raeePhotoInput').value = '';
-        document.getElementById('raeePhotoPreview').style.display = 'none';
-        document.getElementById('raeePhotoPlaceholder').style.display = 'block';
-    };
-    
-    window.saveRaee = function(event) {
-        event.preventDefault();
-        
-        const ticketId = document.getElementById('raeeTicketId').value;
-        const nessuno = document.getElementById('raeeNessuno').checked;
-        
-        const selectedTypes = [];
-        document.querySelectorAll('input[name="raeeType"]:checked').forEach(cb => {
-            if (cb.value !== 'nessuno') selectedTypes.push(cb.value);
-        });
-        
-        if (!nessuno && selectedTypes.length === 0) {
-            if (typeof UI !== 'undefined' && UI.showToast) {
-                UI.showToast('Seleziona almeno una tipologia RAEE o "Nessun RAEE"', 'error');
-            }
-            return;
-        }
-        
-        if (!nessuno) {
-            const qty = document.getElementById('raeeQty').value;
-            const weight = document.getElementById('raeeWeight').value;
-            
-            if (!qty || qty < 1) {
-                if (typeof UI !== 'undefined' && UI.showToast) UI.showToast('Inserisci la quantità', 'error');
-                return;
-            }
-            if (!weight || weight <= 0) {
-                if (typeof UI !== 'undefined' && UI.showToast) UI.showToast('Inserisci il peso', 'error');
-                return;
-            }
-        }
-        
-        const raeeData = {
-            id: 'RAEE-' + Date.now(),
-            ticketId: ticketId,
-            interventionType: document.getElementById('raeeInterventionType').value,
-            types: nessuno ? [] : selectedTypes,
-            nessunoRaee: nessuno,
-            qty: nessuno ? 0 : parseInt(document.getElementById('raeeQty').value),
-            weight: nessuno ? 0 : parseFloat(document.getElementById('raeeWeight').value),
-            brand: document.getElementById('raeeBrand').value.trim(),
-            photo: window.raeePhotoData,
-            notes: document.getElementById('raeeNotes').value.trim(),
-            createdAt: new Date().toISOString(),
-            createdBy: typeof Auth !== 'undefined' && Auth.currentUser ? Auth.currentUser.username : 'unknown'
-        };
-        
-        if (typeof db !== 'undefined' && db.collection) {
-            db.collection("raee").doc(raeeData.id).set(raeeData)
-                .then(() => console.log('RAEE salvato su Firestore'))
-                .catch(err => console.error('Errore salvataggio RAEE:', err));
-        }
-        
-        const savedRaee = JSON.parse(localStorage.getItem('raeeRecords') || '[]');
-        savedRaee.push(raeeData);
-        localStorage.setItem('raeeRecords', JSON.stringify(savedRaee));
-        
-        if (typeof Store !== 'undefined' && Store.addLog) {
-            Store.addLog(`RAEE registrato per ticket ${ticketId}: ${nessuno ? 'Nessuno' : selectedTypes.join(', ')}`);
-        }
-        
-        if (typeof UI !== 'undefined' && UI.showToast) {
-            UI.showToast(nessuno ? 'RAEE registrato: nessun ritiro' : 'RAEE registrato con successo!', 'success');
-        }
-        
-        const modal = document.getElementById('raeeModal');
-        modal.classList.remove('active');
-        modal.style.display = 'none';
-        document.body.style.overflow = '';
-        
-        window.currentTicketForRaee = null;
-        window.raeePhotoData = null;
-    };
-    
-    // Drag & drop
-    const dropZone = document.getElementById('raeeDropZone');
-    if (dropZone) {
-        dropZone.addEventListener('dragover', function(e) { e.preventDefault(); this.style.borderColor = 'var(--success)'; });
-        dropZone.addEventListener('dragleave', function(e) { e.preventDefault(); this.style.borderColor = 'var(--border-color)'; });
-        dropZone.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.style.borderColor = 'var(--border-color)';
-            const files = e.dataTransfer.files;
-            if (files.length > 0 && files[0].type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    window.raeePhotoData = event.target.result;
-                    document.getElementById('raeePhotoImg').src = window.raeePhotoData;
-                    document.getElementById('raeePhotoPreview').style.display = 'block';
-                    document.getElementById('raeePhotoPlaceholder').style.display = 'none';
-                };
-                reader.readAsDataURL(files[0]);
-            }
-        });
-    }
-    
-    // Chiudi con ESC
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const modal = document.getElementById('raeeModal');
-            if (modal && modal.classList.contains('active')) skipRaeeModal();
-        }
-    });
-    
-    console.log('✅ RAEE Modal System initialized');
-})();
-</script>
-<!-- ==================== END RAEE MODAL ==================== -->
 </body>
 </html>
