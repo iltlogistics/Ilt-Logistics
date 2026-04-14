@@ -271,6 +271,7 @@
             
             search: async () => {
                 const input = document.getElementById('trackingId').value.trim();
+                console.log('Search chiamato con input:', input);
                 if (!input) return;
 
                 document.getElementById('searchBox').style.display = 'none';
@@ -278,34 +279,68 @@
                 document.getElementById('resultCard').style.display = 'none';
 
                 try {
-                    // 1. Cerca per Tracking ID (es. "TRK-XXXXX")
-                    let snapshot = await db.collection("domicile_tickets")
+                    // 1. Cerca per Tracking ID nella collezione interventions
+                    console.log('1. Cerca per trackingId in interventions:', input);
+                    let snapshot = await db.collection("interventions")
                         .where("trackingId", "==", input)
                         .limit(1)
                         .get();
-                        
+
+                    console.log('Snapshot interventions trackingId:', snapshot.size, 'documenti');
+                    if (!snapshot.empty) {
+                        snapshot.forEach(doc => {
+                            console.log('Trovato intervention:', doc.data());
+                            Tracker.showInterventionResult(doc.data());
+                        });
+                        return;
+                    }
+
+                    // 2. Cerca per Tracking ID nella collezione domicile_tickets
+                    console.log('2. Cerca per trackingId in domicile_tickets:', input);
+                    snapshot = await db.collection("domicile_tickets")
+                        .where("trackingId", "==", input)
+                        .limit(1)
+                        .get();
+
+                    console.log('Snapshot domicile_tickets trackingId:', snapshot.size, 'documenti');
                     if (!snapshot.empty) {
                         snapshot.forEach(doc => Tracker.showResult(doc.data()));
                         return;
                     }
-                    
-                    // 2. Cerca per Ticket ID (es. "0001")
+
+                    // 3. Cerca per Ticket ID nella collezione domicile_tickets
+                    console.log('3. Cerca per ticketId in domicile_tickets:', input);
                     snapshot = await db.collection("domicile_tickets")
                         .where("ticketId", "==", input)
                         .limit(1)
                         .get();
 
-                    if (snapshot.empty) {
-                        // 3. Se non trova, cerca per ID Documento
-                        const docRef = await db.collection("domicile_tickets").doc(input).get();
-                        if (docRef.exists) {
-                            Tracker.showResult(docRef.data());
-                        } else {
-                            Tracker.showError();
-                        }
-                    } else {
+                    console.log('Snapshot domicile_tickets ticketId:', snapshot.size, 'documenti');
+                    if (!snapshot.empty) {
                         snapshot.forEach(doc => Tracker.showResult(doc.data()));
+                        return;
                     }
+
+                    // 4. Cerca per ID Documento nella collezione interventions
+                    console.log('4. Cerca per docId in interventions:', input);
+                    const docRef = await db.collection("interventions").doc(input).get();
+                    console.log('DocRef interventions exists:', docRef.exists);
+                    if (docRef.exists) {
+                        Tracker.showInterventionResult(docRef.data());
+                        return;
+                    }
+
+                    // 5. Cerca per ID Documento nella collezione domicile_tickets
+                    console.log('5. Cerca per docId in domicile_tickets:', input);
+                    const domicileDocRef = await db.collection("domicile_tickets").doc(input).get();
+                    console.log('DocRef domicile_tickets exists:', domicileDocRef.exists);
+                    if (domicileDocRef.exists) {
+                        Tracker.showResult(domicileDocRef.data());
+                        return;
+                    }
+
+                    console.log('Nessun risultato trovato, mostro errore');
+                    Tracker.showError();
                 } catch (error) {
                     console.error("Errore:", error);
                     Tracker.showError();
@@ -350,6 +385,72 @@
                     
                     const estimation = await Tracker.calculateETA(ticket);
                     
+                    msgEl.innerText = estimation.message;
+                    document.getElementById('etaTime').innerText = estimation.etaTime;
+                    document.getElementById('progressFill').style.width = estimation.progress + '%';
+                    document.getElementById('etaLabel').innerText = estimation.label;
+                    etaBox.style.display = 'block';
+                }
+
+                document.getElementById('resultCard').style.display = 'block';
+            },
+
+            showInterventionResult: async (intervention) => {
+                console.log('showInterventionResult chiamato con stato:', intervention.status);
+                console.log('Intervention completo:', intervention);
+
+                // Popola dati base per interventi standard
+                document.getElementById('infoId').innerText = `#${intervention.trackingId || intervention.id.substring(0,4)}`;
+                document.getElementById('infoOperator').innerText = intervention.assignedTo || 'N/D';
+                document.getElementById('infoAddress').innerText = intervention.client?.indirizzo || 'N/D';
+
+                const iconEl = document.getElementById('statusIcon');
+                const titleEl = document.getElementById('statusTitle');
+                const msgEl = document.getElementById('statusMessage');
+                const etaBox = document.getElementById('etaBox');
+
+                // Stato: Completato
+                if (intervention.status === 'completato' || intervention.status === 'chiuso') {
+                    console.log('Stato: Completato/Chiuso');
+                    iconEl.className = 'status-icon completed';
+                    iconEl.innerHTML = '<i class="fas fa-check-circle"></i>';
+                    titleEl.innerText = 'Intervento Completato';
+                    titleEl.style.color = 'var(--success)';
+                    msgEl.innerText = 'Il tuo intervento è stato completato con successo.';
+                    etaBox.style.display = 'none';
+                }
+                // Stato: In Corso - Calcola posizione e mostra che è in corso
+                else if (intervention.status === 'in corso') {
+                    console.log('Stato: In corso, chiamo calculateInterventionETA');
+                    iconEl.className = 'status-icon transit';
+                    iconEl.innerHTML = '<i class="fas fa-tools"></i>';
+                    titleEl.innerText = 'In Corso';
+                    titleEl.style.color = 'var(--primary)';
+
+                    // Calcola posizione nella lista del giorno
+                    const estimation = await Tracker.calculateInterventionETA(intervention);
+
+                    console.log('Risultato calculateInterventionETA:', estimation);
+
+                    msgEl.innerText = 'L\'operatore sta effettuando il tuo intervento. ' + estimation.message;
+                    document.getElementById('etaTime').innerText = estimation.etaTime;
+                    document.getElementById('progressFill').style.width = estimation.progress + '%';
+                    document.getElementById('etaLabel').innerText = estimation.label;
+                    etaBox.style.display = 'block';
+                }
+                // Stato: Assegnato o Nuovo - Calcola posizione
+                else {
+                    console.log('Stato: Assegnato/Nuovo, chiamo calculateInterventionETA');
+                    iconEl.className = 'status-icon pending';
+                    iconEl.innerHTML = '<i class="fas fa-clipboard-list"></i>';
+                    titleEl.innerText = 'In Programmazione';
+                    titleEl.style.color = 'var(--warning)';
+
+                    // Calcola posizione nella lista del giorno
+                    const estimation = await Tracker.calculateInterventionETA(intervention);
+
+                    console.log('Risultato calculateInterventionETA:', estimation);
+
                     msgEl.innerText = estimation.message;
                     document.getElementById('etaTime').innerText = estimation.etaTime;
                     document.getElementById('progressFill').style.width = estimation.progress + '%';
@@ -439,6 +540,167 @@
                 const now = new Date();
                 const eta = new Date(now.getTime() + estimatedMinutes * 60000);
                 const etaFormatted = eta.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+                return {
+                    message: message,
+                    etaTime: remainingStops <= 0 ? now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : etaFormatted,
+                    progress: progress,
+                    label: label
+                };
+            },
+
+            calculateInterventionETA: async (currentIntervention) => {
+                const today = new Date().toISOString().split('T')[0];
+                const operator = currentIntervention.assignedTo;
+
+                console.log('calculateInterventionETA chiamato per:', currentIntervention.id);
+                console.log('Operator:', operator);
+                console.log('Today:', today);
+
+                // Se l'intervento non è oggi
+                if (!operator) {
+                    return {
+                        message: "In attesa di assegnazione operatore",
+                        etaTime: '--:--',
+                        progress: 0,
+                        label: 'Da assegnare'
+                    };
+                }
+
+                // Converti data intervento
+                const interventionDate = currentIntervention.client?.dataIntervento;
+                if (!interventionDate) {
+                    return {
+                        message: "Data intervento non definita",
+                        etaTime: '--:--',
+                        progress: 0,
+                        label: 'In programmazione'
+                    };
+                }
+
+                // Formatta data per confronto
+                let formattedDate = interventionDate;
+                if (interventionDate.includes('-')) {
+                    const parts = interventionDate.split('-');
+                    if (parts.length === 3) {
+                        formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+                    }
+                } else if (interventionDate.includes('/')) {
+                    const parts = interventionDate.split('/');
+                    if (parts.length === 3) {
+                        formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                    }
+                }
+
+                console.log('Intervention date:', interventionDate);
+                console.log('Formatted date:', formattedDate);
+
+                if (formattedDate !== today) {
+                    return {
+                        message: `Intervento programmato per il ${interventionDate}`,
+                        etaTime: '--:--',
+                        progress: 0,
+                        label: 'Data intervento'
+                    };
+                }
+
+                // Scarica tutti gli interventi di oggi per questo operatore
+                const snapshot = await db.collection("interventions")
+                    .where("assignedTo", "==", operator)
+                    .get();
+
+                const allInterventions = [];
+                snapshot.forEach(doc => allInterventions.push(doc.data()));
+
+                console.log('Tutti gli interventi per operatore:', allInterventions.length);
+
+                // Filtra solo interventi di oggi
+                const todayInterventions = allInterventions.filter(i => {
+                    const iDate = i.client?.dataIntervento;
+                    if (!iDate) return false;
+                    let iFormatted = iDate;
+                    if (iDate.includes('-')) {
+                        const parts = iDate.split('-');
+                        if (parts.length === 3) iFormatted = `${parts[0]}-${parts[1]}-${parts[2]}`;
+                    } else if (iDate.includes('/')) {
+                        const parts = iDate.split('/');
+                        if (parts.length === 3) iFormatted = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                    }
+                    return iFormatted === today;
+                });
+
+                console.log('Interventi di oggi:', todayInterventions.length);
+                console.log('Interventi di oggi con orderNumber:', todayInterventions.filter(i => i.orderNumber !== undefined).length);
+
+                if (todayInterventions.length === 0) {
+                    return { message: "In attesa di aggiornamenti", etaTime: '--:--', progress: 0, label: 'Caricamento...' };
+                }
+
+                // Ordiniamo per orderNumber se esiste, altrimenti creation time
+                todayInterventions.sort((a, b) => {
+                    if (a.orderNumber !== undefined && b.orderNumber !== undefined) {
+                        return a.orderNumber - b.orderNumber;
+                    }
+                    return (a.createdAt || "").localeCompare(b.createdAt || "");
+                });
+
+                console.log('Interventi ordinati:', todayInterventions.map(i => ({ id: i.id, orderNumber: i.orderNumber })));
+
+                // Trova la mia posizione
+                let myPosition = 0;
+                let totalStops = todayInterventions.length;
+
+                todayInterventions.forEach((t, index) => {
+                    if (t.id === currentIntervention.id) {
+                        myPosition = index + 1;
+                    }
+                });
+
+                console.log('Mia posizione:', myPosition);
+                console.log('Totale interventi:', totalStops);
+
+                // Conta interventi completati
+                const completedCount = todayInterventions.filter(t => t.status === 'completato' || t.status === 'chiuso').length;
+                console.log('Interventi completati:', completedCount);
+
+                // Calcolo logico
+                const remainingStops = myPosition - completedCount;
+                const minutesPerStop = 30;
+                const estimatedMinutes = remainingStops > 0 ? remainingStops * minutesPerStop : 0;
+
+                console.log('Interventi rimanenti:', remainingStops);
+                console.log('Minuti stimati:', estimatedMinutes);
+
+                // Calcolo progresso visivo
+                let progress = 0;
+                if (myPosition > 0) {
+                    progress = Math.min(100, Math.max(0, (completedCount / myPosition) * 100));
+                }
+
+                console.log('Progresso:', progress);
+
+                // Messaggio personalizzato
+                let message = "";
+                let label = "Orario stimato arrivo";
+
+                if (remainingStops <= 0) {
+                    message = "È il tuo turno! L'operatore dovrebbe arrivare a momenti.";
+                    label = "Imminente";
+                } else if (remainingStops === 1) {
+                    message = "Sei il prossimo! L'operatore sta completando l'intervento precedente.";
+                    label = "Arrivo tra circa 30 min";
+                } else {
+                    message = `Sei la ${myPosition}ª tappa su ${totalStops}. Mancano ${remainingStops} interventi.`;
+                    label = `Arrivo stimato tra ${estimatedMinutes} min`;
+                }
+
+                // Calcolo orario preciso
+                const now = new Date();
+                const eta = new Date(now.getTime() + estimatedMinutes * 60000);
+                const etaFormatted = eta.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+
+                console.log('Messaggio:', message);
+                console.log('ETA time:', etaFormatted);
 
                 return {
                     message: message,
