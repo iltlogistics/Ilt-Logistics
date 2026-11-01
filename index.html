@@ -1,1654 +1,1923 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ILT Logistics Srl - Tracciabilità Consegne</title>
-    <!-- Font: Poppins -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Icone FontAwesome -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ILT Logistics S.r.l. - Gestione Report Interventi HVAC</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <!-- html2pdf.js CDN for Direct PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        iltRed: '#d61124',
+                        iltDark: '#343a40',
+                        iltBlue: '#004aad'
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        /* --- VARIABILI GENERALI --- */
-        :root {
-            --ilt-blue: #1e293b;
-            --ilt-orange: #f97316;
-            --ilt-text: #f8fafc;
-            --ilt-bg: #f1f5f9;
-            
-            /* Variabili Tracking Tool */
-            --trk-primary: #0ea5e9;
-            --trk-success: #10b981;
-            --trk-warning: #f59e0b;
-            --trk-danger: #ef4444;
-            --trk-bg-body: #0f172a;
-            --trk-bg-card: #1e293b;
-            --trk-text-primary: #f1f5f9;
-            --trk-text-secondary: #94a3b8;
-            --trk-border-color: #334155;
-            
-            /* Colore WhatsApp */
-            --wa-green: #25D366;
-            --wa-dark: #128C7E;
-            
-            /* Variabili Assistente Virtuale GIPRO */
-            --gipro-primary: #6366f1;
-            --gipro-secondary: #8b5cf6;
-            --gipro-bg: #ffffff;
-            --gipro-text: #1f2937;
-            --gipro-shadow: rgba(99, 102, 241, 0.2);
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--ilt-bg);
-            color: var(--ilt-text);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-
-        /* --- VIDEO INTRODUTTIVO --- */
-        .video-intro {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80vw;
-            height: 80vh;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-            overflow: hidden;
-            margin: 0;
-            padding: 0;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-        }
-
-        .video-container {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0;
-            padding: 0;
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        .video-container::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 60px;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .intro-video {
-            width: 120%;
-            height: 120%;
-            object-fit: contain;
-            margin: 0;
-            padding: 0;
-            border-radius: 20px;
-            background: #000;
-            object-position: center top;
-        }
-
-        .video-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            color: white;
-            text-align: center;
-        }
-
-        .intro-logo {
-            font-size: 4rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--ilt-orange), #fbbf24);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: fadeInScale 1s ease-out, fadeOutAfter 1s ease-out 2s forwards;
-        }
-
-        .intro-text {
-            font-size: 1.5rem;
-            margin-bottom: 2rem;
-            opacity: 0;
-            animation: fadeInUp 1s ease-out 0.5s forwards, fadeOutAfter 1s ease-out 2s forwards;
-        }
-
-        .skip-intro {
-            padding: 1rem 2rem;
-            background: var(--ilt-orange);
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            opacity: 0;
-            animation: fadeInUp 1s ease-out 1s forwards, fadeOutAfter 1s ease-out 2s forwards;
-            transition: all 0.3s ease;
-        }
-
-        .skip-intro:hover {
-            background: #ea580c;
-            transform: translateY(-2px);
-        }
-
-        @keyframes fadeInScale {
-            from {
-                opacity: 0;
-                transform: scale(0.8);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes fadeOutAfter {
-            0% { opacity: 1; }
-            100% { opacity: 0; }
-        }
-
-        .main-content {
-            display: none;
-        }
-
-        .main-content.active {
-            display: block;
-        }
-
-        a { text-decoration: none; color: inherit; }
-        ul { list-style: none; }
-
-        /* --- HEADER --- */
-        header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: rgba(30, 41, 59, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-        }
-
-        .logo { font-size: 1.5rem; font-weight: 700; color: var(--ilt-text); display: flex; align-items: center; gap: 10px; }
-        .logo i { color: var(--ilt-orange); }
-
-        nav { display: flex; align-items: center; gap: 2rem; }
-        nav ul.nav-links { display: flex; gap: 2rem; margin: 0; padding: 0; }
-        nav a.nav-link { color: var(--ilt-text); font-weight: 500; transition: color 0.3s; }
-        nav a.nav-link:hover { color: var(--ilt-orange); }
-
-        .nav-actions { display: flex; align-items: center; gap: 1rem; }
-        
-        .btn-login {
-            padding: 0.5rem 1.2rem; background: transparent; color: var(--ilt-text);
-            border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; font-weight: 600; cursor: pointer;
-        }
-        .btn-login:hover { background: rgba(255,255,255,0.1); }
-
-        .btn-nav {
-            padding: 0.5rem 1.2rem; background: var(--ilt-orange); color: white; border: none;
-            border-radius: 4px; font-weight: 600; cursor: pointer;
-        }
-        .btn-nav:hover { background: #ea580c; }
-
-        /* --- HERO SECTION --- */
-        .hero {
-            position: relative;
-            min-height: 90vh; 
-            background: var(--ilt-blue);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--ilt-text);
-            text-align: center;
-            transition: height 0.5s ease;
-        }
-
-        .city-grid {
-            position: absolute; width: 100%; height: 100%;
-            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: 60px 60px;
-            transform: perspective(500px) rotateX(20deg) scale(1.2) translateY(100px);
-            transform-origin: bottom; opacity: 0.5; z-index: 1;
-        }
-
-        .hero-content {
-            position: relative; z-index: 10; max-width: 800px; padding: 2rem;
-            animation: fadeInUp 1s forwards;
-        }
-
-        .hero h1 { font-size: 3rem; line-height: 1.2; margin-bottom: 1rem; text-transform: uppercase; }
-        .hero h1 span { color: var(--ilt-orange); }
-        .hero p { font-size: 1.2rem; color: #cbd5e1; margin-bottom: 2rem; }
-
-        .btn-tracker {
-            display: inline-block; padding: 1rem 2.5rem; background: var(--ilt-orange);
-            color: white; font-weight: 700; border-radius: 50px;
-            transition: all 0.3s; box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
-            cursor: pointer; border: none;
-        }
-        .btn-tracker:hover { background: #ea580c; transform: translateY(-3px); }
-
-        /* --- TRACKING SECTION --- */
-        #tracking-section {
-            display: none;
-            width: 100%;
-            background: #0f172a;
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 58, 95, 0.98) 100%),
-                        url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            padding: 4rem 1rem;
-            min-height: 100vh;
-            position: relative;
-            z-index: 50;
-            color: var(--trk-text-primary);
-        }
-
-        .tracker-container {
-            width: 100%; max-width: 500px; margin: 0 auto; text-align: center;
-            position: relative; top: -50px;
-        }
-
-        .tk-logo {
-            font-size: 2.5rem; font-weight: 900; margin-bottom: 10px;
-            background: linear-gradient(135deg, var(--trk-primary), var(--trk-success));
-            -webkit-background-clip: text; background-clip: text;
-            -webkit-text-fill-color: transparent; font-family: 'Segoe UI', sans-serif;
-        }
-        .tk-subtitle { color: var(--trk-text-secondary); margin-bottom: 40px; font-size: 1.1rem; font-family: 'Segoe UI', sans-serif; }
-
-        .tk-search-box {
-            background: var(--trk-bg-card); padding: 30px; border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid var(--trk-border-color);
-            margin-bottom: 20px;
-        }
-
-        .tk-input {
-            width: 100%; padding: 16px; border: 2px solid var(--trk-border-color); border-radius: 12px;
-            font-size: 1.2rem; background: var(--trk-bg-body); color: var(--trk-text-primary);
-            text-align: center; letter-spacing: 2px; margin-bottom: 15px; font-family: 'Segoe UI', sans-serif;
-        }
-        .tk-input:focus { outline: none; border-color: var(--trk-primary); }
-
-        .tk-btn {
-            width: 100%; padding: 16px; background: linear-gradient(135deg, var(--trk-primary), #0284c7);
-            color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700;
-            cursor: pointer; font-family: 'Segoe UI', sans-serif;
-        }
-
-        .tk-result-card {
-            background: var(--trk-bg-card); border-radius: 20px; padding: 30px;
-            border: 1px solid var(--trk-border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            display: none; animation: slideUp 0.4s ease;
-        }
-
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .tk-status-icon {
-            width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 2.5rem; margin: 0 auto 20px;
-        }
-        .tk-status-icon.pending { background: rgba(245, 158, 11, 0.15); color: var(--trk-warning); }
-        .tk-status-icon.transit { background: rgba(14, 165, 233, 0.15); color: var(--trk-primary); animation: pulse 2s infinite; }
-        .tk-status-icon.completed { background: rgba(16, 185, 129, 0.15); color: var(--trk-success); }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(14, 165, 233, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
-        }
-
-        .tk-status-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; font-family: 'Segoe UI', sans-serif; }
-        .tk-status-message { color: var(--trk-text-secondary); margin-bottom: 25px; font-size: 1rem; line-height: 1.6; font-family: 'Segoe UI', sans-serif; }
-
-        .tk-info-grid { text-align: left; background: var(--trk-bg-body); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-        .tk-info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--trk-border-color); }
-        .tk-info-label { color: var(--trk-text-secondary); font-size: 0.9rem; }
-        .tk-info-value { font-weight: 600; color: var(--trk-text-primary); }
-
-        .tk-eta-box {
-            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.1));
-            border: 1px solid var(--trk-primary); border-radius: 12px; padding: 20px; margin-top: 20px;
-        }
-        .tk-eta-time { font-size: 2.5rem; font-weight: 800; color: var(--trk-primary); display: block; margin-bottom: 5px; }
-        .tk-eta-label { color: var(--trk-text-secondary); font-size: 0.9rem; }
-
-        .tk-progress-bar { width: 100%; height: 8px; background: var(--trk-bg-body); border-radius: 4px; margin-top: 15px; overflow: hidden; }
-        .tk-progress-fill { height: 100%; background: linear-gradient(90deg, var(--trk-primary), var(--trk-success)); border-radius: 4px; transition: width 0.5s ease; }
-
-        .tk-error-card {
-            background: rgba(239, 68, 68, 0.1); border: 1px solid var(--trk-danger); color: var(--trk-danger);
-            padding: 20px; border-radius: 12px; display: none; animation: slideUp 0.4s ease;
-        }
-        
-        .tk-back-btn { background: transparent; border: 2px solid var(--trk-border-color); color: var(--trk-text-secondary); margin-top: 15px; width: 100%; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600; }
-        .tk-back-btn:hover { border-color: var(--trk-text-primary); color: var(--trk-text-primary); }
-
-        .close-tracker {
-            position: absolute; top: 20px; right: 20px;
-            background: rgba(255,255,255,0.1); color: white;
-            border: none; width: 40px; height: 40px; border-radius: 50%;
-            font-size: 1.2rem; cursor: pointer; z-index: 60;
-            display: flex; align-items: center; justify-content: center;
-            transition: background 0.3s;
-        }
-        .close-tracker:hover { background: rgba(255,255,255,0.3); }
-
-        /* --- SEZIONE SERVIZI --- */
-        .services { padding: 5rem 2rem; max-width: 1200px; margin: 0 auto; position: relative; z-index: 20; background: var(--ilt-bg); }
-        .section-header { text-align: center; margin-bottom: 3rem; }
-        .section-header h2 { font-size: 2.5rem; color: var(--ilt-blue); margin-bottom: 0.5rem; }
-        .section-header .line { width: 80px; height: 4px; background: var(--ilt-orange); margin: 0 auto; }
-
-        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
-        .service-card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); text-align: center; border-bottom: 4px solid transparent; transition: transform 0.3s; }
-        .service-card:hover { transform: translateY(-10px); border-bottom: 4px solid var(--ilt-orange); }
-
-        .icon-box { font-size: 2.5rem; color: var(--ilt-blue); margin-bottom: 1.5rem; background: #f1f5f9; width: 80px; height: 80px; line-height: 80px; border-radius: 50%; margin: 0 auto; transition: 0.3s; }
-        .service-card:hover .icon-box { background: var(--ilt-orange); color: white; transform: rotateY(180deg); }
-        .service-card h3 { margin-bottom: 0.8rem; color: var(--ilt-blue); }
-        .service-card p { color: #64748b; font-size: 0.9rem; }
-
-        /* --- SEZIONE CONTATTI (AGGIORNATA CON WHATSAPP) --- */
-        .contact-section { background: var(--ilt-blue); color: white; padding: 4rem 2rem; margin-top: 3rem; text-align: center; }
-        .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 3rem; max-width: 1000px; margin: 2rem auto; text-align: left; }
-        .contact-info h3 { color: var(--ilt-orange); margin-bottom: 1.5rem; font-size: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 0.5rem; }
-        .contact-item { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 1.2rem; font-size: 1rem; }
-        .contact-item i { color: var(--ilt-orange); margin-top: 4px; width: 20px; text-align: center; }
-        .contact-item a { color: #f8fafc; transition: 0.2s; }
-        .contact-item a:hover { color: var(--ilt-orange); text-decoration: underline; }
-
-        /* Pulsante WhatsApp Styling */
-        .whatsapp-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background-color: var(--wa-green);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            text-decoration: none;
-            margin-top: 20px;
-            width: 100%;
-            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .whatsapp-btn:hover {
-            background-color: var(--wa-dark);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.6);
-            text-decoration: none; /* Rimuove sottolineatura */
-        }
-        
-        .whatsapp-btn i { font-size: 1.3rem; }
-
-        /* Form */
-        .contact-form { display: flex; flex-direction: column; gap: 10px; }
-        .contact-form input, .contact-form textarea {
-            padding: 12px; border-radius: 4px; border: none; font-family: inherit;
-        }
-        .contact-form button {
-            padding: 12px; background: var(--ilt-orange); border: none; color: white; font-weight: bold; border-radius: 4px; cursor: pointer;
-        }
-        .contact-form button:hover { background: #ea580c; }
-
-        /* Footer */
-        footer { background: var(--ilt-blue); color: #94a3b8; padding: 2rem; text-align: center; font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.1); }
-
-        /* Animazione Generica */
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Mobile */
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2rem; }
-            .nav-links, .nav-actions { display: none; }
-            .menu-toggle { display: block; color: white; font-size: 1.5rem; cursor: pointer; }
-            nav.mobile-open { flex-direction: column; position: absolute; top: 70px; left: 0; width: 100%; background: #1e293b; padding: 1rem; }
-            nav.mobile-open .nav-links, nav.mobile-open .nav-actions { display: flex; flex-direction: column; width: 100%; margin-bottom: 1rem; }
-        }
-        @media (min-width: 769px) { .menu-toggle { display: none; } }
-        
-        /* --- ASSISTENTE VIRTUALE GIPRO --- */
-        .gipro-assistant {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 9999;
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        .gipro-bubble {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--gipro-primary), var(--gipro-secondary));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 8px 25px var(--gipro-shadow);
-            transition: all 0.3s ease;
-            animation: gipro-pulse 2s infinite;
-        }
-        
-        @keyframes gipro-pulse {
-            0% { transform: scale(1); box-shadow: 0 8px 25px var(--gipro-shadow); }
-            50% { transform: scale(1.05); box-shadow: 0 12px 35px var(--gipro-shadow); }
-            100% { transform: scale(1); box-shadow: 0 8px 25px var(--gipro-shadow); }
-        }
-        
-        .gipro-bubble:hover {
-            transform: scale(1.1);
-            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.3);
-        }
-        
-        .gipro-bubble i {
-            color: white;
-            font-size: 1.5rem;
-        }
-        
-        .gipro-bubble.minimized i::before {
-            content: "\f00d"; /* Icona X quando minimizzato */
-        }
-        
-        .gipro-chat {
-            position: absolute;
-            bottom: 80px;
-            right: 0;
-            width: 380px;
-            height: 500px;
-            background: var(--gipro-bg);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-            display: none;
-            flex-direction: column;
-            overflow: hidden;
-            animation: gipro-slide-up 0.3s ease;
-        }
-        
-        @keyframes gipro-slide-up {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .gipro-chat.active {
-            display: flex;
-        }
-        
-        .gipro-header {
-            background: linear-gradient(135deg, var(--gipro-primary), var(--gipro-secondary));
-            color: white;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-       body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--ilt-bg);
-            color: var(--ilt-text);
-            line-height: 1.6;
-            overflow-x: hidden;
-        }
-        
-        .gipro-message.assistant {
-            flex-direction: row;
-        }
-        
-        .gipro-message.user {
-            flex-direction: row-reverse;
-        }
-        
-        .gipro-message-content {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-        
-        .gipro-message.assistant .gipro-message-content {
-            background: white;
-            color: var(--gipro-text);
-            border-bottom-left-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .gipro-message.user .gipro-message-content {
-            background: linear-gradient(135deg, var(--gipro-primary), var(--gipro-secondary));
-            color: white;
-            border-bottom-right-radius: 4px;
-        }
-        
-        .gipro-message-time {
-            font-size: 0.7rem;
-            color: #6b7280;
-            margin-top: 4px;
-        }
-        
-        .gipro-message.assistant .gipro-message-time {
-            text-align: left;
-        }
-        
-        .gipro-message.user .gipro-message-time {
-            text-align: right;
-        }
-        
-        .gipro-quick-actions {
-            padding: 15px 20px;
-            background: white;
-            border-top: 1px solid #e5e7eb;
-        }
-        
-        .gipro-quick-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .gipro-quick-btn {
-            flex: 1;
-            padding: 8px 12px;
-            background: linear-gradient(135deg, var(--gipro-primary), var(--gipro-secondary));
-            color: white;
-            border: none;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .gipro-quick-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-        }
-        
-        .gipro-input-area {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .gipro-input {
-            flex: 1;
-            padding: 10px 15px;
-            border: 1px solid #d1d5db;
-            border-radius: 25px;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.3s;
-        }
-        
-        .gipro-input:focus {
-            border-color: var(--gipro-primary);
-        }
-        
-        .gipro-send {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--gipro-primary), var(--gipro-secondary));
-            color: white;
-            border: none;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-        
-        .gipro-send:hover {
-            transform: scale(1.1);
-        }
-        
-        .gipro-typing {
-            display: none;
-            align-items: center;
-            gap: 5px;
-            padding: 10px 15px;
-            background: white;
-            border-radius: 18px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .gipro-typing.show {
-            display: flex;
-        }
-        
-        .gipro-typing-dot {
-            width: 8px;
-            height: 8px;
-            background: #6b7280;
-            border-radius: 50%;
-            animation: gipro-typing 1.4s infinite;
-        }
-        
-        .gipro-typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        
-        .gipro-typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        
-        @keyframes gipro-typing {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-10px); }
-        }
-        
-        /* Responsive per mobile */
-        @media (max-width: 480px) {
-            .gipro-chat {
-                width: calc(100vw - 40px);
-                right: -10px;
-                height: 600px;
-            }
-            
-            .gipro-assistant {
-                bottom: 20px;
-                right: 20px;
-            }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; font-size: 11pt; }
+            @page { margin: 10mm; size: A4 portrait; }
+        }
+        .canvas-container {
+            touch-action: none;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
-<body>
-    <!-- Video Introduttivo -->
-    <div class="video-intro" id="videoIntro">
-        <div class="video-container">
-            <video class="intro-video" id="introVideo" autoplay muted>
-                <source src="loading-video.mp4.mp4" type="video/mp4">
-                Il tuo browser non supporta il tag video.
-            </video>
-            <div class="video-overlay">
-                <div class="intro-logo">ILT Logistics</div>
-                <div class="intro-text">Installazioni Professionali e Logistica Rapida</div>
-                <button class="skip-intro" onclick="skipIntro()">Vai al Sito</button>
+<body class="bg-slate-100 min-h-screen text-slate-800 font-sans flex flex-col">
+
+    <!-- MODALE DI LOGIN -->
+    <div id="login-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-6 transform transition-all">
+            <div class="text-center space-y-2">
+                <div class="inline-flex p-3 bg-red-50 rounded-2xl text-iltRed mb-1">
+                    <i class="fas fa-user-lock text-3xl"></i>
+                </div>
+                <h2 class="text-xl font-black text-slate-800 tracking-tight">Accesso Riservato</h2>
+                <p class="text-xs text-slate-500">Inserisci le credenziali per accedere al sistema di reportistica ILT Logistics.</p>
+            </div>
+
+            <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+                <div id="login-error" class="hidden bg-red-50 border border-red-200 text-red-700 text-xs p-3 rounded-lg flex items-center gap-2">
+                    <i class="fas fa-circle-exclamation"></i>
+                    <span id="login-error-msg">Credenziali non valide.</span>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Username</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fas fa-user text-xs"></i>
+                        </span>
+                        <input type="text" id="login_username" required placeholder="Es. admin o tecnico" class="w-full text-xs pl-9 p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                            <i class="fas fa-key text-xs"></i>
+                        </span>
+                        <input type="password" id="login_password" required placeholder="••••••••" class="w-full text-xs pl-9 p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-iltRed hover:bg-red-700 text-white font-bold text-xs rounded-lg shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fas fa-right-to-bracket"></i> Accedi
+                </button>
+            </form>
+
+            <div class="border-t border-slate-100 pt-3 text-[11px] text-slate-400 space-y-1">
+                <p class="font-bold text-slate-500">Credenziali Predefinite:</p>
+                <div class="flex justify-between font-mono">
+                    <span>Admin: admin / admin123</span>
+                    <span>Tecnico: maiorana / 123456</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Contenuto Principale -->
-    <div class="main-content" id="mainContent">
+    <!-- INPUT FOTOCAMERA NASCOSTO PER SCANSIONE ETICHETTA -->
+    <input type="file" id="labelScanInput" accept="image/*" capture="environment" class="hidden" onchange="handleLabelScanFile(event)">
 
-    <!-- Header -->
-    <header>
-        <div class="logo"><i class="fas fa-screwdriver-wrench"></i> ILT Logistics</div>
-        <nav id="mainNav">
-            <ul class="nav-links">
-                <li><a href="#home" class="nav-link" onclick="closeTracker()">Home</a></li>
-                <li><a href="#servizi" class="nav-link" onclick="closeTracker()">Servizi</a></li>
-                <li><a href="#contatti" class="nav-link" onclick="closeTracker()">Contatti</a></li>
-            </ul>
-            <div class="nav-actions">
-                <button class="btn-login" onclick="window.open('gipro.html', '_blank')"><i class="fas fa-user"></i> Login</button>
-                <!-- Link modificato per scorrere ai contatti -->
-                <a href="#contatti" class="btn-nav">Richiedi Intervento</a>
+    <!-- TOAST NOTIFICATIONS -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
+
+    <!-- NAVBAR E HEADER -->
+    <header class="bg-iltDark text-white shadow-lg no-print sticky top-0 z-40 border-b-4 border-iltRed">
+        <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white p-1.5 rounded-lg shadow-sm flex items-center h-11 border border-slate-200 overflow-hidden min-w-[100px] justify-center" id="appHeaderLogoContainer"></div>
+                <div>
+                    <h1 class="text-base font-bold tracking-tight leading-tight flex items-center gap-2">
+                        <span id="appHeaderCompanyName">ILT Logistics S.r.l.</span>
+                        <span class="text-[10px] bg-iltRed text-white px-2 py-0.5 rounded font-mono uppercase tracking-wider">HVAC & F-GAS</span>
+                    </h1>
+                    <p class="text-[11px] text-slate-300" id="appHeaderSubText">Servizi Tecnici, Impiantistica & Assistenza</p>
+                </div>
             </div>
-        </nav>
-        <div class="menu-toggle" onclick="toggleMobileMenu()"><i class="fas fa-bars"></i></div>
+
+            <!-- UTENTE E NAVIGAZIONE TAB -->
+            <div class="flex items-center gap-3">
+                <!-- BADGE SESSIONE UTENTE -->
+                <div id="user-session-badge" class="hidden flex items-center gap-2 bg-slate-800 border border-slate-700 px-3 py-1 rounded-xl text-xs">
+                    <span id="user-role-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-iltBlue text-white">Tecnico</span>
+                    <span id="user-name-display" class="font-bold text-slate-200">Operatore</span>
+                    <button onclick="logoutUser()" title="Disconnettiti" class="text-slate-400 hover:text-red-400 ml-1">
+                        <i class="fas fa-power-off"></i>
+                    </button>
+                </div>
+
+                <nav class="flex items-center space-x-1.5 bg-slate-800/90 p-1 rounded-xl border border-slate-700">
+                    <button onclick="switchTab('assigned-tasks')" id="tab-btn-tasks" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fas fa-list-check text-amber-400"></i> <span id="tab-tasks-label">Pre-Report Assegnati</span>
+                        <span id="pending-tasks-badge" class="bg-amber-500 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+                    </button>
+                    <button onclick="switchTab('new-report', false, 'professional'); preparePreReport('professional')" id="tab-btn-professional" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-iltRed text-white flex items-center gap-1.5 shadow transition">
+                        <i class="fas fa-file-signature"></i> <span>Pre-Report Professional</span>
+                    </button>
+                    <button onclick="switchTab('new-report', false, 'base'); preparePreReport('base')" id="tab-btn-base" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fas fa-file-lines"></i> <span>Pre-Report Base</span>
+                    </button>
+                    <button onclick="switchTab('history')" id="tab-btn-history" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fas fa-history"></i> <span>Storico</span>
+                        <span id="history-badge" class="bg-slate-700 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+                    </button>
+                    <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fas fa-sliders"></i> <span>Impostazioni</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
     </header>
 
-    <main>
-        <!-- Hero Section -->
-        <section id="home" class="hero">
-            <div class="city-grid"></div>
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-5">
+
+        <!-- TAB: PRE-REPORT (GESTIONE ADMIN / COMPLETAMENTO TECNICO) -->
+        <section id="tab-assigned-tasks" class="space-y-4 no-print">
+            <div id="tasks-header-banner" class="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center gap-3">
+                <i class="fas fa-clipboard-list text-2xl text-amber-600"></i>
+                <div>
+                    <h3 id="tasks-banner-title" class="text-sm font-bold text-amber-900">Pre-Report Assegnati</h3>
+                    <p id="tasks-banner-desc" class="text-xs text-amber-700">Gestione e monitoraggio dei pre-report emessi e in attesa di completamento tecnico in cantiere.</p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                    <h2 id="tasks-table-title" class="text-xs font-bold uppercase tracking-wider text-slate-700">Elenco Pre-Report</h2>
+                    <span id="tasks-count-tag" class="text-xs font-bold bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full">0 Incarichi</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
+                                <th class="p-3">N° Doc</th>
+                                <th class="p-3">Data</th>
+                                <th class="p-3">Cliente</th>
+                                <th class="p-3">Indirizzo / Ubicazione</th>
+                                <th class="p-3">Tipologia</th>
+                                <th class="p-3" id="th-tecnico-col">Tecnico Incaricato</th>
+                                <th class="p-3 text-center">Azione</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasks-tbody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 1: MODULO COMPILAZIONE REPORT / PRE-REPORT -->
+        <section id="tab-new-report" class="hidden space-y-5">
             
-            <div class="hero-content" id="heroContent">
-                <h1>Installazioni Professionali <br> e <span>Logistica Rapida</span></h1>
-                <p>Da ILT Logistics ricevi un servizio completo: installiamo climatizzatori, caldaie ed elettrodomestici, e consegnamo la merce in tempi record.</p>
-                
-                <button class="btn-tracker" onclick="openTracker()">
-                    <i class="fas fa-map-marked-alt"></i> Traccia la mia consegna
-                </button>
-            </div>
-        </section>
-
-        <!-- Tracking Section -->
-        <section id="tracking-section">
-            <button class="close-tracker" onclick="closeTracker()" title="Chiudi Tracciamento"><i class="fas fa-times"></i></button>
-            
-            <div class="tracker-container">
-                <div class="tk-logo">GIPRO</div>
-                <p class="tk-subtitle">Tracciamento Consegna</p>
-
-                <div class="tk-search-box" id="tkSearchBox">
-                    <p style="margin-bottom: 20px; color: var(--trk-text-secondary);">Inserisci il codice della tua consegna</p>
-                    <input type="text" id="trackingId" class="tk-input" placeholder="Es: 0001 o TRK-ABC123" maxlength="20" autocomplete="off">
-                    <button class="tk-btn" onclick="Tracker.search()"><i class="fas fa-search"></i> Cerca Consegna</button>
+            <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-3 no-print">
+                <div class="flex items-center flex-wrap gap-2">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Strumenti:</span>
+                    <button type="button" onclick="loadDemoData()" class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-iltBlue font-bold text-xs rounded-lg border border-blue-200 flex items-center gap-1.5 transition">
+                        <i class="fas fa-wand-magic-sparkles"></i> Carica Dati Demo
+                    </button>
+                    <button type="button" onclick="resetForm()" class="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold text-xs rounded-lg border border-slate-200 flex items-center gap-1.5 transition">
+                        <i class="fas fa-rotate-left"></i> Svuota Campi
+                    </button>
                 </div>
 
-                <div class="tk-result-card" id="tkResultCard">
-                    <div class="tk-status-icon" id="tkStatusIcon"><i class="fas fa-truck"></i></div>
-                    <div class="tk-status-title" id="tkStatusTitle">In Consegna</div>
-                    <div class="tk-status-message" id="tkStatusMessage">Il corriere è in arrivo</div>
-
-                    <div class="tk-info-grid">
-                        <div class="tk-info-row"><span class="tk-info-label">Codice</span><span class="tk-info-value" id="tkInfoId">-</span></div>
-                        <div class="tk-info-row"><span class="tk-info-label">Operatore</span><span class="tk-info-value" id="tkInfoOperator">-</span></div>
-                        <div class="tk-info-row"><span class="tk-info-label">Indirizzo</span><span class="tk-info-value" id="tkInfoAddress">-</span></div>
-                    </div>
-
-                    <div class="tk-eta-box" id="tkEtaBox">
-                        <span class="tk-eta-time" id="tkEtaTime">--:--</span>
-                        <span class="tk-eta-label" id="tkEtaLabel">Orario stimato arrivo</span>
-                        <div class="tk-progress-bar">
-                            <div class="tk-progress-fill" id="tkProgressFill" style="width: 0%"></div>
-                        </div>
-                    </div>
-
-                    <button class="tk-back-btn" onclick="Tracker.reset()"><i class="fas fa-redo"></i> Nuova Ricerca</button>
-                </div>
-
-                <div class="tk-error-card" id="tkErrorCard">
-                    <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                    <p style="font-weight: 600; margin-bottom: 5px;">Codice non trovato</p>
-                    <p style="font-size: 0.9rem;">Verifica il codice e riprova.</p>
-                    <button class="tk-back-btn" onclick="Tracker.reset()" style="margin-top: 15px; border-color: var(--trk-danger); color: var(--trk-danger);"><i class="fas fa-redo"></i> Riprova</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Servizi -->
-        <section id="servizi" class="services">
-            <div class="section-header">
-                <h2>I Nostri Servizi</h2>
-                <div class="line"></div>
-            </div>
-            <div class="cards-grid">
-                <article class="service-card">
-                    <a href="clima.html" style="text-decoration: none; color: inherit;">
-                        <div class="icon-box"><i class="fas fa-snowflake"></i></div>
-                        <h3>Installazione Climatizzatori</h3>
-                        <p>Montaggio professionale di split e multi-split.</p>
-                    </a>
-                </article>
-                <article class="service-card">
-                    <a href="caldaie.html" style="text-decoration: none; color: inherit;">
-                        <div class="icon-box"><i class="fas fa-fire-flame-simple"></i></div>
-                        <h3>Installazione Caldaie</h3>
-                        <p>Sostituzione e nuova installazione caldaie.</p>
-                    </a>
-                </article>
-                <article class="service-card">
-                    <a href="elettrodomestici.html" style="text-decoration: none; color: inherit;">
-                        <div class="icon-box"><i class="fas fa-plug"></i></div>
-                        <h3>Installazione Elettrodomestici</h3>
-                        <p>Collegamento idrico ed elettrico.</p>
-                    </a>
-                </article>
-                <article class="service-card">
-                    <a href="consegna-elettrodomestici.html" style="text-decoration: none; color: inherit;">
-                        <div class="icon-box"><i class="fas fa-box-open"></i></div>
-                        <h3>Consegna Elettrodomestici</h3>
-                        <p>Trasporto sicuro della merce acquistata.</p>
-                    </a>
-                </article>
-                <article class="service-card">
-                    <a href="consegne-rapide.html" style="text-decoration: none; color: inherit;">
-                        <div class="icon-box"><i class="fas fa-stopwatch"></i></div>
-                        <h3>Consegne Rapide</h3>
-                        <p>Servizio espresso entro 3 ore.</p>
-                    </a>
-                </article>
-            </div>
-        </section>
-
-        <!-- Contatti -->
-        <section id="contatti" class="contact-section">
-            <div class="section-header" style="color: white;">
-                <h2 style="color: white;">Contattaci Subito</h2>
-                <div class="line" style="background: white;"></div>
-            </div>
-            <div class="contact-grid">
-                <!-- Colonna Info -->
-                <div class="contact-info">
-                    <h3>Informazioni</h3>
-                    <div class="contact-item">
-                        <i class="fas fa-phone-alt"></i>
-                        <div>
-                            <a href="tel:+390916739583">+091 6739583</a><br>
-                            <a href="tel:+393793336959">+39 379 333 6959</a>
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-envelope"></i>
-                        <a href="mailto:iltlogistics@pec.it">iltlogistics@pec.it</a>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div>
-                            Via Sperone 3, Palermo<br>
-                            Via Sardegna 13, Pieve Emanuele (MI)
-                        </div>
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-clock"></i>
-                        <span>Lun - Ven: 08:00 - 18:00</span>
-                    </div>
+                <div class="flex items-center flex-wrap gap-2">
+                    <button type="button" onclick="generateAIReport()" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
+                        <i class="fas fa-robot"></i> Genera Relazione AI
+                    </button>
                     
-                    <!-- PULSANTE WHATSAPP -->
-                    <a href="https://wa.me/393898735341?text=Salve,%20vorrei%20richiedere%20un%20intervento." class="whatsapp-btn" target="_blank">
-                        <i class="fab fa-whatsapp"></i> Contattaci su WhatsApp
-                    </a>
-                </div>
+                    <!-- BOTTONE SALVA COME PRE-REPORT (SOLO ADMIN) -->
+                    <button type="button" id="btn-save-prereport" onclick="saveAsPreReport()" class="hidden px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
+                        <i class="fas fa-paper-plane"></i> Assegna Pre-Report a Tecnico
+                    </button>
 
-                <!-- Colonna Form -->
-                <form class="contact-form" onsubmit="event.preventDefault(); alert('Messaggio inviato!');">
-                    <input type="text" placeholder="Nome" required>
-                    <input type="tel" placeholder="Telefono" required>
-                    <textarea rows="4" placeholder="Messaggio"></textarea>
-                    <button type="submit">Invia Richiesta</button>
-                </form>
-            </div>
-        </section>
-    </main>
-
-    <!-- Assistente Virtuale GIPRO -->
-    <div class="gipro-assistant">
-        <div class="gipro-chat">
-            <div class="gipro-header">
-                <div class="gipro-header-info">
-                    <div class="gipro-avatar">G</div>
-                    <div class="gipro-name">
-                        <h3>GIPRO</h3>
-                        <p>Assistente Virtuale</p>
-                    </div>
-                </div>
-                <button class="gipro-minimize" onclick="toggleGipro()">
-                    <i class="fas fa-minus"></i>
-                </button>
-            </div>
-            
-            <div class="gipro-messages" id="giproMessages">
-                <div class="gipro-message assistant">
-                    <div class="gipro-message-content">
-                        <div>Ciao! Sono GIPRO, il tuo assistente virtuale ILT Logistics. Come posso aiutarti oggi?</div>
-                        <div class="gipro-message-time">Ora</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="gipro-typing" id="giproTyping">
-                <div class="gipro-typing-dot"></div>
-                <div class="gipro-typing-dot"></div>
-                <div class="gipro-typing-dot"></div>
-            </div>
-            
-            <div class="gipro-quick-actions">
-                <div class="gipro-quick-buttons">
-                    <button class="gipro-quick-btn" onclick="giproQuickAction('phone')">📞 Telefono</button>
-                    <button class="gipro-quick-btn" onclick="giproQuickAction('email')">📧 Email</button>
-                    <button class="gipro-quick-btn" onclick="giproQuickAction('whatsapp')">💬 WhatsApp</button>
-                </div>
-                <div class="gipro-quick-buttons" style="margin-top: 10px;">
-                    <button class="gipro-quick-btn" onclick="giproQuickAction('preventivo')">💰 Preventivo</button>
-                    <button class="gipro-quick-btn" onclick="giproQuickAction('orari')">⏰ Orari</button>
-                    <button class="gipro-quick-btn" onclick="giproQuickAction('tracking')">📦 Tracciamento</button>
-                </div>
-                <div class="gipro-input-area">
-                    <input type="text" class="gipro-input" id="giproInput" placeholder="Scrivi un messaggio..." onkeypress="handleGiproInput(event)">
-                    <button class="gipro-send" onclick="sendGiproMessage()">
-                        <i class="fas fa-paper-plane"></i>
+                    <button type="button" onclick="saveReport()" class="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
+                        <i class="fas fa-floppy-disk"></i> Salva Report Definitivo
+                    </button>
+                    <button type="button" onclick="exportPDF()" class="px-3.5 py-1.5 bg-iltRed hover:bg-red-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
+                        <i class="fas fa-file-pdf"></i> Scarica PDF
                     </button>
                 </div>
             </div>
-        </div>
-        
-        <div class="gipro-bubble" onclick="toggleGipro()">
-            <i class="fas fa-comments"></i>
-        </div>
-    </div>
 
-    <footer>
-        <p>&copy; 2023 ILT Logistics Srl. Servizi di Installazione e Consegna.</p>
-    </footer>
-
-    <!-- Logica JavaScript -->
-    <script>
-        // --- Gestione Video Introduttivo ---
-        let videoTimeout;
-        
-        window.addEventListener('load', function() {
-            const video = document.getElementById('introVideo');
-            const videoIntro = document.getElementById('videoIntro');
-            const mainContent = document.getElementById('mainContent');
-            
-            // Imposta un timeout di 10 secondi massimo per il video
-            videoTimeout = setTimeout(() => {
-                endIntro();
-            }, 10000);
-            
-            // Quando il video finisce, passa al contenuto principale
-            video.addEventListener('ended', function() {
-                endIntro();
-            });
-            
-            // Gestione errori del video
-            video.addEventListener('error', function() {
-                console.log('Video non disponibile, salto diretto al contenuto');
-                endIntro();
-            });
-        });
-        
-        function skipIntro() {
-            endIntro();
-        }
-        
-        function endIntro() {
-            clearTimeout(videoTimeout);
-            
-            const videoIntro = document.getElementById('videoIntro');
-            const mainContent = document.getElementById('mainContent');
-            
-            // Fade out del video
-            videoIntro.style.opacity = '0';
-            videoIntro.style.transition = 'opacity 0.5s ease';
-            
-            setTimeout(() => {
-                videoIntro.style.display = 'none';
-                mainContent.classList.add('active');
+            <!-- FORM NUOVO REPORT -->
+            <form id="report-form" class="space-y-5 no-print" onsubmit="event.preventDefault();">
                 
-                // Resetta lo scroll all'inizio
-                window.scrollTo(0, 0);
-            }, 500);
-        }
+                <!-- 1. COMMITTENTE & ASSEGNAZIONE -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                        <h2 class="text-sm font-bold text-iltDark flex items-center gap-2">
+                            <span class="p-1.5 bg-red-50 text-iltRed rounded-md"><i class="fas fa-user-tag"></i></span>
+                            <span>1. Dati Committente e Riferimenti Documento</span>
+                        </h2>
+                        <span class="text-xs text-slate-400 font-mono" id="form-doc-num-badge">N° INT-2026-1022</span>
+                    </div>
 
-        function closeTracker() {
-            document.getElementById('tracking-section').style.display = 'none';
-            document.querySelector('.hero').style.display = 'flex';
-            Tracker.reset();
-        }
+                    <!-- BLOCCO ASSEGNAZIONE TECNICO (VISIBILE SOLO ALL'ADMIN) -->
+                    <div id="admin-assignment-box" class="hidden bg-amber-50 border border-amber-200 p-3.5 rounded-xl flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-2 text-xs text-amber-900 font-bold">
+                            <i class="fas fa-user-gear text-base text-amber-600"></i>
+                            <span>Assegna questo Pre-Report ad un tecnico operativo:</span>
+                        </div>
+                        <div class="flex items-center gap-2 min-w-[220px]">
+                            <select id="assigned_technician_select" class="w-full text-xs font-bold border border-amber-300 rounded-lg p-2 bg-white text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                            </select>
+                        </div>
+                    </div>
 
-        function openTracker() {
-            document.getElementById('tracking-section').style.display = 'block';
-            document.querySelector('.hero').style.display = 'none';
-            // Resetta il tracker per una nuova ricerca
-            Tracker.reset();
-        }
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Numero Report</label>
+                            <input type="text" id="doc_num" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-iltRed bg-slate-50 focus:ring-2 focus:ring-iltRed focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Data Intervento</label>
+                            <input type="date" id="doc_date" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipologia Intervento</label>
+                            <select id="tipo_intervento" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-semibold text-slate-700 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                                <option>Installazione & Collaudo Climatizzatore</option>
+                                <option>Sopralluogo Tecnico & Fattibilità</option>
+                                <option>Manutenzione Ordinaria / Pulizia Filtri</option>
+                                <option>Riparazione & Ricerca Perdita Refrigerante</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Cliente / Spett.le</label>
+                            <input type="text" id="cliente_nome" placeholder="Es. Cosentino Giuseppe" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
 
-        function toggleMobileMenu() {
-            document.getElementById('mainNav').classList.toggle('mobile-open');
-        }
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Indirizzo / Ubicazione Immobile</label>
+                            <input type="text" id="cliente_indirizzo" placeholder="Es. Via Giovanni Pacini 39, Palermo (PA)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Codice Fiscale / P.IVA</label>
+                            <input type="text" id="cliente_cf" placeholder="Es. CSNGPP59E03G273A" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Email Cliente</label>
+                            <input type="email" id="cliente_email" placeholder="cliente@email.it" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
 
-        // --- Configurazione Firebase ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyDbKtru1AyoexRXuWybXA_nh7pPmzR1WjI",
-            authDomain: "gipro-c5e47.firebaseapp.com",
-            projectId: "gipro-c5e47",
-            storageBucket: "gipro-c5e47.firebasestorage.app",
-            messagingSenderId: "417519163920",
-            appId: "1:417519163920:web:ad67a8262ede081ad6c895",
-            measurementId: "G-TMP00KTXXV"
-        };
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Rivenditore / Provenienza</label>
+                            <input type="text" id="rivenditore" placeholder="Es. MediaMarket S.p.A. (Palermo)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">N° Bolla / Ricevuta / Scontrino</label>
+                            <input type="text" id="num_scontrino" placeholder="Es. 3538146 / RT 0123-0025" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Data Bolla / Ricevuta</label>
+                            <input type="date" id="data_bolla" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Totale Acquisto (€)</label>
+                            <input type="text" id="totale_acquisto" placeholder="Es. 559,09" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                    </div>
+                </div>
 
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const db = firebase.firestore();
+                <!-- 2. ASSET / PRODOTTI -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <h2 class="text-sm font-bold text-iltDark flex items-center gap-2">
+                            <span class="p-1.5 bg-blue-50 text-iltBlue rounded-md"><i class="fas fa-cubes"></i></span>
+                            <span id="section-2-title">2. Censimento Apparecchiature con Doppio Seriale (S/N UI / UE) & Scan Foto Etichetta</span>
+                        </h2>
+                        <button type="button" onclick="addAssetRow()" class="px-3 py-1.5 bg-iltBlue text-white text-xs font-bold rounded-lg hover:bg-blue-800 flex items-center gap-1 transition">
+                            <i class="fas fa-plus"></i> <span id="add-row-btn-text">Aggiungi Macchina</span>
+                        </button>
+                    </div>
 
-        // --- Logica Tracker ---
-        const Tracker = {
-            search: async () => {
-                const input = document.getElementById('trackingId').value.trim();
-                if (!input) return;
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr id="assets-table-header" class="bg-slate-100 text-slate-700 uppercase font-bold text-[11px] border-b border-slate-200"></tr>
+                            </thead>
+                            <tbody id="assets-table-body" class="divide-y divide-slate-200"></tbody>
+                        </table>
+                    </div>
+                </div>
 
-                document.getElementById('tkSearchBox').style.display = 'none';
-                document.getElementById('tkErrorCard').style.display = 'none';
-                document.getElementById('tkResultCard').style.display = 'none';
+                <!-- 3. PARAMETRI STRUMENTALI -->
+                <div id="sezione-parametri-fgas" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <h2 class="text-sm font-bold text-iltDark flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                        <span class="p-1.5 bg-green-50 text-green-700 rounded-md"><i class="fas fa-gauge-high"></i></span>
+                        <span>3. Parametri Strumentali, Temperature & Certificazione Collaudo F-GAS</span>
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tenuta Azoto (bar)</label>
+                            <input type="text" id="fgas_azoto" value="42 bar (Superata)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Prova Vuoto Circuito</label>
+                            <input type="text" id="fgas_vuoto" value="-1.0 bar (30 min) OK" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Pressione Operativa Bassa</label>
+                            <input type="text" id="fgas_pressione" value="8.5 bar (Regime Inverter)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Drenaggio Condensa</label>
+                            <input type="text" id="fgas_condensa" value="Test Flusso Ok per Gravità" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">N° Patentino F-GAS Tecnico</label>
+                            <input type="text" id="fgas_patentino" value="XPERT/FGAS/23/2529" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Gas Refrigerante Aggiunto (g)</label>
+                            <input type="text" id="fgas_gas_aggiunto" value="0 g (Precarica standard ok)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Temperature Aria in Uscita Split (°C)</label>
+                            <input type="text" id="fgas_temp_split" value="Split Letto: +6.8 °C | Split Studio: +7.2 °C" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                    </div>
+                </div>
 
-                try {
-                    // 1. Cerca per Tracking ID (es. "TRK-XXXXX")
-                    let snapshot = await db.collection("domicile_tickets")
-                        .where("trackingId", "==", input)
-                        .limit(1)
-                        .get();
+                <!-- 4. CHECKLIST -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3.5">
+                    <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+                        <h2 class="text-sm font-bold text-iltDark flex items-center gap-2">
+                            <span class="p-1.5 bg-purple-50 text-purple-700 rounded-md"><i class="fas fa-list-check"></i></span>
+                            <span>4. Checklist Controllo Qualità, Sicurezza & Normativa</span>
+                        </h2>
+                        <div class="flex items-center gap-2 text-xs">
+                            <button type="button" onclick="toggleAllChecklist(true)" class="text-iltBlue font-bold hover:underline">Seleziona Tutti</button>
+                            <span class="text-slate-300">|</span>
+                            <button type="button" onclick="toggleAllChecklist(false)" class="text-slate-500 hover:underline">Deseleziona</button>
+                        </div>
+                    </div>
+
+                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                        <div id="checklist-progress" class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 100%"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5" id="checklist-container"></div>
+                </div>
+
+                <!-- 5. RELAZIONE TECNICA ED EXTRA -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-2">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <label class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fas fa-file-pen text-iltRed"></i> Relazione Tecnica Lavorazioni
+                            </label>
+                            <button type="button" onclick="generateAIReport()" class="text-xs text-purple-600 font-bold hover:text-purple-800 flex items-center gap-1">
+                                <i class="fas fa-wand-magic-sparkles"></i> Perfeziona con AI
+                            </button>
+                        </div>
+                        <textarea id="relazione_tecnica" rows="6" class="w-full text-xs border border-slate-300 rounded-lg p-3 font-sans leading-relaxed focus:ring-2 focus:ring-iltBlue focus:outline-none" placeholder="Descrivere analiticamente le operazioni eseguite..."></textarea>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fas fa-receipt text-green-600"></i> Pagamenti Extra Incassati
+                            </h3>
+                            <button type="button" onclick="addExtraRow()" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-bold transition flex items-center gap-1">
+                                <i class="fas fa-plus"></i> Add Spesa
+                            </button>
+                        </div>
                         
-                    if (!snapshot.empty) {
-                        snapshot.forEach(doc => Tracker.showResult(doc.data()));
-                        return;
-                    }
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-700 font-bold text-[10px] uppercase border-b border-slate-200">
+                                        <th class="p-1.5">Voce / Materiale Extra</th>
+                                        <th class="p-1.5 w-20">Importo (€)</th>
+                                        <th class="p-1.5 w-28">Modalità</th>
+                                        <th class="p-1 text-center w-8"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="extra-table-body" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 flex justify-between items-center text-xs">
+                            <span class="font-bold text-slate-700">TOTALE EXTRA INCASSATI:</span>
+                            <span id="extra_total_badge" class="font-black text-green-700 text-sm">€ 0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5B. SEZIONE FOTOGRAFICA CANTIERE -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <h2 class="text-sm font-bold text-iltDark flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                        <span class="p-1.5 bg-amber-50 text-amber-700 rounded-md"><i class="fas fa-camera"></i></span>
+                        <span>5. Documentazione Fotografica Cantiere (Fino a 4 foto con didascalia)</span>
+                    </h2>
                     
-                    // 2. Cerca per Ticket ID (es. "0001")
-                    snapshot = await db.collection("domicile_tickets")
-                        .where("ticketId", "==", input)
-                        .limit(1)
-                        .get();
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Foto 1 -->
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2 text-center">
+                            <div class="h-32 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center overflow-hidden bg-white relative cursor-pointer group" onclick="triggerPhotoUpload(1)">
+                                <img id="photo_preview_1" class="w-full h-full object-cover hidden" alt="Foto 1">
+                                <div id="photo_placeholder_1" class="text-slate-400 text-xs space-y-1">
+                                    <i class="fas fa-camera text-2xl"></i>
+                                    <p class="font-bold">Scatta / Carica Foto 1</p>
+                                </div>
+                            </div>
+                            <input type="file" id="photo_file_1" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, 1)">
+                            <input type="text" id="photo_caption_1" placeholder="Didascalia" class="w-full text-xs border border-slate-300 rounded p-2 bg-white text-center">
+                            <button type="button" onclick="clearPhoto(1)" class="text-[10px] text-red-500 hover:underline">Rimuovi Foto</button>
+                        </div>
+                        <!-- Foto 2 -->
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2 text-center">
+                            <div class="h-32 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center overflow-hidden bg-white relative cursor-pointer group" onclick="triggerPhotoUpload(2)">
+                                <img id="photo_preview_2" class="w-full h-full object-cover hidden" alt="Foto 2">
+                                <div id="photo_placeholder_2" class="text-slate-400 text-xs space-y-1">
+                                    <i class="fas fa-camera text-2xl"></i>
+                                    <p class="font-bold">Scatta / Carica Foto 2</p>
+                                </div>
+                            </div>
+                            <input type="file" id="photo_file_2" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, 2)">
+                            <input type="text" id="photo_caption_2" placeholder="Didascalia" class="w-full text-xs border border-slate-300 rounded p-2 bg-white text-center">
+                            <button type="button" onclick="clearPhoto(2)" class="text-[10px] text-red-500 hover:underline">Rimuovi Foto</button>
+                        </div>
+                        <!-- Foto 3 -->
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2 text-center">
+                            <div class="h-32 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center overflow-hidden bg-white relative cursor-pointer group" onclick="triggerPhotoUpload(3)">
+                                <img id="photo_preview_3" class="w-full h-full object-cover hidden" alt="Foto 3">
+                                <div id="photo_placeholder_3" class="text-slate-400 text-xs space-y-1">
+                                    <i class="fas fa-camera text-2xl"></i>
+                                    <p class="font-bold">Scatta / Carica Foto 3</p>
+                                </div>
+                            </div>
+                            <input type="file" id="photo_file_3" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, 3)">
+                            <input type="text" id="photo_caption_3" placeholder="Didascalia" class="w-full text-xs border border-slate-300 rounded p-2 bg-white text-center">
+                            <button type="button" onclick="clearPhoto(3)" class="text-[10px] text-red-500 hover:underline">Rimuovi Foto</button>
+                        </div>
+                        <!-- Foto 4 -->
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2 text-center">
+                            <div class="h-32 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center overflow-hidden bg-white relative cursor-pointer group" onclick="triggerPhotoUpload(4)">
+                                <img id="photo_preview_4" class="w-full h-full object-cover hidden" alt="Foto 4">
+                                <div id="photo_placeholder_4" class="text-slate-400 text-xs space-y-1">
+                                    <i class="fas fa-camera text-2xl"></i>
+                                    <p class="font-bold">Scatta / Carica Foto 4</p>
+                                </div>
+                            </div>
+                            <input type="file" id="photo_file_4" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, 4)">
+                            <input type="text" id="photo_caption_4" placeholder="Didascalia" class="w-full text-xs border border-slate-300 rounded p-2 bg-white text-center">
+                            <button type="button" onclick="clearPhoto(4)" class="text-[10px] text-red-500 hover:underline">Rimuovi Foto</button>
+                        </div>
+                    </div>
+                </div>
 
-                    if (snapshot.empty) {
-                        // 3. Se non trova, cerca per ID Documento
-                        const docRef = await db.collection("domicile_tickets").doc(input).get();
-                        if (docRef.exists) {
-                            Tracker.showResult(docRef.data());
-                        } else {
-                            Tracker.showError();
-                        }
-                    } else {
-                        snapshot.forEach(doc => Tracker.showResult(doc.data()));
-                    }
-                } catch (error) {
-                    console.error("Errore DB:", error);
-                    Tracker.showError();
-                }
-            },
+                <!-- 6. FIRME CANVAS -->
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Firma Tecnico Incaricato</label>
+                            <button type="button" onclick="clearCanvas('canvas-tecnico')" class="text-xs text-slate-400 hover:text-red-600">Pulisci</button>
+                        </div>
+                        <input type="text" id="nome_tecnico" placeholder="Nome Tecnico" class="w-full text-xs border border-slate-300 rounded-lg p-2 mb-2 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        <div class="border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 canvas-container">
+                            <canvas id="canvas-tecnico" width="400" height="110" class="w-full h-24 cursor-crosshair"></canvas>
+                        </div>
+                    </div>
 
-            showResult: async (ticket) => {
-                document.getElementById('tkInfoId').innerText = `#${ticket.ticketId || ticket.id.substring(0,4)}`;
-                document.getElementById('tkInfoOperator').innerText = ticket.operator || 'N/D';
-                document.getElementById('tkInfoAddress').innerText = ticket.address || 'N/D';
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Firma Cliente per Accettazione & Collaudo</label>
+                            <button type="button" onclick="clearCanvas('canvas-cliente')" class="text-xs text-slate-400 hover:text-red-600">Pulisci</button>
+                        </div>
+                        <div class="text-xs text-slate-500 mb-2 font-medium" id="label-nome-cliente-firma">Spett.le Cliente</div>
+                        <div class="border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 canvas-container">
+                            <canvas id="canvas-cliente" width="400" height="110" class="w-full h-24 cursor-crosshair"></canvas>
+                        </div>
+                    </div>
+                </div>
 
-                const iconEl = document.getElementById('tkStatusIcon');
-                const titleEl = document.getElementById('tkStatusTitle');
-                const msgEl = document.getElementById('tkStatusMessage');
-                const etaBox = document.getElementById('tkEtaBox');
+            </form>
 
-                iconEl.className = 'tk-status-icon';
-
-                if (ticket.status === 'completato') {
-                    iconEl.classList.add('completed');
-                    iconEl.innerHTML = '<i class="fas fa-check-circle"></i>';
-                    titleEl.innerText = 'Consegna Completata';
-                    titleEl.style.color = 'var(--trk-success)';
-                    msgEl.innerText = 'La tua consegna è stata effettuata con successo.';
-                    etaBox.style.display = 'none';
-                } else if (ticket.status === 'reclamo') {
-                    iconEl.classList.add('pending');
-                    iconEl.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
-                    titleEl.innerText = 'In Verifica';
-                    titleEl.style.color = 'var(--trk-warning)';
-                    msgEl.innerText = 'Il tuo ticket è stato preso in carico.';
-                    etaBox.style.display = 'none';
-                } else {
-                    iconEl.classList.add('transit');
-                    iconEl.innerHTML = '<i class="fas fa-truck-moving"></i>';
-                    titleEl.innerText = 'In Programmazione';
-                    titleEl.style.color = 'var(--trk-primary)';
+            <!-- ANTEPRIMA STAMPA A4 -->
+            <div id="print-area-wrapper" class="bg-slate-200 p-2 sm:p-6 rounded-xl flex justify-center">
+                <div id="print-area" class="bg-white p-8 rounded-sm shadow-xl border border-slate-300 w-full max-w-[210mm] text-slate-800 text-[11px] leading-tight space-y-4 font-sans">
                     
-                    const estimation = await Tracker.calculateETA(ticket);
-                    
-                    msgEl.innerText = estimation.message;
-                    document.getElementById('tkEtaTime').innerText = estimation.etaTime;
-                    document.getElementById('tkProgressFill').style.width = estimation.progress + '%';
-                    document.getElementById('tkEtaLabel').innerText = estimation.label;
-                    etaBox.style.display = 'block';
-                }
+                    <div class="border-b-2 border-iltRed pb-3 flex justify-between items-start gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-white p-1 rounded border border-slate-200 max-w-[140px] flex items-center justify-center" id="prt_logo_container"></div>
+                            <div>
+                                <h1 class="text-base font-black text-slate-900 tracking-tight leading-none" id="prt_company_name">ILT LOGISTICS S.R.L.</h1>
+                                <p class="text-[9.5px] text-slate-600 mt-1" id="prt_company_sub">Servizi Tecnici ed Impiantistica HVAC / F-GAS</p>
+                                <p class="text-[8.5px] text-slate-500 mt-0.5" id="prt_company_details">
+                                    Viale della Regione Siciliana Sud Est 5161, 90124 Palermo (PA)<br>
+                                    P.IVA/C.F.: 12888410961 | REA: PA-440170 | SDI: M5UXCR1 | Tel: 091 673 9583
+                                </p>
+                            </div>
+                        </div>
 
-                document.getElementById('tkResultCard').style.display = 'block';
-            },
+                        <div class="text-right">
+                            <span id="prt_tipo_doc" class="inline-block bg-iltBlue text-white text-[9px] font-extrabold uppercase px-2.5 py-1 rounded">RAPPORTO INTERVENTO</span>
+                            <div class="text-xs font-mono font-bold text-slate-900 mt-1" id="prt_doc_num">INT-2026-1022</div>
+                            <div class="text-[9px] text-slate-500" id="prt_doc_date">Data: 22/10/2026</div>
+                            <div class="text-[8.5px] text-green-700 font-bold mt-1" id="prt_fgas_cert">Certificato F-GAS CE N. 303/2008</div>
+                        </div>
+                    </div>
 
-            calculateETA: async (currentTicket) => {
-                const today = new Date().toISOString().split('T')[0];
-                const operator = currentTicket.operator;
+                    <div class="grid grid-cols-2 gap-3 bg-slate-50 p-2.5 rounded border border-slate-200 text-[10px]">
+                        <div>
+                            <div class="font-bold text-slate-800 uppercase border-b border-slate-200 pb-0.5 mb-1 text-[9px]">DATI COMMITTENTE / CLIENTE</div>
+                            <div class="space-y-0.5">
+                                <p><strong>Cliente:</strong> <span id="prt_cliente_nome">-</span></p>
+                                <p><strong>Indirizzo:</strong> <span id="prt_cliente_indirizzo">-</span></p>
+                                <p><strong>Codice Fiscale:</strong> <span id="prt_cliente_cf" class="font-mono">-</span></p>
+                                <p><strong>Email / Tel:</strong> <span id="prt_cliente_email">-</span></p>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="font-bold text-slate-800 uppercase border-b border-slate-200 pb-0.5 mb-1 text-[9px]">RIFERIMENTI D'ACQUISTO</div>
+                            <div class="space-y-0.5">
+                                <p><strong>Rivenditore:</strong> <span id="prt_rivenditore">-</span></p>
+                                <p><strong>N° Bolla / Ricevuta:</strong> <span id="prt_num_scontrino">-</span></p>
+                                <p><strong>Data Bolla:</strong> <span id="prt_data_bolla">-</span></p>
+                                <p><strong>Totale Acquisto:</strong> <span id="prt_totale_acquisto">-</span></p>
+                                <p><strong>Tipologia:</strong> <span id="prt_tipo_txt">-</span></p>
+                            </div>
+                        </div>
+                    </div>
 
-                if (currentTicket.date !== today) {
-                    return { 
-                        message: `Consegna programmata per il ${currentTicket.date}`, 
-                        etaTime: '--:--', 
-                        progress: 0,
-                        label: 'Data consegna'
-                    };
-                }
+                    <div>
+                        <div class="font-bold text-slate-800 uppercase text-[9.5px] border-b border-slate-300 pb-0.5 mb-1">1. Identificazione Apparecchiature & Prodotti</div>
+                        <table class="w-full text-left border-collapse border border-slate-300 text-[9.5px]">
+                            <thead>
+                                <tr class="bg-slate-800 text-white font-bold">
+                                    <th class="border border-slate-300 p-1">Componente / Prodotto</th>
+                                    <th class="border border-slate-300 p-1">Marca / Modello</th>
+                                    <th class="border border-slate-300 p-1">Dettaglio / Qta</th>
+                                    <th class="border border-slate-300 p-1">Matricola / Note</th>
+                                    <th class="border border-slate-300 p-1">Ubicazione Merce</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prt_assets_tbody"></tbody>
+                        </table>
+                    </div>
 
-                const snapshot = await db.collection("domicile_tickets")
-                    .where("operator", "==", operator)
-                    .where("date", "==", today)
-                    .get();
+                    <div>
+                        <div class="font-bold text-slate-800 uppercase text-[9.5px] border-b border-slate-300 pb-0.5 mb-1">2. Relazione Tecnica di Installazione e Posa</div>
+                        <div id="prt_relazione" class="bg-white p-2 border border-slate-200 rounded whitespace-pre-line text-[10px] leading-normal min-h-[50px]">-</div>
+                    </div>
 
-                const allTickets = [];
-                snapshot.forEach(doc => allTickets.push(doc.data()));
+                    <div class="grid grid-cols-2 gap-3">
+                        <div id="prt-box-fgas" class="border border-slate-300 p-2 rounded bg-slate-50 relative overflow-hidden">
+                            <div class="font-bold text-slate-800 uppercase border-b border-slate-200 pb-0.5 mb-1 text-[9px]">3. Verifiche Strumentali & Sigillo Collaudo F-GAS</div>
+                            <ul class="space-y-0.5 text-[9.5px]">
+                                <li><strong>Tenuta Azoto:</strong> <span id="prt_fgas_azoto">-</span></li>
+                                <li><strong>Vuoto Circuito:</strong> <span id="prt_fgas_vuoto">-</span></li>
+                                <li><strong>Pressione Operativa:</strong> <span id="prt_fgas_pressione">-</span></li>
+                                <li><strong>Drenaggio Condensa:</strong> <span id="prt_fgas_condensa">-</span></li>
+                                <li><strong>Patentino F-GAS Tecnico:</strong> <span id="prt_fgas_patentino" class="font-mono font-bold text-iltBlue">-</span></li>
+                                <li><strong>Gas Aggiunto:</strong> <span id="prt_fgas_gas_aggiunto">-</span></li>
+                                <li><strong>Temp. Uscita Split:</strong> <span id="prt_fgas_temp_split" class="font-mono">-</span></li>
+                            </ul>
+                        </div>
 
-                if (allTickets.length === 0) {
-                    return { message: "In attesa di aggiornamenti", etaTime: '--:--', progress: 0, label: 'Caricamento...' };
-                }
+                        <div class="border border-slate-300 p-2 rounded bg-slate-50">
+                            <div class="flex justify-between items-center border-b border-slate-200 pb-0.5 mb-1">
+                                <div class="font-bold text-slate-800 uppercase text-[9px]">4. Checklist Qualità & Sicurezza</div>
+                                <span id="prt_checklist_badge" class="bg-green-100 text-green-800 font-bold text-[8.5px] px-1.5 py-0.2 rounded border border-green-300">100% OK</span>
+                            </div>
+                            <ul id="prt_checklist_ul" class="space-y-0.5 text-[8.5px]"></ul>
+                        </div>
+                    </div>
 
-                allTickets.sort((a, b) => {
-                    if (a.orderNumber && b.orderNumber) return a.orderNumber - b.orderNumber;
-                    return (a.createdAt || "").localeCompare(b.createdAt || "");
-                });
+                    <!-- ANTEPRIMA FOTO STAMPA A4 -->
+                    <div id="prt_photos_container" class="hidden space-y-2">
+                        <div class="font-bold text-slate-800 uppercase text-[9.5px] border-b border-slate-300 pb-0.5 mb-1">Documentazione Fotografica Cantiere</div>
+                        <div class="grid grid-cols-2 gap-2" id="prt_photos_grid"></div>
+                    </div>
 
-                let myPosition = 0;
-                let totalStops = allTickets.length;
+                    <div class="bg-slate-100 p-2 rounded border border-slate-300 text-[9.5px]">
+                        <div class="font-bold text-slate-800 uppercase border-b border-slate-200 pb-0.5 mb-1 flex justify-between items-center">
+                            <span>Dettaglio Spese Extra Incassate</span>
+                            <span id="prt_extra_totale" class="font-black text-iltRed text-xs">TOTALE: € 0,00</span>
+                        </div>
+                        <table class="w-full text-left text-[9px] border-collapse">
+                            <thead>
+                                <tr class="bg-slate-200 text-slate-800 font-bold border-b border-slate-300">
+                                    <th class="p-1">Descrizione Voce Extra</th>
+                                    <th class="p-1 w-24">Modalità Saldo</th>
+                                    <th class="p-1 text-right w-20">Importo (€)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prt_extra_tbody"></tbody>
+                        </table>
+                    </div>
 
-                allTickets.forEach((t, index) => {
-                    if (t.id === currentTicket.id) {
-                        myPosition = index + 1;
-                    }
-                });
+                    <div class="grid grid-cols-2 gap-6 pt-2 border-t border-slate-300">
+                        <div class="text-center">
+                            <p class="font-bold text-[9.5px] text-slate-700 mb-0.5">Firma Tecnico Installatore Qualificato</p>
+                            <p id="prt_nome_tecnico" class="text-[8.5px] text-slate-500 mb-1">-</p>
+                            <img id="prt_img_tecnico" class="h-12 mx-auto object-contain border-b border-slate-400 min-w-[100px]" alt="Firma Tecnico">
+                        </div>
+                        <div class="text-center">
+                            <p class="font-bold text-[9.5px] text-slate-700 mb-0.5">Firma per Accettazione & Collaudo Cliente</p>
+                            <p id="prt_nome_cliente_sub" class="text-[8.5px] text-slate-500 mb-1">-</p>
+                            <img id="prt_img_cliente" class="h-12 mx-auto object-contain border-b border-slate-400 min-w-[100px]" alt="Firma Cliente">
+                        </div>
+                    </div>
 
-                const completedCount = allTickets.filter(t => t.status === 'completato').length;
-                const remainingStops = myPosition - completedCount;
-                const minutesPerStop = 15;
-                const estimatedMinutes = remainingStops > 0 ? remainingStops * minutesPerStop : 0;
-                
-                let progress = 0;
-                if (myPosition > 0) {
-                    progress = Math.min(100, Math.max(0, (completedCount / myPosition) * 100));
-                }
+                    <div class="pt-2 border-t border-slate-200 text-center text-[8px] text-slate-400">
+                        <span id="prt_footer_text">ILT Logistics S.r.l. - P.IVA/C.F. 12888410961 - Viale Regione Siciliana Sud Est 5161, Palermo (PA) - Certificazione F-GAS CE N. 303/2008</span>
+                    </div>
 
-                let message = "";
-                let label = "Orario stimato arrivo";
-
-                if (remainingStops <= 0) {
-                    message = "È il tuo turno! Il corriere dovrebbe arrivare a momenti.";
-                    label = "Imminente";
-                } else if (remainingStops === 1) {
-                    message = "Sei il prossimo! Il corriere è alla consegna precedente.";
-                    label = "Arrivo tra circa 15 min";
-                } else {
-                    message = `Sei la ${myPosition}ª tappa su ${totalStops}. Mancano ${remainingStops} consegne.`;
-                    label = `Arrivo stimato tra ${estimatedMinutes} min`;
-                }
-
-                const now = new Date();
-                const eta = new Date(now.getTime() + estimatedMinutes * 60000);
-                const etaFormatted = eta.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-
-                return {
-                    message: message,
-                    etaTime: remainingStops <= 0 ? now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : etaFormatted,
-                    progress: progress,
-                    label: label
-                };
-            },
-
-            showError: () => {
-                document.getElementById('tkSearchBox').style.display = 'none';
-                document.getElementById('tkErrorCard').style.display = 'block';
-            },
-
-            reset: () => {
-                document.getElementById('trackingId').value = '';
-                document.getElementById('tkSearchBox').style.display = 'block';
-                document.getElementById('tkResultCard').style.display = 'none';
-                document.getElementById('tkErrorCard').style.display = 'none';
-            }
-        };
-
-        document.getElementById("trackingId").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") Tracker.search();
-        });
-
-        // --- Logica Assistente Virtuale GIPRO ---
-        let giproOpen = false;
-    
-    function toggleGipro() {
-        const chat = document.querySelector('.gipro-chat');
-        const bubble = document.querySelector('.gipro-bubble');
-        
-        giproOpen = !giproOpen;
-        
-        if (giproOpen) {
-            chat.classList.add('active');
-            bubble.innerHTML = '<i class="fas fa-times"></i>';
-        } else {
-            chat.classList.remove('active');
-            bubble.innerHTML = '<i class="fas fa-comments"></i>';
-        }
-    }
-    
-    function giproQuickAction(action) {
-        const messages = document.getElementById('giproMessages');
-        
-        // Aggiungi messaggio utente
-        addGiproMessage('user', getActionText(action));
-        
-        // Mostra typing
-        showGiproTyping();
-        
-        // Simula risposta dopo 1.5 secondi
-        setTimeout(() => {
-            hideGiproTyping();
-            const response = getActionResponse(action);
-            addGiproMessage('assistant', response);
-            
-            // Esegui l'azione
-            executeGiproAction(action);
-        }, 1500);
-    }
-    
-    function getActionText(action) {
-        const actions = {
-            'phone': 'Vorrei il numero di telefono',
-            'email': 'Vorrei l\'indirizzo email',
-            'whatsapp': 'Vorrei contattarvi su WhatsApp',
-            'preventivo': 'Vorrei richiedere un preventivo',
-            'orari': 'Quali sono i vostri orari?',
-            'tracking': 'Come traccio una consegna?'
-        };
-        return actions[action] || 'Aiuto';
-    }
-    
-    function getActionResponse(action) {
-        const responses = {
-            'phone': 'Ecco i nostri numeri di telefono:<br><br>📞 <strong>+39 389 873 5341</strong><br>📞 <strong>+39 331 164 0977</strong><br><br>Siamo disponibili Lun - Ven: 08:00 - 18:00',
-            'email': 'Il nostro indirizzo email è:<br><br>📧 <strong>iltlogistics@pec.it</strong><br><br>Invia una email per richiedere informazioni o preventivi.',
-            'whatsapp': 'Puoi contattarci direttamente su WhatsApp:<br><br>💬 <a href="https://wa.me/393898735341?text=Salve,%20vorrei%20richiedere%20un%20intervento." target="_blank" style="color: #25D366; text-decoration: none; font-weight: bold;">Clicca qui per avviare la chat</a><br><br>Ti risponderemo il prima possibile!',
-            'preventivo': 'Per richiedere un preventivo:<br><br>📞 <strong>Chiama subito:</strong> +39 389 873 5341<br>📧 <strong>Email:</strong> iltlogistics@pec.it<br>💬 <strong>WhatsApp:</strong> Invia foto/descrizione<br><br>⏰ <strong>Tempi risposta:</strong><br>• Urgenti: 1-2 ore<br>• Standard: 4-8 ore<br>• Complessi: 24 ore<br><br>🎯 <strong>Sconto 10%</strong> menzionando che ci hai trovato online!',
-            'orari': 'I nostri orari di apertura:<br><br>📅 <strong>Lunedì - Venerdì:</strong> 08:00 - 18:00<br>📅 <strong>Sabato:</strong> Chiuso (solo urgenze)<br>📅 <strong>Domenica:</strong> Chiuso<br>📅 <strong>Festivi:</strong> Chiusi<br><br>🚨 <strong>Urgenze:</strong><br>• Tel: +39 331 164 0977<br>• Costo aggiuntivo: €50<br>• Solo interventi programmati<br><br>📍 <strong>Aree copertura:</strong><br>• Milano e provincia: completa<br>• Palermo: parziale',
-            'tracking': 'Per tracciare la tua consegna:<br><br>🔍 <strong>Come fare:</strong><br>1. Usa il codice ricevuto via email/SMS<br>2. Inseriscilo nel form "Traccia consegna"<br>3. Oppure chiamaci al +39 389 873 5341<br><br>📱 <strong>Formato codice:</strong><br>• Generalmente 4 cifre (es: 0001)<br>• Trovalo nella conferma d\'ordine<br>• Ricevuto anche via WhatsApp<br><br>⏱️ <strong>Informazioni disponibili:</strong><br>• Stato consegna in tempo reale<br>• Posizione corriere<br>• Orario stimato arrivo'
-        };
-        return responses[action] || 'Come posso aiutarti?';
-    }
-    
-    function executeGiproAction(action) {
-        switch(action) {
-            case 'phone':
-                // Non fare nulla, l'utente ha già i numeri
-                break;
-            case 'email':
-                // Non fare nulla, l'utente ha già l'email
-                break;
-            case 'whatsapp':
-                // Potrebbe aprire WhatsApp automaticamente
-                setTimeout(() => {
-                    window.open('https://wa.me/393898735341?text=Salve,%20vorrei%20richiedere%20un%20intervento.', '_blank');
-                }, 2000);
-                break;
-            case 'preventivo':
-                // Apri il form contatti
-                setTimeout(() => {
-                    document.getElementById('contatti').scrollIntoView({ behavior: 'smooth' });
-                }, 1500);
-                break;
-            case 'orari':
-                // Non fare nulla, le info sono già mostrate
-                break;
-            case 'tracking':
-                // Apri il tracker
-                setTimeout(() => {
-                    openTracker();
-                }, 1500);
-                break;
-        }
-    }
-    
-    function sendGiproMessage() {
-        const input = document.getElementById('giproInput');
-        const message = input.value.trim();
-        
-        if (!message) return;
-        
-        // Aggiungi messaggio utente
-        addGiproMessage('user', message);
-        
-        // Svuota input
-        input.value = '';
-        
-        // Mostra typing
-        showGiproTyping();
-        
-        // Simula risposta dopo 1.5 secondi
-        setTimeout(() => {
-            hideGiproTyping();
-            const response = generateGiproResponse(message);
-            addGiproMessage('assistant', response);
-        }, 1500);
-    }
-    
-    function handleGiproInput(event) {
-        if (event.key === 'Enter') {
-            sendGiproMessage();
-        }
-    }
-    
-    function addGiproMessage(sender, message) {
-        const messages = document.getElementById('giproMessages');
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `gipro-message ${sender}`;
-        
-        const time = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-        
-        messageDiv.innerHTML = `
-            <div class="gipro-message-content">
-                <div>${message}</div>
-                <div class="gipro-message-time">${time}</div>
+                </div>
             </div>
-        `;
-        
-        messages.appendChild(messageDiv);
-        messages.scrollTop = messages.scrollHeight;
-    }
-    
-    function showGiproTyping() {
-        document.getElementById('giproTyping').classList.add('show');
-        const messages = document.getElementById('giproMessages');
-        messages.scrollTop = messages.scrollHeight;
-    }
-    
-    function hideGiproTyping() {
-        document.getElementById('giproTyping').classList.remove('show');
-    }
-    
-    function generateGiproResponse(userMessage) {
-            const message = userMessage.toLowerCase();
-            
-            // Saluti base
-            if (message.includes('ciao') || message.includes('salve') || message.includes('buongiorno') || message.includes('buonasera')) {
-                return `Ciao! Sono GIPRO, l'assistente virtuale avanzato di ILT Logistics. Posso aiutarti con:<br><br>
-                🔧 <strong>Installazioni</strong> (clima, caldaie, elettrodomestici)<br>
-                🚚 <strong>Consegne</strong> e tracciamento spedizioni<br>
-                📞 <strong>Preventivi</strong> e consulenza tecnica<br>
-                📍 <strong>Orari</strong> e disponibilità<br>
-                💬 <strong>Supporto</strong> tecnico e informazioni<br><br>
-                Cosa desideri sapere o fare oggi?`;
-            }
-            
-            // Installazioni e servizi tecnici
-            else if (message.includes('installazione') || message.includes('clima') || message.includes('condizionatore') || message.includes('caldaia') || message.includes('elettrodomestico')) {
-                let response = `Offriamo servizi di installazione professionale completa:<br><br>`;
+
+        </section>
+
+        <!-- TAB 2: STORICO -->
+        <section id="tab-history" class="hidden space-y-4 no-print">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <div>
+                        <h2 class="text-base font-bold text-iltDark flex items-center gap-2">
+                            <i class="fas fa-boxes-packing text-iltRed"></i> Storico Interventi Completati
+                        </h2>
+                        <p class="text-xs text-slate-500">Tutti i report chiusi e salvati nel sistema.</p>
+                    </div>
+                    <span id="history-total-count" class="text-xs bg-slate-100 border border-slate-200 px-3 py-1 rounded-full font-bold text-slate-700">0 Report</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 uppercase text-[11px] font-bold border-b border-slate-200">
+                                <th class="p-3">N° Doc</th>
+                                <th class="p-3">Data</th>
+                                <th class="p-3">Cliente</th>
+                                <th class="p-3">Tipologia</th>
+                                <th class="p-3">Tecnico Incaricato</th>
+                                <th class="p-3">Extra Incassato</th>
+                                <th class="p-3 text-center">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-tbody" class="divide-y divide-slate-200"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: IMPOSTAZIONI -->
+        <section id="tab-settings" class="hidden space-y-5 no-print">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 
-                if (message.includes('clima') || message.includes('condizionatore')) {
-                    response += `❄️ <strong>Climatizzatori:</strong><br>
-                    • Installazione split e multi-split<br>
-                    • Vuoto tecnico e brasatura professionale<br>
-                    • Carico gas refrigerante certificato<br>
-                    • Manutenzione ordinaria programmata<br><br>`;
+                <div id="admin-tech-management-box" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <h2 class="text-sm font-bold text-iltDark border-b border-slate-100 pb-2.5 flex items-center gap-2">
+                        <i class="fas fa-users-gear text-iltRed"></i> Gestione Tecnici Operativi
+                    </h2>
+
+                    <form onsubmit="handleCreateTechnician(event)" class="space-y-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nome e Cognome</label>
+                                <input type="text" id="new_tech_name" required placeholder="Es. Mario Rossi" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Username Login</label>
+                                <input type="text" id="new_tech_user" required placeholder="Es. mrossi" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Password</label>
+                                <input type="password" id="new_tech_pass" required placeholder="••••••••" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">N° Patentino F-GAS</label>
+                                <input type="text" id="new_tech_fgas" placeholder="Patentino" class="w-full text-xs border border-slate-300 rounded-lg p-2 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full py-2 bg-iltBlue hover:bg-blue-800 text-white font-bold text-xs rounded-lg transition shadow flex items-center justify-center gap-1.5">
+                            <i class="fas fa-user-plus"></i> Registra Nuovo Tecnico
+                        </button>
+                    </form>
+
+                    <div class="space-y-2">
+                        <h3 class="text-xs font-bold text-slate-700 uppercase">Tecnici Attivi</h3>
+                        <div class="border border-slate-200 rounded-lg overflow-hidden">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
+                                    <tr>
+                                        <th class="p-2">Nome</th>
+                                        <th class="p-2">Username</th>
+                                        <th class="p-2">Patentino F-GAS</th>
+                                        <th class="p-2 text-center">Azione</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="technicians-tbody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-5">
+                    <div id="admin-logo-box" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3.5">
+                        <h2 class="text-sm font-bold text-iltDark border-b border-slate-100 pb-2.5 flex items-center gap-2">
+                            <i class="fas fa-image text-iltRed"></i> Gestione Logo Aziendale
+                        </h2>
+                        <div class="flex items-center gap-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                            <div class="bg-white p-2 rounded border border-slate-200 flex items-center justify-center min-w-[120px] h-12" id="settingsLogoContainer"></div>
+                            <div class="text-xs space-y-1">
+                                <span class="font-bold text-slate-700 block">Logo Attualmente In Uso</span>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="block text-xs font-semibold text-slate-600">Carica Logo Personalizzato</label>
+                            <input type="file" id="logoFileInput" accept="image/*" onchange="handleLogoUpload(event)" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-iltDark file:text-white cursor-pointer">
+                            <button onclick="resetDefaultLogo()" class="text-xs text-slate-500 hover:text-iltRed font-medium underline block pt-1">Ripristina Logo Predefinito</button>
+                        </div>
+                    </div>
+
+                    <div id="gemini-settings-box" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3.5">
+                        <h2 class="text-sm font-bold text-iltDark border-b border-slate-100 pb-2.5 flex items-center gap-2">
+                            <i class="fas fa-robot text-purple-600"></i> Parametri AI Gemini
+                        </h2>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Gemini API Key</label>
+                            <input type="password" id="gemini_api_key" placeholder="AIzaSy..." class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-purple-600 focus:outline-none">
+                        </div>
+                        <button onclick="saveApiKey()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow">Salva Chiave API</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- JS LOGIC -->
+    <script>
+        const RAW_SVG_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 85" width="340" height="85"><defs><linearGradient id="gR" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff2e43"/><stop offset="50%" stop-color="#d61124"/><stop offset="100%" stop-color="#9b000e"/></linearGradient><linearGradient id="gD" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4a5157"/><stop offset="60%" stop-color="#2a2e33"/><stop offset="100%" stop-color="#15181b"/></linearGradient><linearGradient id="gB" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#003580"/><stop offset="50%" stop-color="#004aad"/><stop offset="100%" stop-color="#0066ff"/></linearGradient><radialGradient id="fG" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff" stop-opacity="1"/><stop offset="40%" stop-color="#ffffff" stop-opacity="0.8"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs><path d="M 12 35 C -5 18, 2 52, 28 68 C 68 84, 180 80, 295 52 C 235 73, 80 78, 32 63 C 14 53, 16 32, 28 36 Z" fill="url(#gB)"/><path d="M 22 35 C 8 24, 10 48, 32 61 C 72 75, 192 70, 305 46 C 245 65, 88 69, 38 56 C 22 48, 24 33, 36 36 Z" fill="url(#gR)"/><polygon points="68,14 88,14 62,68 42,68" fill="url(#gR)"/><circle cx="67" cy="15" r="9" fill="url(#fG)"/><path d="M 67 4 L 67 26 M 56 15 L 78 15 M 59 7 L 75 23 M 59 23 L 75 7" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/><polygon points="85,16 122,16 116,26 104,26 87,68 69,68 82,35 74,35 79,26 88,26" fill="url(#gD)"/><polygon points="108,36 132,36 118,68 101,68" fill="url(#gD)" opacity="0.9"/><text x="135" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="900" font-style="italic" font-size="38" fill="url(#gB)" letter-spacing="-1">Logistics</text><text x="282" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="700" font-style="italic" font-size="19" fill="url(#gB)">srl</text></svg>`;
+
+        let activeUser = null;
+        let currentReportMode = 'professional';
+        let currentScanRow = null;
+        let reportPhotos = { 1: null, 2: null, 3: null, 4: null };
+
+        const CHECKLIST_PROFESSIONAL = [
+            "Prova di tenuta con azoto (minimo 42 bar) superata",
+            "Vuoto del circuito eseguito con vacuometro (-1.0 bar)",
+            "Coibentazione e isolamento linee frigorifere a norma",
+            "Verifica e collaudo flusso scarico condensa per gravità",
+            "Allaccio elettrico e sezionamento a norma CEI 64-8",
+            "Pulizia area di lavoro e smaltimento sfridi/materiali",
+            "Spiegazione funzionamento e pulizia filtri al cliente",
+            "Apposizione targhetta F-GAS ed etichettatura macchina"
+        ];
+
+        const CHECKLIST_BASE = [
+            "Verifica integrità imballo e assenza danni da trasporto",
+            "Controllo corrispondenza prodotto con documento d'acquisto",
+            "Verifica predisposizione attacchi idrici / scarichi a norma",
+            "Verifica idoneità presa elettrica e messa a terra",
+            "Livellamento e posizionamento stabile dell'apparecchio",
+            "Collaudo funzionale iniziale ed esecuzione ciclo di prova",
+            "Pulizia area di installazione e ritiro materiale d'imballo",
+            "Consegna libretto uso/manutenzione e istruzioni al cliente"
+        ];
+
+        let checklistState = new Array(CHECKLIST_PROFESSIONAL.length).fill(true);
+
+        function triggerLabelScan(btn) {
+            currentScanRow = btn.closest('tr');
+            document.getElementById('labelScanInput').click();
+        }
+
+        function preparePreReport(mode) {
+            currentReportMode = mode;
+            const titleBadge = document.getElementById('form-doc-num-badge');
+            const tipoInterventoSelect = document.getElementById('tipo_intervento');
+            const section2Title = document.getElementById('section-2-title');
+            const addRowBtnText = document.getElementById('add-row-btn-text');
+            
+            const fgasFormSection = document.getElementById('sezione-parametri-fgas');
+            const fgasPrintBox = document.getElementById('prt-box-fgas');
+            
+            if (mode === 'base') {
+                if (titleBadge) titleBadge.innerText = "MODALITÀ: PRE-REPORT BASE (Elettrodomestici & Logistica)";
+                if (section2Title) section2Title.innerText = "2. Lista Elettrodomestici / Prodotti in Consegna o Installazione (Quantità & Dettagli)";
+                if (addRowBtnText) addRowBtnText.innerText = "Aggiungi Prodotto";
+                
+                if (fgasFormSection) fgasFormSection.classList.add('hidden');
+                if (fgasPrintBox) fgasPrintBox.classList.add('hidden');
+
+                if (tipoInterventoSelect) {
+                    tipoInterventoSelect.innerHTML = `
+                        <option>Consegna Base</option>
+                        <option>Consegna e incasso</option>
+                        <option>Incasso</option>
+                        <option>Ritiro Raee</option>
+                        <option>Consegna Expressa</option>
+                        <option>Consegna Weekend</option>
+                        <option>Consegna Prioritaria</option>
+                        <option>Reclamo</option>
+                        <option>Rendi & Prendi</option>
+                    `;
                 }
+                checklistState = new Array(CHECKLIST_BASE.length).fill(true);
+                showToast("Modalità Base attivata: checklist e parametri adattati.", "info");
+            } else {
+                if (titleBadge) titleBadge.innerText = "MODALITÀ: PRE-REPORT PROFESSIONAL (HVAC / F-GAS)";
+                if (section2Title) section2Title.innerText = "2. Censimento Apparecchiature con Doppio Seriale (S/N UI / UE) & Scan Foto Etichetta";
+                if (addRowBtnText) addRowBtnText.innerText = "Aggiungi Macchina";
                 
-                if (message.includes('caldaia')) {
-                    response += `🔥 <strong>Caldaie:</strong><br>
-                    • Sostituzione vecchie caldaie<br>
-                    • Installazione nuove caldaie a condensazione<br>
-                    • Allacciamenti idrici e gas<br>
-                    • Certificazione conformità<br><br>`;
+                if (fgasFormSection) fgasFormSection.classList.remove('hidden');
+                if (fgasPrintBox) fgasPrintBox.classList.remove('hidden');
+
+                if (tipoInterventoSelect) {
+                    tipoInterventoSelect.innerHTML = `
+                        <option>Installazione & Collaudo Climatizzatore</option>
+                        <option>Sopralluogo Tecnico & Fattibilità</option>
+                        <option>Manutenzione Ordinaria / Pulizia Filtri</option>
+                        <option>Riparazione & Ricerca Perdita Refrigerante</option>
+                    `;
                 }
-                
-                if (message.includes('elettrodomestico')) {
-                    response += `⚡ <strong>Elettrodomestici:</strong><br>
-                    • Collegamento idrico ed elettrico<br>
-                    • Installazione lavatrici, lavastoviglie, forni<br>
-                    • Verifiche di sicurezza<br>
-                    • Smaltimento vecchi elettrodomestici<br><br>`;
-                }
-                
-                response += `📞 <strong>Per un preventivo personalizzato:</strong><br>
-                Chiama i nostri tecnici al +39 389 873 5341<br>
-                O invia una email a iltlogistics@pec.it`;
-                
-                return response;
+                checklistState = new Array(CHECKLIST_PROFESSIONAL.length).fill(true);
+                showToast("Modalità Professional attivata: report HVAC completo.", "info");
             }
-            
-            // Consegne e logistica
-            else if (message.includes('consegna') || message.includes('trasporto') || message.includes('spedizione') || message.includes('tracciamento')) {
-                return `🚚 <strong>Servizi di Consegna ILT Logistics:</strong><br><br>
-                📦 <strong>Consegna Standard:</strong><br>
-                • Trasporto sicuro merce acquistata<br>
-                • Consegna al piano terra<br>
-                • Orario: 24-48 ore lavorative<br><br>
-                
-                ⚡ <strong>Consegne Rapide:</strong><br>
-                • Servizio espresso entro 3 ore<br>
-                • Disponibile solo a Milano e provincia<br>
-                • Ideale per emergenze<br><br>
-                
-                📍 <strong>Tracciamento in tempo reale:</strong><br>
-                • Codice di tracciamento univoco<br>
-                • Aggiornamenti live sulla posizione<br>
-                • Notifiche SMS/WhatsApp<br><br>
-                
-                📞 <strong>Per tracciare la tua consegna:</strong><br>
-                Usa il codice che hai ricevuto via email/SMS<br>
-                O chiamaci al +39 389 873 5341 per assistenza`;
-            }
-            
-            // Preventivi e costi
-            else if (message.includes('preventivo') || message.includes('costo') || message.includes('prezzo') || message.includes('quanto') || message.includes('tariffa')) {
-                return `💰 <strong>Informazioni Preventivi:</strong><br><br>
-                📋 <strong>Come ottenere un preventivo:</strong><br>
-                1. <strong>Chiamata diretta:</strong> +39 389 873 5341<br>
-                2. <strong>WhatsApp:</strong> Invia foto/descrizione<br>
-                3. <strong>Email:</strong> iltlogistics@pec.it<br>
-                4. <strong>Sito web:</strong> Form contatti qui sotto<br><br>
-                
-                💡 <strong>Info utili per il preventivo:</strong><br>
-                • Tipo di intervento/installazione<br>
-                • Modello dell'apparecchiatura<br>
-                • Indirizzo completo<br>
-                • Preferenze orarie<br><br>
-                
-                ⏰ <strong>Tempi risposta preventivi:</strong><br>
-                • <strong>Urgenti:</strong> 1-2 ore lavorative<br>
-                • <strong>Standard:</strong> 4-8 ore lavorative<br>
-                • <strong>Complessi:</strong> 24 ore lavorative<br><br>
-                
-                🎯 <strong>Offerta speciale:</strong><br>
-                Menziona che ci hai trovato online per uno sconto del 10%!`;
-            }
-            
-            // Orari e disponibilità
-            else if (message.includes('orario') || message.includes('aperto') || message.includes('chiuso') || message.includes('disponibile') || message.includes('quando')) {
-                const now = new Date();
-                const day = now.getDay();
-                const hour = now.getHours();
-                
-                let isOpen = false;
-                let statusText = '';
-                
-                if (day >= 1 && day <= 5) { // Lun-Ven
-                    if (hour >= 8 && hour < 18) {
-                        isOpen = true;
-                        statusText = '🟢 <strong>Siamo APERTI ora!</strong>';
-                    } else if (hour < 8) {
-                        statusText = '🟡 <strong>Apriamo tra poco</strong> (08:00)';
-                    } else {
-                        statusText = '🔴 <strong>Siamo chiusi</strong> (riapriamo domani 08:00)';
-                    }
-                } else {
-                    statusText = '🔴 <strong>Siamo chiusi</strong> (riapriamo Lunedì 08:00)';
-                }
-                
-                return `⏰ <strong>Orari e Disponibilità:</strong><br><br>
-                ${statusText}<br><br>
-                
-                📅 <strong>Orari di apertura:</strong><br>
-                • <strong>Lunedì - Venerdì:</strong> 08:00 - 18:00<br>
-                • <strong>Sabato:</strong> Chiuso (solo urgenze)<br>
-                • <strong>Domenica:</strong> Chiuso<br>
-                • <strong>Festivi:</strong> Chiuso<br><br>
-                
-                🚨 <strong>Urgenze fuori orario:</strong><br>
-                • Tel: +39 331 164 0977<br>
-                • Solo per interventi già programmati<br>
-                • Costo aggiuntivo di €50<br><br>
-                
-                📍 <strong>Aree di copertura:</strong><br>
-                • <strong>Milano e provincia:</strong> Copertura completa<br>
-                • <strong>Palermo:</strong> Copertura parziale<br>
-                • Altre città: Contattaci per verifica`;
-            }
-            
-            // Informazioni aziendali
-            else if (message.includes('chi siete') || message.includes('azienda') || message.includes('informazioni') || message.includes('dove')) {
-                return `🏢 <strong>Informazioni su ILT Logistics:</strong><br><br>
-                📋 <strong>Chi siamo:</strong><br>
-                ILT Logistics Srl è un'azienda specializzata in:<br>
-                • Installazioni tecniche professionali<br>
-                • Servizi di logistica e consegna<br>
-                • Assistenza tecnica qualificata<br><br>
-                
-                📍 <strong>Sedi operative:</strong><br>
-                • <strong>Milano:</strong> Via Sardegna 13, Pieve Emanuele (MI)<br>
-                • <strong>Palermo:</strong> Via Sperone 3, Palermo<br><br>
-                
-                👥 <strong>Il nostro team:</strong><br>
-                • Tecnici certificati con 10+ anni esperienza<br>
-                • Corrieri professionisti e assicurati<br>
-                • Staff commerciale dedicato<br><br>
-                
-                🏆 <strong>Le nostre certificazioni:</strong><br>
-                • Certificazione UNI EN ISO 9001<br>
-                • Patentino FGAS per climatizzatori<br>
-                • Abilitazione impianti gas<br><br>
-                
-                📞 <strong>Contatti diretti:</strong><br>
-                • <strong>Ufficio:</strong> +39 389 873 5341<br>
-                • <strong>Urgenze:</strong> +39 331 164 0977<br>
-                • <strong>Email:</strong> iltlogistics@pec.it`;
-            }
-            
-            // Supporto tecnico e problemi
-            else if (message.includes('problema') || message.includes('guasto') || message.includes('non funziona') || message.includes('aiuto') || message.includes('supporto')) {
-                return `🔧 <strong>Supporto Tecnico ILT Logistics:</strong><br><br>
-                ⚠️ <strong>Importante:</strong><br>
-                Non effettuiamo assistenza tecnica straordinaria o riparazioni guasti.<br>
-                Il nostro focus è installazioni e manutenzione ordinaria.<br><br>
-                
-                🔍 <strong>Cosa possiamo fare:</strong><br>
-                • <strong>Installazione</strong> nuovi impianti<br>
-                • <strong>Manutenzione</strong> programmata<br>
-                • <strong>Sostituzione</strong> apparecchiature<br>
-                • <strong>Verifiche</strong> di sicurezza<br><br>
-                
-                📞 <strong>Per problemi tecnici urgenti:</strong><br>
-                • Contatta il produttore dell'apparecchiatura<br>
-                • Chiama un centro assistenza autorizzato<br>
-                • Per installazioni: +39 389 873 5341<br><br>
-                
-                💡 <strong>Consigli utili:</strong><br>
-                • Controlla sempre la garanzia del prodotto<br>
-                • Mantieni la manutenzione programmata<br>
-                • Documenta i problemi con foto/video`;
-            }
-            
-            // Tracciamento spedizioni
-            else if (message.includes('codice') || message.includes('tracking') || message.includes('dove') || message.includes('pacchetto')) {
-                return `📦 <strong>Tracciamento Consegne:</strong><br><br>
-                🔍 <strong>Come tracciare la tua consegna:</strong><br>
-                1. Usa il codice ricevuto via email/SMS<br>
-                2. Inseriscilo nel form "Traccia consegna"<br>
-                3. Oppure chiamaci al +39 389 873 5341<br><br>
-                
-                📱 <strong>Formato codice:</strong><br>
-                • Generalmente 4 cifre (es: 0001)<br>
-                • Trovalo nella conferma d'ordine<br>
-                • Ricevuto anche via WhatsApp<br><br>
-                
-                ⏱️ <strong>Informazioni disponibili:</strong><br>
-                • Stato attuale della consegna<br>
-                • Posizione in tempo reale<br>
-                • Orario stimato di arrivo<br>
-                • Nome operatore<br><br>
-                
-                🆘 <strong>Codice non trovato?</strong><br>
-                • Verifica di aver inserito il codice corretto<br>
-                • Controlla la data di consegna<br>
-                • Chiama il nostro supporto clienti`;
-            }
-            
-            // Contatti e comunicazione
-            else if (message.includes('contatto') || message.includes('telefono') || message.includes('email') || message.includes('whatsapp')) {
-                return `📞 <strong>Tutti i modi per contattarci:</strong><br><br>
-                📱 <strong>Telefono:</strong><br>
-                • <strong>Ufficio:</strong> +39 389 873 5341<br>
-                • <strong>Urgenze:</strong> +39 331 164 0977<br>
-                • <strong>Orario:</strong> Lun-Ven 08:00-18:00<br><br>
-                
-                📧 <strong>Email:</strong><br>
-                • <strong>Generale:</strong> iltlogistics@pec.it<br>
-                • <strong>Preventivi:</strong> iltlogistics@pec.it<br>
-                • <strong>Risposta:</strong> entro 4 ore lavorative<br><br>
-                
-                💬 <strong>WhatsApp:</strong><br>
-                • <strong>Numero:</strong> +39 389 873 5341<br>
-                • <strong>Orario:</strong> 08:00-20:00 (anche festivi)<br>
-                • <strong>Per:</strong> preventivi, info, urgenze<br><br>
-                
-                🌐 <strong>Sito Web:</strong><br>
-                • <strong>Form contatti:</strong> qui sotto<br>
-                • <strong>Tracciamento:</strong> in homepage<br>
-                • <strong>Area clienti:</strong> in sviluppo<br><br>
-                
-                📍 <strong>Sedi:</strong><br>
-                • <strong>Milano:</strong> Via Sardegna 13, Pieve Emanuele<br>
-                • <strong>Palermo:</strong> Via Sperone 3`;
-            }
-            
-            // Ringraziamenti
-            else if (message.includes('grazie') || message.includes('grazie mille') || message.includes('apprezzo')) {
-                return `😊 <strong>Grazie a te per aver scelto ILT Logistics!</strong><br><br>
-                È un piacere poterti aiutare. Se hai altre domande su:<br><br>
-                🔧 Installazioni e manutenzioni<br>
-                🚚 Consegne e tracciamenti<br>
-                💰 Preventivi e costi<br>
-                ⏰ Orari e disponibilità<br>
-                📞 Contatti e supporto<br><br>
-                ...sono sempre qui per assisterti!<br><br>
-                🎯 <strong>Non dimenticare:</strong><br>
-                Menziona che ci hai trovato online per uno sconto del 10% sul tuo prossimo intervento!<br><br>
-                A presto e buona giornata! 🚀`;
-            }
-            
-            // Messaggi generici e non compresi
-            else if (message.length < 3) {
-                return `Ciao! Sono GIPRO, l'assistente virtuale di ILT Logistics.<br><br>
-                Posso aiutarti con installazioni, consegne, preventivi e molto altro.<br><br>
-                Scrivi una domanda più dettagliata o usa i pulsanti qui sotto per contattarci direttamente! 📞`;
-            }
-            
-            // Risposta di fallback intelligente
-            else {
-                return `🤖 <strong>GIPRO Assistant Virtuale</strong><br><br>
-                Ho capito che vuoi informazioni su: "${userMessage}"<br><br>
-                Posso aiutarti con:<br><br>
-                🔧 <strong>Installazioni:</strong> clima, caldaie, elettrodomestici<br>
-                🚚 <strong>Consegne:</strong> tracciamento, tempi, aree copertura<br>
-                💰 <strong>Preventivi:</strong> costi, sconti, tempi di risposta<br>
-                ⏰ <strong>Orari:</strong> aperture, disponibilità, urgenze<br>
-                📞 <strong>Contatti:</strong> telefono, email, WhatsApp<br>
-                🏢 <strong>Azienda:</strong> sedi, team, certificazioni<br><br>
-                💡 <strong>Suggerimento:</strong><br>
-                Prova a scrivere parole come "installazione", "consegna", "preventivo", "orario" o "contatto"<br><br>
-                O contattaci direttamente:<br>
-                📞 +39 389 873 5341 | 📧 iltlogistics@pec.it`;
+
+            document.getElementById('assets-table-body').innerHTML = '';
+            renderTableHeader();
+            renderChecklist();
+            addAssetRow();
+            syncToPrint();
+        }
+
+        function renderTableHeader() {
+            const headerTr = document.getElementById('assets-table-header');
+            if (!headerTr) return;
+
+            if (currentReportMode === 'base') {
+                headerTr.innerHTML = `
+                    <th class="p-2">Tipologia Elettrodomestico</th>
+                    <th class="p-2">Marca e Modello</th>
+                    <th class="p-2 w-20">Quantità</th>
+                    <th class="p-2">Matricola / Barcode</th>
+                    <th class="p-2">Ubicazione Merce</th>
+                    <th class="p-2 text-center">Azione</th>
+                `;
+            } else {
+                headerTr.innerHTML = `
+                    <th class="p-2">Componente</th>
+                    <th class="p-2">Marca e Modello</th>
+                    <th class="p-2">Potenza</th>
+                    <th class="p-2">Gas</th>
+                    <th class="p-2">S/N Unità Interna (UI)</th>
+                    <th class="p-2">S/N Unità Esterna (UE)</th>
+                    <th class="p-2">Ubicazione</th>
+                    <th class="p-2 text-center">Scan / Azione</th>
+                `;
             }
         }
-</script>
+
+        function triggerPhotoUpload(index) {
+            document.getElementById(`photo_file_${index}`).click();
+        }
+
+        function handlePhotoUpload(e, index) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                showToast("Seleziona un file immagine valido!", "error");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                reportPhotos[index] = evt.target.result;
+                const preview = document.getElementById(`photo_preview_${index}`);
+                const placeholder = document.getElementById(`photo_placeholder_${index}`);
+                preview.src = reportPhotos[index];
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                syncToPrint();
+                showToast(`Foto ${index} caricata!`, "success");
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function clearPhoto(index) {
+            reportPhotos[index] = null;
+            document.getElementById(`photo_file_${index}`).value = '';
+            const preview = document.getElementById(`photo_preview_${index}`);
+            const placeholder = document.getElementById(`photo_placeholder_${index}`);
+            preview.src = '';
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            document.getElementById(`photo_caption_${index}`).value = '';
+            syncToPrint();
+            showToast(`Foto ${index} rimossa.`, "info");
+        }
+
+        function initLogo() {
+            const customLogo = localStorage.getItem('ilt_custom_logo');
+            const navContainer = document.getElementById('appHeaderLogoContainer');
+            const prtContainer = document.getElementById('prt_logo_container');
+            const setContainer = document.getElementById('settingsLogoContainer');
+
+            if (customLogo && customLogo.startsWith('data:image')) {
+                const imgHtmlNav = `<img src="${customLogo}" class="h-8 md:h-9 w-auto object-contain">`;
+                const imgHtmlPrt = `<img src="${customLogo}" class="h-10 w-auto object-contain">`;
+                
+                if (navContainer) navContainer.innerHTML = imgHtmlNav;
+                if (prtContainer) prtContainer.innerHTML = imgHtmlPrt;
+                if (setContainer) setContainer.innerHTML = imgHtmlPrt;
+            } else {
+                if (navContainer) navContainer.innerHTML = RAW_SVG_LOGO;
+                if (prtContainer) prtContainer.innerHTML = RAW_SVG_LOGO;
+                if (setContainer) setContainer.innerHTML = RAW_SVG_LOGO;
+            }
+        }
+
+        function handleLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                localStorage.setItem('ilt_custom_logo', evt.target.result);
+                initLogo();
+                showToast('Logo personalizzato caricato e applicato!', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetDefaultLogo() {
+            localStorage.removeItem('ilt_custom_logo');
+            initLogo();
+            showToast('Logo ripristinato!', 'info');
+        }
+
+        function getUsersDB() {
+            const saved = localStorage.getItem('ilt_users_db');
+            if (saved) return JSON.parse(saved);
+            const defaultDB = {
+                'admin': { username: 'admin', pass: 'admin123', name: 'Amministratore ILT', role: 'admin', fgas: '' },
+                'maiorana': { username: 'maiorana', pass: '123456', name: 'Maiorana Antonino', role: 'tecnico', fgas: 'XPERT/FGAS/23/2529' }
+            };
+            localStorage.setItem('ilt_users_db', JSON.stringify(defaultDB));
+            return defaultDB;
+        }
+
+        function saveUsersDB(db) {
+            localStorage.setItem('ilt_users_db', JSON.stringify(db));
+        }
+
+        function handleCreateTechnician(e) {
+            e.preventDefault();
+            const name = document.getElementById('new_tech_name').value.trim();
+            const user = document.getElementById('new_tech_user').value.trim().toLowerCase();
+            const pass = document.getElementById('new_tech_pass').value;
+            const fgas = document.getElementById('new_tech_fgas').value.trim();
+
+            const db = getUsersDB();
+            if (db[user]) {
+                showToast("Username già esistente!", "error");
+                return;
+            }
+
+            db[user] = { username: user, pass: pass, name: name, role: 'tecnico', fgas: fgas };
+            saveUsersDB(db);
+            showToast(`Tecnico ${name} creato!`, "success");
+
+            document.getElementById('new_tech_name').value = '';
+            document.getElementById('new_tech_user').value = '';
+            document.getElementById('new_tech_pass').value = '';
+            document.getElementById('new_tech_fgas').value = '';
+
+            renderTechniciansList();
+            populateTechnicianSelect();
+        }
+
+        function deleteTechnician(username) {
+            if (username === 'admin') return;
+            const db = getUsersDB();
+            delete db[username];
+            saveUsersDB(db);
+            showToast("Tecnico rimosso.", "info");
+            renderTechniciansList();
+            populateTechnicianSelect();
+        }
+
+        function renderTechniciansList() {
+            const tbody = document.getElementById('technicians-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const db = getUsersDB();
+
+            Object.values(db).filter(u => u.role === 'tecnico').forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2 font-bold">${t.name}</td>
+                    <td class="p-2 text-slate-500">${t.username}</td>
+                    <td class="p-2 font-mono text-[11px]">${t.fgas || '-'}</td>
+                    <td class="p-2 text-center">
+                        <button onclick="deleteTechnician('${t.username}')" class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function populateTechnicianSelect() {
+            const select = document.getElementById('assigned_technician_select');
+            if (!select) return;
+            select.innerHTML = '';
+            const db = getUsersDB();
+
+            Object.values(db).filter(u => u.role === 'tecnico').forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.username;
+                opt.innerText = `${t.name} (${t.username})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function checkAuth() {
+            const savedUser = localStorage.getItem('ilt_active_user');
+            const db = getUsersDB();
+            if (savedUser && db[savedUser]) {
+                activeUser = db[savedUser];
+                document.getElementById('login-modal').classList.add('hidden');
+                updateUserBadge();
+                applyRolePermissions();
+            } else {
+                document.getElementById('login-modal').classList.remove('hidden');
+            }
+        }
+
+        function handleLoginSubmit(e) {
+            e.preventDefault();
+            const u = document.getElementById('login_username').value.trim().toLowerCase();
+            const p = document.getElementById('login_password').value;
+            const db = getUsersDB();
+
+            if (db[u] && db[u].pass === p) {
+                activeUser = db[u];
+                localStorage.setItem('ilt_active_user', activeUser.username);
+                document.getElementById('login-modal').classList.add('hidden');
+                showToast(`Benvenuto ${activeUser.name}`, 'success');
+                updateUserBadge();
+                applyRolePermissions();
+            } else {
+                document.getElementById('login-error').classList.remove('hidden');
+            }
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('ilt_active_user');
+            activeUser = null;
+            document.getElementById('login-modal').classList.remove('hidden');
+        }
+
+        function updateUserBadge() {
+            if (!activeUser) return;
+            document.getElementById('user-session-badge').classList.remove('hidden');
+            document.getElementById('user-name-display').innerText = activeUser.name;
+            const rBadge = document.getElementById('user-role-badge');
+
+            if (activeUser.role === 'admin') {
+                rBadge.innerText = 'Admin';
+                rBadge.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-iltRed text-white';
+            } else {
+                rBadge.innerText = 'Tecnico';
+                rBadge.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-iltBlue text-white';
+            }
+
+            if (activeUser.fgas) document.getElementById('fgas_patentino').value = activeUser.fgas;
+            document.getElementById('nome_tecnico').value = activeUser.name;
+            syncToPrint();
+        }
+
+        function applyRolePermissions() {
+            if (!activeUser) return;
+
+            const btnProf = document.getElementById('tab-btn-professional');
+            const btnBase = document.getElementById('tab-btn-base');
+            const btnSavePre = document.getElementById('btn-save-prereport');
+            const adminBox = document.getElementById('admin-assignment-box');
+            const btnSettings = document.getElementById('tab-btn-settings');
+            
+            const tabTasksLabel = document.getElementById('tab-tasks-label');
+            const tasksBannerTitle = document.getElementById('tasks-banner-title');
+            const tasksBannerDesc = document.getElementById('tasks-banner-desc');
+            const tasksTableTitle = document.getElementById('tasks-table-title');
+            const thTecnicoCol = document.getElementById('th-tecnico-col');
+
+            const adminTechBox = document.getElementById('admin-tech-management-box');
+            const adminLogoBox = document.getElementById('admin-logo-box');
+
+            if (btnSettings) btnSettings.classList.remove('hidden');
+
+            if (activeUser.role === 'admin') {
+                if (btnProf) btnProf.classList.remove('hidden');
+                if (btnBase) btnBase.classList.remove('hidden');
+                if (btnSavePre) btnSavePre.classList.remove('hidden');
+                if (adminBox) adminBox.classList.remove('hidden');
+                
+                if (tabTasksLabel) tabTasksLabel.innerText = "Pre-Report Emessi";
+                if (tasksBannerTitle) tasksBannerTitle.innerText = "Monitoraggio Pre-Report Emessi";
+                if (tasksBannerDesc) tasksBannerDesc.innerText = "Elenco di tutti i pre-report creati e assegnati ai tecnici operativi.";
+                if (tasksTableTitle) tasksTableTitle.innerText = "Tutti i Pre-Report del Sistema";
+                if (thTecnicoCol) thTecnicoCol.classList.remove('hidden');
+
+                if (adminTechBox) adminTechBox.classList.remove('hidden');
+                if (adminLogoBox) adminLogoBox.classList.remove('hidden');
+
+                populateTechnicianSelect();
+                renderTechniciansList();
+                switchTab('assigned-tasks');
+            } else {
+                if (btnProf) btnProf.classList.add('hidden');
+                if (btnBase) btnBase.classList.add('hidden');
+                if (btnSavePre) btnSavePre.classList.add('hidden');
+                if (adminBox) adminBox.classList.add('hidden');
+                
+                if (tabTasksLabel) tabTasksLabel.innerText = "Miei Pre-Report";
+                if (tasksBannerTitle) tasksBannerTitle.innerText = "Pre-Report Assegnati dall'Amministrazione";
+                if (tasksBannerDesc) tasksBannerDesc.innerText = "Seleziona un tuo pre-report per aprirlo e completarlo.";
+                if (tasksTableTitle) tasksTableTitle.innerText = "Incarichi In Attesa di Completamento";
+                if (thTecnicoCol) thTecnicoCol.classList.add('hidden');
+
+                if (adminTechBox) adminTechBox.classList.add('hidden');
+                if (adminLogoBox) adminLogoBox.classList.add('hidden');
+
+                switchTab('assigned-tasks');
+            }
+            loadAssignedTasks();
+            loadHistoryTable();
+        }
+
+        function saveAsPreReport() {
+            if (activeUser.role !== 'admin') {
+                showToast("Solo l'amministratore può creare pre-report!", "error");
+                return;
+            }
+
+            const techUser = document.getElementById('assigned_technician_select').value;
+            if (!techUser) {
+                showToast("Seleziona un tecnico!", "error");
+                return;
+            }
+
+            const db = getUsersDB();
+            const techObj = db[techUser];
+
+            const prereport = {
+                id: 'PRE-' + Date.now(),
+                doc_num: document.getElementById('doc_num').value,
+                doc_date: document.getElementById('doc_date').value,
+                assigned_to: techUser,
+                assigned_name: techObj.name,
+                cliente_nome: document.getElementById('cliente_nome').value,
+                cliente_indirizzo: document.getElementById('cliente_indirizzo').value,
+                cliente_cf: document.getElementById('cliente_cf').value,
+                cliente_email: document.getElementById('cliente_email').value,
+                tipo_intervento: document.getElementById('tipo_intervento').value,
+                rivenditore: document.getElementById('rivenditore').value,
+                num_scontrino: document.getElementById('num_scontrino').value,
+                data_bolla: document.getElementById('data_bolla').value,
+                totale_acquisto: document.getElementById('totale_acquisto').value,
+                assets: getAssetsData(),
+                relazione: document.getElementById('relazione_tecnica').value,
+                photos: reportPhotos,
+                captions: {
+                    1: document.getElementById('photo_caption_1').value,
+                    2: document.getElementById('photo_caption_2').value,
+                    3: document.getElementById('photo_caption_3').value,
+                    4: document.getElementById('photo_caption_4').value
+                }
+            };
+
+            let prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+            prereports.push(prereport);
+            localStorage.setItem('ilt_prereports', JSON.stringify(prereports));
+
+            showToast(`Pre-Report assegnato a ${techObj.name}!`, 'success');
+            resetForm();
+            switchTab('assigned-tasks');
+            loadAssignedTasks();
+        }
+
+        function loadAssignedTasks() {
+            const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+            let tasks = prereports;
+            if (activeUser && activeUser.role === 'tecnico') {
+                tasks = prereports.filter(p => p.assigned_to === activeUser.username);
+            }
+
+            document.getElementById('pending-tasks-badge').innerText = tasks.length;
+            document.getElementById('tasks-count-tag').innerText = `${tasks.length} Incarichi`;
+
+            const tbody = document.getElementById('tasks-tbody');
+            tbody.innerHTML = '';
+
+            if (tasks.length === 0) {
+                const colSpan = (activeUser && activeUser.role === 'admin') ? 7 : 6;
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-slate-400">Nessun pre-report presente nel sistema.</td></tr>`;
+                return;
+            }
+
+            tasks.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-amber-50/50 transition";
+                
+                let tecnicoColHtml = '';
+                if (activeUser && activeUser.role === 'admin') {
+                    tecnicoColHtml = `<td class="p-3 font-bold text-slate-700"><span class="bg-slate-100 border px-2 py-0.5 rounded text-[11px]"><i class="fas fa-user text-iltBlue"></i> ${t.assigned_name || t.assigned_to}</span></td>`;
+                }
+
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-iltRed">${t.doc_num}</td>
+                    <td class="p-3">${t.doc_date}</td>
+                    <td class="p-3 font-semibold">${t.cliente_nome}</td>
+                    <td class="p-3 text-slate-500">${t.cliente_indirizzo}</td>
+                    <td class="p-3"><span class="bg-blue-50 text-iltBlue font-bold px-2 py-0.5 rounded text-[10px]">${t.tipo_intervento}</span></td>
+                    ${tecnicoColHtml}
+                    <td class="p-3 text-center">
+                        <button onclick="openPreReportForCompletion('${t.id}')" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center gap-1 mx-auto">
+                            <i class="fas fa-folder-open"></i> ${activeUser.role === 'admin' ? 'Visualizza / Modifica' : 'Completa'}
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openPreReportForCompletion(id) {
+            const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+            const item = prereports.find(p => p.id === id);
+            if (!item) return;
+
+            let targetMode = 'professional';
+            if (item.tipo_intervento === 'Consegna Base' || item.tipo_intervento === 'Consegna e incasso' || 
+                item.tipo_intervento === 'Incasso' || item.tipo_intervento === 'Ritiro Raee' || 
+                item.tipo_intervento === 'Consegna Expressa' || item.tipo_intervento === 'Consegna Weekend' || 
+                item.tipo_intervento === 'Consegna Prioritaria' || item.tipo_intervento === 'Reclamo' || 
+                item.tipo_intervento === 'Rendi & Prendi' || (item.assets && item.assets[0] && item.assets[0].mode === 'base')) {
+                targetMode = 'base';
+            }
+
+            preparePreReport(targetMode);
+
+            document.getElementById('doc_num').value = item.doc_num;
+            document.getElementById('doc_date').value = item.doc_date;
+            document.getElementById('cliente_nome').value = item.cliente_nome;
+            document.getElementById('cliente_indirizzo').value = item.cliente_indirizzo;
+            document.getElementById('cliente_cf').value = item.cliente_cf;
+            document.getElementById('cliente_email').value = item.cliente_email;
+            document.getElementById('tipo_intervento').value = item.tipo_intervento;
+            document.getElementById('rivenditore').value = item.rivenditore;
+            document.getElementById('num_scontrino').value = item.num_scontrino;
+            document.getElementById('data_bolla').value = item.data_bolla;
+            document.getElementById('totale_acquisto').value = item.totale_acquisto;
+            document.getElementById('relazione_tecnica').value = item.relazione || '';
+
+            if (item.photos) {
+                reportPhotos = item.photos;
+                [1, 2, 3, 4].forEach(i => {
+                    const preview = document.getElementById(`photo_preview_${i}`);
+                    const placeholder = document.getElementById(`photo_placeholder_${i}`);
+                    if (reportPhotos[i]) {
+                        preview.src = reportPhotos[i];
+                        preview.classList.remove('hidden');
+                        placeholder.classList.add('hidden');
+                    } else {
+                        preview.classList.add('hidden');
+                        placeholder.classList.remove('hidden');
+                    }
+                });
+            }
+            if (item.captions) {
+                [1, 2, 3, 4].forEach(i => {
+                    if (item.captions[i]) document.getElementById(`photo_caption_${i}`).value = item.captions[i];
+                });
+            }
+
+            document.getElementById('assets-table-body').innerHTML = '';
+            if (item.assets && item.assets.length > 0) {
+                item.assets.forEach(a => addAssetRow(a));
+            } else {
+                addAssetRow();
+            }
+
+            switchTab('new-report', true, targetMode);
+            syncToPrint();
+            showToast(`Pre-Report ${item.doc_num} (${targetMode.toUpperCase()}) aperto con successo.`, 'info');
+        }
+
+        function getAssetsData() {
+            const assets = [];
+            document.querySelectorAll('#assets-table-body tr').forEach(tr => {
+                if (currentReportMode === 'base') {
+                    assets.push({
+                        mode: 'base',
+                        comp: tr.querySelector('.asset-comp').value,
+                        modello: tr.querySelector('.asset-modello').value,
+                        qta: tr.querySelector('.asset-qta').value,
+                        matricola: tr.querySelector('.asset-matricola').value,
+                        ubicazione_merce: tr.querySelector('.asset-ubicazione-merce') ? tr.querySelector('.asset-ubicazione-merce').value : ''
+                    });
+                } else {
+                    assets.push({
+                        mode: 'professional',
+                        comp: tr.querySelector('.asset-comp').value,
+                        modello: tr.querySelector('.asset-modello').value,
+                        potenza: tr.querySelector('.asset-potenza').value,
+                        gas: tr.querySelector('.asset-gas').value,
+                        sn_ui: tr.querySelector('.asset-sn-ui').value,
+                        sn_ue: tr.querySelector('.asset-sn-ue').value,
+                        ubicazione: tr.querySelector('.asset-ubicazione').value
+                    });
+                }
+            });
+            return assets;
+        }
+
+        function saveReport() {
+            const num = document.getElementById('doc_num').value;
+            if (!num) {
+                showToast("Numero documento mancante!", "error");
+                return;
+            }
+
+            const reportData = {
+                num: num,
+                date: document.getElementById('doc_date').value,
+                cliente: document.getElementById('cliente_nome').value,
+                cliente_indirizzo: document.getElementById('cliente_indirizzo').value,
+                cliente_cf: document.getElementById('cliente_cf').value,
+                cliente_email: document.getElementById('cliente_email').value,
+                tipo: document.getElementById('tipo_intervento').value,
+                rivenditore: document.getElementById('rivenditore').value,
+                num_scontrino: document.getElementById('num_scontrino').value,
+                data_bolla: document.getElementById('data_bolla').value,
+                totale_acquisto: document.getElementById('totale_acquisto').value,
+                tecnico: activeUser ? activeUser.name : 'Tecnico',
+                relazione: document.getElementById('relazione_tecnica').value,
+                extraTotal: document.getElementById('extra_total_badge').innerText,
+                assets: getAssetsData(),
+                photos: reportPhotos,
+                captions: {
+                    1: document.getElementById('photo_caption_1').value,
+                    2: document.getElementById('photo_caption_2').value,
+                    3: document.getElementById('photo_caption_3').value,
+                    4: document.getElementById('photo_caption_4').value
+                }
+            };
+
+            let history = JSON.parse(localStorage.getItem('ilt_reports_history') || '[]');
+            history = history.filter(r => r.num !== num);
+            history.unshift(reportData);
+            localStorage.setItem('ilt_reports_history', JSON.stringify(history));
+
+            let prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+            prereports = prereports.filter(p => p.doc_num !== num);
+            localStorage.setItem('ilt_prereports', JSON.stringify(prereports));
+
+            showToast(`Report Definitivo ${num} Salvato!`, 'success');
+            loadHistoryTable();
+            loadAssignedTasks();
+            switchTab('history');
+        }
+
+        function loadHistoryTable() {
+            const history = JSON.parse(localStorage.getItem('ilt_reports_history') || '[]');
+            const badgeEl = document.getElementById('history-badge');
+            const totalCountEl = document.getElementById('history-total-count');
+            if (badgeEl) badgeEl.innerText = history.length;
+            if (totalCountEl) totalCountEl.innerText = `${history.length} Report`;
+
+            const tbody = document.getElementById('history-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (history.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Nessun report presente nello storico.</td></tr>`;
+                return;
+            }
+
+            history.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition";
+                
+                const docNum = r.num || r.doc_num || '-';
+                const docDate = r.date || r.doc_date || '-';
+                const clienteNome = r.cliente || r.cliente_nome || '-';
+                const tipoInt = r.tipo || r.tipo_intervento || '-';
+                const tecnicoNome = r.tecnico || r.assigned_name || 'N/A';
+                const extraTot = r.extraTotal || '€ 0.00';
+
+                let deleteBtnHtml = '';
+                if (activeUser && activeUser.role === 'admin') {
+                    deleteBtnHtml = `
+                        <button onclick="deleteHistoricalReport('${docNum}')" class="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1" title="Elimina Report">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                }
+
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-iltRed">${docNum}</td>
+                    <td class="p-3">${docDate}</td>
+                    <td class="p-3 font-semibold">${clienteNome}</td>
+                    <td class="p-3 text-xs">${tipoInt}</td>
+                    <td class="p-3 font-bold text-slate-700">
+                        <span class="bg-slate-100 border px-2 py-0.5 rounded text-[11px]"><i class="fas fa-user-gear text-iltBlue"></i> ${tecnicoNome}</span>
+                    </td>
+                    <td class="p-3 font-bold text-green-700">${extraTot}</td>
+                    <td class="p-3 text-center flex items-center justify-center gap-3">
+                        <button onclick="viewHistoricalReport('${docNum}')" class="text-iltBlue hover:underline text-xs font-bold flex items-center gap-1">
+                            <i class="fas fa-eye"></i> Visualizza
+                        </button>
+                        ${deleteBtnHtml}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteHistoricalReport(docNum) {
+            if (!activeUser || activeUser.role !== 'admin') return;
+            if (!confirm(`Eliminare definitivamente il report ${docNum}?`)) return;
+
+            let history = JSON.parse(localStorage.getItem('ilt_reports_history') || '[]');
+            history = history.filter(item => item.num !== docNum && item.doc_num !== docNum);
+            localStorage.setItem('ilt_reports_history', JSON.stringify(history));
+
+            showToast(`Report ${docNum} eliminato.`, "success");
+            loadHistoryTable();
+        }
+
+        function viewHistoricalReport(docNum) {
+            const history = JSON.parse(localStorage.getItem('ilt_reports_history') || '[]');
+            const r = history.find(item => (item.num === docNum || item.doc_num === docNum));
+            if (!r) return;
+
+            document.getElementById('doc_num').value = r.num || r.doc_num || '';
+            document.getElementById('doc_date').value = r.date || r.doc_date || '';
+            document.getElementById('cliente_nome').value = r.cliente || r.cliente_nome || '';
+            document.getElementById('cliente_indirizzo').value = r.cliente_indirizzo || '';
+            document.getElementById('cliente_cf').value = r.cliente_cf || '';
+            document.getElementById('cliente_email').value = r.cliente_email || '';
+            document.getElementById('tipo_intervento').value = r.tipo || r.tipo_intervento || '';
+            document.getElementById('rivenditore').value = r.rivenditore || '';
+            document.getElementById('num_scontrino').value = r.num_scontrino || '';
+            document.getElementById('data_bolla').value = r.data_bolla || '';
+            document.getElementById('totale_acquisto').value = r.totale_acquisto || '';
+            document.getElementById('relazione_tecnica').value = r.relazione || '';
+            document.getElementById('nome_tecnico').value = r.tecnico || r.assigned_name || '';
+
+            if (r.photos) {
+                reportPhotos = r.photos;
+                [1, 2, 3, 4].forEach(i => {
+                    const preview = document.getElementById(`photo_preview_${i}`);
+                    const placeholder = document.getElementById(`photo_placeholder_${i}`);
+                    if (preview && placeholder) {
+                        if (reportPhotos[i]) {
+                            preview.src = reportPhotos[i];
+                            preview.classList.remove('hidden');
+                            placeholder.classList.add('hidden');
+                        } else {
+                            preview.classList.add('hidden');
+                            placeholder.classList.remove('hidden');
+                        }
+                    }
+                });
+            }
+
+            const assetsBody = document.getElementById('assets-table-body');
+            if (assetsBody) {
+                assetsBody.innerHTML = '';
+                const assetsList = r.assets || [];
+                if (assetsList.length > 0) {
+                    assetsList.forEach(a => addAssetRow(a));
+                } else {
+                    addAssetRow();
+                }
+            }
+
+            switchTab('new-report', true);
+            syncToPrint();
+            showToast(`Report ${docNum} caricato.`, 'success');
+        }
+
+        function resetForm() {
+            document.getElementById('report-form').reset();
+            document.getElementById('assets-table-body').innerHTML = '';
+            document.getElementById('extra-table-body').innerHTML = '';
+            [1, 2, 3, 4].forEach(i => clearPhoto(i));
+            clearCanvas('canvas-tecnico');
+            clearCanvas('canvas-cliente');
+            initDateAndDoc();
+            addAssetRow();
+            addExtraRow();
+            syncToPrint();
+            showToast("Modulo resettato.", "info");
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-green-700' : type === 'error' ? 'bg-red-700' : 'bg-slate-800';
+            toast.className = `${bgClass} text-white text-xs font-semibold px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0 pointer-events-auto`;
+            toast.innerHTML = `<i class="fas ${type==='success'?'fa-circle-check':type==='error'?'fa-circle-exclamation':'fa-circle-info'}"></i> <span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function switchTab(tab, force = false, mode = 'professional') {
+            if (tab === 'new-report' && activeUser && activeUser.role === 'tecnico' && !force) {
+                showToast("Accesso consentito solo tramite i pre-report assegnati.", "error");
+                return;
+            }
+
+            ['new-report', 'history', 'settings', 'assigned-tasks'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (el) el.classList.add('hidden');
+            });
+
+            ['professional', 'base', 'history', 'settings', 'assigned-tasks'].forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (btn) {
+                    btn.classList.remove('bg-iltRed', 'text-white', 'shadow', 'font-bold');
+                    btn.classList.add('text-slate-300', 'hover:bg-slate-700/50', 'font-semibold');
+                }
+            });
+
+            const targetTab = document.getElementById(`tab-${tab}`);
+            if (targetTab) targetTab.classList.remove('hidden');
+
+            let activeBtnId = tab === 'new-report' ? `tab-btn-${mode}` : `tab-btn-${tab}`;
+            const targetBtn = document.getElementById(activeBtnId);
+            if (targetBtn) {
+                targetBtn.classList.add('bg-iltRed', 'text-white', 'shadow', 'font-bold');
+                targetBtn.classList.remove('text-slate-300', 'hover:bg-slate-700/50', 'font-semibold');
+            }
+        }
+
+        function initDateAndDoc() {
+            document.getElementById('doc_date').valueAsDate = new Date();
+            document.getElementById('data_bolla').valueAsDate = new Date();
+            document.getElementById('doc_num').value = 'INT-2026-' + Math.floor(1000 + Math.random() * 9000);
+            syncToPrint();
+        }
+
+        function addAssetRow(data = {}) {
+            renderTableHeader();
+            const tbody = document.getElementById('assets-table-body');
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-slate-50 transition";
+
+            if (currentReportMode === 'base') {
+                tr.innerHTML = `
+                    <td class="p-1.5"><input type="text" value="${data.comp || 'Lavatrice'}" class="asset-comp w-full p-1.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
+                    <td class="p-1.5"><input type="text" value="${data.modello || 'Samsung WW90T'}" class="asset-modello w-full p-1.5 border border-slate-300 rounded text-xs font-semibold focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
+                    <td class="p-1.5"><input type="number" min="1" value="${data.qta || '1'}" class="asset-qta w-full p-1.5 border border-slate-300 rounded text-xs font-bold text-center focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
+                    <td class="p-1.5"><input type="text" value="${data.matricola || ''}" placeholder="Matricola / Barcode" class="asset-matricola w-full p-1.5 border border-slate-300 rounded text-xs font-mono font-bold text-iltBlue focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
+                    <td class="p-1.5"><input type="text" value="${data.ubicazione_merce || 'Magazzino Centrale - Corsia A'}" placeholder="Es. Corsia B4" class="asset-ubicazione-merce w-full p-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
+                    <td class="p-1.5 text-center">
+                        <button type="button" onclick="this.closest('tr').remove(); syncToPrint();" class="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded transition"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+            } else {
+                tr.innerHTML = `
+                    <td class="p-1.5"><input type="text" value="${data.comp || 'Unità Interna'}" class="asset-comp w-full p-1.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
+                    <td class="p-1.5"><input type="text" value="${data.modello || 'Samsung Luzon 12000'}" class="asset-modello w-full p-1.5 border border-slate-300 rounded text-xs font-semibold focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
+                    <td class="p-1.5"><input type="text" value="${data.potenza || '12.000 BTU'}" class="asset-potenza w-24 p-1.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
+                    <td class="p-1.5"><input type="text" value="${data.gas || 'R-32'}" class="asset-gas w-16 p-1.5 border border-slate-300 rounded text-xs font-mono focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
+                    <td class="p-1.5"><input type="text" value="${data.sn_ui || ''}" placeholder="S/N" class="asset-sn-ui w-full p-1.5 border border-slate-300 rounded text-xs font-mono font-bold text-iltBlue focus:outline-none"></td>
+                    <td class="p-1.5"><input type="text" value="${data.sn_ue || ''}" placeholder="S/N" class="asset-sn-ue w-full p-1.5 border border-slate-300 rounded text-xs font-mono font-bold text-iltRed focus:outline-none"></td>
+                    <td class="p-1.5"><input type="text" value="${data.ubicazione || 'Soggiorno'}" class="asset-ubicazione w-full p-1.5 border border-slate-300 rounded text-xs focus:outline-none"></td>
+                    <td class="p-1.5 text-center flex items-center justify-center gap-1">
+                        <button type="button" onclick="triggerLabelScan(this)" title="Scan" class="p-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded transition"><i class="fas fa-camera"></i></button>
+                        <button type="button" onclick="this.closest('tr').remove(); syncToPrint();" class="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded transition"><i class="fas fa-trash"></i></button>
+                    </td>
+                `;
+            }
+            tbody.appendChild(tr);
+            tr.querySelectorAll('input').forEach(i => i.addEventListener('input', syncToPrint));
+            syncToPrint();
+        }
+
+        function addExtraRow(data = {}) {
+            const tbody = document.getElementById('extra-table-body');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="p-1"><input type="text" value="${data.desc || 'Materiale Extra'}" class="extra-desc w-full p-1 border border-slate-300 rounded text-xs"></td>
+                <td class="p-1"><input type="number" step="0.01" value="${data.imp || '0.00'}" oninput="calculateExtraTotal()" class="extra-imp w-full p-1 border border-slate-300 rounded text-xs font-bold text-green-700"></td>
+                <td class="p-1">
+                    <select class="extra-mode w-full p-1 border border-slate-300 rounded text-xs">
+                        <option>Contanti</option>
+                        <option>POS / Carta</option>
+                        <option>Bonifico</option>
+                    </select>
+                </td>
+                <td class="p-1 text-center"><button type="button" onclick="this.closest('tr').remove(); calculateExtraTotal(); syncToPrint();" class="text-red-500"><i class="fas fa-trash"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+            tr.querySelectorAll('input, select').forEach(i => i.addEventListener('input', syncToPrint));
+            calculateExtraTotal();
+            syncToPrint();
+        }
+
+        function calculateExtraTotal() {
+            let total = 0;
+            document.querySelectorAll('#extra-table-body tr').forEach(tr => {
+                total += parseFloat(tr.querySelector('.extra-imp').value) || 0;
+            });
+            document.getElementById('extra_total_badge').innerText = `€ ${total.toFixed(2)}`;
+            document.getElementById('prt_extra_totale').innerText = `TOTALE: € ${total.toFixed(2)}`;
+        }
+
+        function renderChecklist() {
+            const container = document.getElementById('checklist-container');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const activeList = currentReportMode === 'base' ? CHECKLIST_BASE : CHECKLIST_PROFESSIONAL;
+
+            activeList.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center space-x-2 bg-slate-50 p-2 rounded-lg border border-slate-200 text-xs";
+                div.innerHTML = `
+                    <input type="checkbox" id="chk_${idx}" ${checklistState[idx] ? 'checked' : ''} onchange="updateChecklist(${idx}, this.checked)" class="w-4 h-4 text-green-600 rounded cursor-pointer">
+                    <label for="chk_${idx}" class="text-slate-700 font-medium cursor-pointer flex-grow text-[11px]">${item}</label>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateChecklist(idx, checked) {
+            checklistState[idx] = checked;
+            syncToPrint();
+        }
+
+        function toggleAllChecklist(status) {
+            checklistState.fill(status);
+            renderChecklist();
+            syncToPrint();
+        }
+
+        function initCanvas(id) {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let drawing = false;
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: clientX - rect.left, y: clientY - rect.top };
+            }
+
+            function start(e) { drawing = true; draw(e); }
+            function stop() { drawing = false; ctx.beginPath(); syncToPrint(); }
+            function draw(e) {
+                if (!drawing) return;
+                e.preventDefault();
+                const pos = getPos(e);
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = '#004aad';
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+            }
+
+            canvas.addEventListener('mousedown', start);
+            canvas.addEventListener('mouseup', stop);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('touchstart', start);
+            canvas.addEventListener('touchend', stop);
+            canvas.addEventListener('touchmove', draw);
+        }
+
+        function clearCanvas(id) {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+            syncToPrint();
+        }
+
+        function syncToPrint() {
+            const getVal = id => (document.getElementById(id) ? document.getElementById(id).value : '');
+            const setTxt = (id, val) => { if (document.getElementById(id)) document.getElementById(id).innerText = val || '-'; };
+
+            setTxt('prt_doc_num', getVal('doc_num'));
+            setTxt('prt_doc_date', `Data: ${getVal('doc_date')}`);
+            setTxt('prt_tipo_txt', getVal('tipo_intervento'));
+            setTxt('prt_cliente_nome', getVal('cliente_nome'));
+            setTxt('prt_cliente_indirizzo', getVal('cliente_indirizzo'));
+            setTxt('prt_cliente_cf', getVal('cliente_cf'));
+            setTxt('prt_cliente_email', getVal('cliente_email'));
+            setTxt('prt_rivenditore', getVal('rivenditore'));
+            setTxt('prt_num_scontrino', getVal('num_scontrino'));
+            setTxt('prt_data_bolla', getVal('data_bolla'));
+            setTxt('prt_totale_acquisto', getVal('totale_acquisto') ? `€ ${getVal('totale_acquisto')}` : '-');
+
+            setTxt('prt_relazione', getVal('relazione_tecnica'));
+            setTxt('prt_fgas_azoto', getVal('fgas_azoto'));
+            setTxt('prt_fgas_vuoto', getVal('fgas_vuoto'));
+            setTxt('prt_fgas_pressione', getVal('fgas_pressione'));
+            setTxt('prt_fgas_condensa', getVal('fgas_condensa'));
+            setTxt('prt_fgas_patentino', getVal('fgas_patentino'));
+            setTxt('prt_fgas_gas_aggiunto', getVal('fgas_gas_aggiunto'));
+            setTxt('prt_fgas_temp_split', getVal('fgas_temp_split'));
+
+            const prtAssetTbody = document.getElementById('prt_assets_tbody');
+            if (prtAssetTbody) {
+                prtAssetTbody.innerHTML = '';
+                document.querySelectorAll('#assets-table-body tr').forEach(tr => {
+                    const row = prtAssetTbody.insertRow();
+                    row.className = "border border-slate-300";
+                    if (currentReportMode === 'base') {
+                        row.insertCell(0).innerText = tr.querySelector('.asset-comp').value;
+                        row.insertCell(1).innerText = tr.querySelector('.asset-modello').value;
+                        row.insertCell(2).innerText = tr.querySelector('.asset-qta').value;
+                        row.insertCell(3).innerText = tr.querySelector('.asset-matricola').value;
+                        row.insertCell(4).innerText = tr.querySelector('.asset-ubicazione-merce') ? tr.querySelector('.asset-ubicazione-merce').value : '-';
+                    } else {
+                        row.insertCell(0).innerText = tr.querySelector('.asset-comp').value;
+                        row.insertCell(1).innerText = tr.querySelector('.asset-modello').value;
+                        row.insertCell(2).innerText = tr.querySelector('.asset-potenza').value;
+                        row.insertCell(3).innerText = tr.querySelector('.asset-gas').value;
+                        row.insertCell(4).innerText = tr.querySelector('.asset-sn-ui').value;
+                        row.insertCell(5).innerText = tr.querySelector('.asset-sn-ue').value;
+                        row.insertCell(6).innerText = tr.querySelector('.asset-ubicazione').value;
+                    }
+                });
+            }
+
+            const prtChecklistUl = document.getElementById('prt_checklist_ul');
+            if (prtChecklistUl) {
+                prtChecklistUl.innerHTML = '';
+                const activeList = currentReportMode === 'base' ? CHECKLIST_BASE : CHECKLIST_PROFESSIONAL;
+                activeList.forEach((item, idx) => {
+                    const li = document.createElement('li');
+                    const isChecked = checklistState[idx];
+                    li.className = isChecked ? "text-slate-800" : "text-slate-400 line-through";
+                    li.innerHTML = `<i class="fas ${isChecked ? 'fa-check-square text-green-600' : 'fa-square text-slate-300'} mr-1"></i> ${item}`;
+                    prtChecklistUl.appendChild(li);
+                });
+            }
+
+            const prtPhotosContainer = document.getElementById('prt_photos_container');
+            const prtPhotosGrid = document.getElementById('prt_photos_grid');
+            if(prtPhotosGrid) prtPhotosGrid.innerHTML = '';
+            let hasPhotos = false;
+
+            [1, 2, 3, 4].forEach(i => {
+                if (reportPhotos[i]) {
+                    hasPhotos = true;
+                    const caption = document.getElementById(`photo_caption_${i}`).value || `Foto ${i}`;
+                    const div = document.createElement('div');
+                    div.className = "border border-slate-300 p-1.5 rounded bg-slate-50 text-center";
+                    div.innerHTML = `
+                        <img src="${reportPhotos[i]}" class="h-28 w-full object-contain rounded border border-slate-200 bg-white" alt="Foto">
+                        <p class="text-[9px] font-bold text-slate-700 mt-1 truncate">${caption}</p>
+                    `;
+                    if(prtPhotosGrid) prtPhotosGrid.appendChild(div);
+                }
+            });
+
+            if (hasPhotos && prtPhotosContainer) {
+                prtPhotosContainer.classList.remove('hidden');
+            } else if(prtPhotosContainer) {
+                prtPhotosContainer.classList.add('hidden');
+            }
+
+            setTxt('prt_nome_tecnico', getVal('nome_tecnico') || (activeUser ? activeUser.name : 'Tecnico'));
+            setTxt('prt_nome_cliente_sub', getVal('cliente_nome') || 'Cliente');
+
+            const canvasTecnico = document.getElementById('canvas-tecnico');
+            if (canvasTecnico) document.getElementById('prt_img_tecnico').src = canvasTecnico.toDataURL();
+            const canvasCliente = document.getElementById('canvas-cliente');
+            if (canvasCliente) document.getElementById('prt_img_cliente').src = canvasCliente.toDataURL();
+        }
+
+        function loadDemoData() {
+            document.getElementById('cliente_nome').value = 'Giuseppe Azzarello';
+            document.getElementById('cliente_indirizzo').value = 'Via della Sorgente 34, Altofonte (PA)';
+            document.getElementById('cliente_cf').value = 'ZZRGPP80A01G273X';
+            document.getElementById('cliente_email').value = 'giuseppe.azzarello@email.it';
+            document.getElementById('rivenditore').value = 'MediaMarket S.p.A.';
+            document.getElementById('num_scontrino').value = '3538146';
+            document.getElementById('totale_acquisto').value = '559.09';
+            syncToPrint();
+            showToast("Dati demo caricati!", "success");
+        }
+
+        function exportPDF() {
+            syncToPrint();
+            const element = document.getElementById('print-area');
+            const docNum = document.getElementById('doc_num').value || 'Report';
+            showToast("Generazione PDF...", "info");
+
+            html2pdf().set({
+                margin: [5, 5, 5, 5],
+                filename: `Report_ILT_${docNum}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            }).from(element).save().then(() => {
+                showToast("PDF scaricato!", "success");
+            });
+        }
+
+        async function generateAIReport() {
+            const apiKey = localStorage.getItem('ilt_gemini_key') || document.getElementById('gemini_api_key').value;
+            if (!apiKey) {
+                showToast("Inserisci l'API Key Gemini!", "error");
+                switchTab('settings');
+                return;
+            }
+
+            const cliente = document.getElementById('cliente_nome').value || 'Cliente';
+            const relazioneAttuale = document.getElementById('relazione_tecnica').value;
+            const prompt = `Sei l'ingegnere supervisore di ILT Logistics. Scrivi una relazione tecnica per il cliente ${cliente}. Note: ${relazioneAttuale || 'Intervento completato con successo.'}.`;
+
+            showToast("Generazione relazione AI...", "info");
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                });
+                const data = await res.json();
+                document.getElementById('relazione_tecnica').value = data.candidates[0].content.parts[0].text;
+                syncToPrint();
+                showToast("Relazione AI generata!", "success");
+            } catch(e) {
+                showToast("Errore di connessione con Gemini AI.", "error");
+            }
+        }
+
+        function saveApiKey() {
+            localStorage.setItem('ilt_gemini_key', document.getElementById('gemini_api_key').value.trim());
+            showToast("API Key Salvata!", "success");
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            getUsersDB();
+            checkAuth();
+            initLogo();
+            initDateAndDoc();
+            renderChecklist();
+            addAssetRow();
+            addExtraRow();
+            initCanvas('canvas-tecnico');
+            initCanvas('canvas-cliente');
+            loadHistoryTable();
+
+            document.querySelectorAll('input, select, textarea').forEach(el => {
+                el.addEventListener('input', syncToPrint);
+                el.addEventListener('change', syncToPrint);
+            });
+
+            const savedKey = localStorage.getItem('ilt_gemini_key');
+            if (savedKey) document.getElementById('gemini_api_key').value = savedKey;
+        });
+    </script>
 </body>
 </html>
