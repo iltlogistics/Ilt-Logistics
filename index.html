@@ -1918,6 +1918,26 @@
             const savedKey = localStorage.getItem('ilt_gemini_key');
             if (savedKey) document.getElementById('gemini_api_key').value = savedKey;
         });
+    <!-- Script di Inizializzazione Firebase -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-analytics.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAarWuuFLMi0gB4KGKKru-_FScXyyWkVS4",
+            authDomain: "ilt-logistcs-srl.firebaseapp.com",
+            projectId: "ilt-logistcs-srl",
+            storageBucket: "ilt-logistcs-srl.firebasestorage.app",
+            messagingSenderId: "737807115782",
+            appId: "1:737807115782:web:6212b5b5f24363c7d64587",
+            measurementId: "G-7JZE8MG46E"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
     </script>
 </body>
 </html>
