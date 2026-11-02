@@ -1236,50 +1236,138 @@
         }
 
         function loadAssignedTasks() {
-            const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
-            let tasks = prereports;
-            if (activeUser && activeUser.role === 'tecnico') {
-                tasks = prereports.filter(p => p.assigned_to === activeUser.username);
+    const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+    let tasks = prereports;
+    if (activeUser && activeUser.role === 'tecnico') {
+        tasks = prereports.filter(p => p.assigned_to === activeUser.username);
+    }
+
+    // Applichiamo un ordinamento personalizzato basato sull'itinerario salvato dal tecnico (se presente)
+    const customOrder = JSON.parse(localStorage.getItem('ilt_tech_itinerary_' + (activeUser ? activeUser.username : 'admin')) || '[]');
+    if (customOrder.length > 0) {
+        tasks.sort((a, b) => {
+            let indexA = customOrder.indexOf(a.id);
+            let indexB = customOrder.indexOf(b.id);
+            if (indexA === -1) indexA = 999;
+            if (indexB === -1) indexB = 999;
+            return indexA - indexB;
+        });
+    }
+
+    document.getElementById('pending-tasks-badge').innerText = tasks.length;
+    document.getElementById('tasks-count-tag').innerText = `${tasks.length} Incarichi`;
+
+    const tbody = document.getElementById('tasks-tbody');
+    tbody.innerHTML = '';
+
+    if (tasks.length === 0) {
+        const colSpan = (activeUser && activeUser.role === 'admin') ? 7 : 6;
+        tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-6 text-center text-slate-400 font-medium">Nessun pre-report presente nel sistema.</td></tr>`;
+        return;
+    }
+
+    // Raggruppiamo gli incarichi per data
+    const groupedByDate = {};
+    tasks.forEach(t => {
+        const dateKey = t.doc_date || 'Data non specificata';
+        if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
+        groupedByDate[dateKey].push(t);
+    });
+
+    // Cicliamo sui gruppi di date per creare blocchi visivi separati
+    Object.keys(groupedByDate).forEach((dateKey, groupIndex) => {
+        const dateTasks = groupedByDate[dateKey];
+
+        // Creazione intestazione di gruppo per data con stili e colori dedicati
+        const headerTr = document.createElement('tr');
+        const colSpanTotal = (activeUser && activeUser.role === 'admin') ? 7 : 6;
+        
+        // Assegniamo colori diversi in base alla "vicinanza" o semplicemente un tema pulito a blocchi
+        const bgHeaderColor = groupIndex === 0 ? 'bg-amber-100/80 text-amber-900 border-amber-300' : 'bg-slate-200/80 text-slate-800 border-slate-300';
+        
+        headerTr.innerHTML = `
+            <td colspan="${colSpanTotal}" class="p-2.5 ${bgHeaderColor} font-bold text-xs uppercase tracking-wider border-y">
+                <div class="flex justify-between items-center px-2">
+                    <span><i class="fas fa-calendar-day mr-1.5">></i> Interventi Previsti per il: ${dateKey}</span>
+                    <span class="text-[10px] bg-white/80 px-2 py-0.5 rounded-full border shadow-sm">${dateTasks.length} Incarichi in questa data</span>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(headerTr);
+
+        // Inseriamo gli elementi del gruppo
+        dateTasks.forEach((t, idxInGroup) => {
+            const tr = document.createElement('tr');
+            tr.className = "hover:bg-amber-50/50 transition border-b border-slate-100";
+            tr.dataset.taskId = t.id;
+
+            let tecnicoColHtml = '';
+            if (activeUser && activeUser.role === 'admin') {
+                tecnicoColHtml = `<td class="p-3 font-bold text-slate-700"><span class="bg-slate-100 border px-2 py-0.5 rounded text-[11px]"><i class="fas fa-user text-iltBlue"></i> ${t.assigned_name || t.assigned_to}</span></td>`;
             }
 
-            document.getElementById('pending-tasks-badge').innerText = tasks.length;
-            document.getElementById('tasks-count-tag').innerText = `${tasks.length} Incarichi`;
+            // Pulsanti per spostare l'itinerario su e giù
+            const itineraryControls = `
+                <div class="flex items-center justify-center gap-1">
+                    <button onclick="moveTaskInItinerary('${t.id}', 'up')" title="Sposta prima nell'itinerario" class="p-1 text-slate-500 hover:text-iltBlue bg-slate-100 hover:bg-blue-50 rounded"><i class="fas fa-arrow-up text-[10px]"></i></button>
+                    <button onclick="moveTaskInItinerary('${t.id}', 'down')" title="Sposta dopo nell'itinerario" class="p-1 text-slate-500 hover:text-iltBlue bg-slate-100 hover:bg-blue-50 rounded"><i class="fas fa-arrow-down text-[10px]"></i></button>
+                </div>
+            `;
 
-            const tbody = document.getElementById('tasks-tbody');
-            tbody.innerHTML = '';
+            tr.innerHTML = `
+                <td class="p-3 font-mono font-bold text-iltRed flex items-center gap-2">
+                    ${itineraryControls}
+                    <span>${t.doc_num}</span>
+                </td>
+                <td class="p-3 text-slate-600">${t.doc_date}</td>
+                <td class="p-3 font-semibold text-slate-800">${t.cliente_nome}</td>
+                <td class="p-3 text-slate-500">${t.cliente_indirizzo}</td>
+                <td class="p-3"><span class="bg-blue-50 text-iltBlue font-bold px-2 py-0.5 rounded text-[10px]">${t.tipo_intervento}</span></td>
+                ${tecnicoColHtml}
+                <td class="p-3 text-center">
+                    <button onclick="openPreReportForCompletion('${t.id}')" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center gap-1 mx-auto">
+                        <i class="fas fa-folder-open"></i> ${activeUser.role === 'admin' ? 'Visualizza / Modifica' : 'Completa'}
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    });
+}
+function moveTaskInItinerary(taskId, direction) {
+    const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+    let tasks = prereports;
+    if (activeUser && activeUser.role === 'tecnico') {
+        tasks = prereports.filter(p => p.assigned_to === activeUser.username);
+    }
 
-            if (tasks.length === 0) {
-                const colSpan = (activeUser && activeUser.role === 'admin') ? 7 : 6;
-                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-slate-400">Nessun pre-report presente nel sistema.</td></tr>`;
-                return;
-            }
+    let currentOrder = tasks.map(t => t.id);
+    const customOrder = JSON.parse(localStorage.getItem('ilt_tech_itinerary_' + (activeUser ? activeUser.username : 'admin')) || '[]');
+    
+    if (customOrder.length > 0) {
+        currentOrder = customOrder;
+        tasks.forEach(t => {
+            if (!currentOrder.includes(t.id)) currentOrder.push(t.id);
+        });
+    }
 
-            tasks.forEach(t => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-amber-50/50 transition";
-                
-                let tecnicoColHtml = '';
-                if (activeUser && activeUser.role === 'admin') {
-                    tecnicoColHtml = `<td class="p-3 font-bold text-slate-700"><span class="bg-slate-100 border px-2 py-0.5 rounded text-[11px]"><i class="fas fa-user text-iltBlue"></i> ${t.assigned_name || t.assigned_to}</span></td>`;
-                }
+    const index = currentOrder.indexOf(taskId);
+    if (index === -1) return;
 
-                tr.innerHTML = `
-                    <td class="p-3 font-mono font-bold text-iltRed">${t.doc_num}</td>
-                    <td class="p-3">${t.doc_date}</td>
-                    <td class="p-3 font-semibold">${t.cliente_nome}</td>
-                    <td class="p-3 text-slate-500">${t.cliente_indirizzo}</td>
-                    <td class="p-3"><span class="bg-blue-50 text-iltBlue font-bold px-2 py-0.5 rounded text-[10px]">${t.tipo_intervento}</span></td>
-                    ${tecnicoColHtml}
-                    <td class="p-3 text-center">
-                        <button onclick="openPreReportForCompletion('${t.id}')" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center gap-1 mx-auto">
-                            <i class="fas fa-folder-open"></i> ${activeUser.role === 'admin' ? 'Visualizza / Modifica' : 'Completa'}
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
+    if (direction === 'up' && index > 0) {
+        const temp = currentOrder[index];
+        currentOrder[index] = currentOrder[index - 1];
+        currentOrder[index - 1] = temp;
+    } else if (direction === 'down' && index < currentOrder.length - 1) {
+        const temp = currentOrder[index];
+        currentOrder[index] = currentOrder[index + 1];
+        currentOrder[index + 1] = temp;
+    }
 
+    localStorage.setItem('ilt_tech_itinerary_' + (activeUser ? activeUser.username : 'admin'), JSON.stringify(currentOrder));
+    loadAssignedTasks();
+    showToast("Itinerario aggiornato con successo!", "success");
+}
         function openPreReportForCompletion(id) {
             const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
             const item = prereports.find(p => p.id === id);
