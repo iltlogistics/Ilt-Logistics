@@ -126,7 +126,7 @@
                     </button>
                 </div>
 
-                <nav class="flex items-center space-x-1.5 bg-slate-800/90 p-1 rounded-xl border border-slate-700">
+                <nav class="flex flex-wrap items-center gap-1.5 bg-slate-800/90 p-1 rounded-xl border border-slate-700">
                     <button onclick="switchTab('assigned-tasks')" id="tab-btn-tasks" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
                         <i class="fas fa-list-check text-amber-400"></i> <span id="tab-tasks-label">Pre-Report Assegnati</span>
                         <span id="pending-tasks-badge" class="bg-amber-500 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
@@ -184,7 +184,7 @@
                     <span id="tasks-count-tag" class="text-xs font-bold bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full">0 Incarichi</span>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-xs border-collapse">
+                    <table class="w-full text-left text-xs border-collapse min-w-[600px]">
                         <thead>
                             <tr class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] border-b border-slate-200">
                                 <th class="p-3">N° Doc</th>
@@ -324,7 +324,7 @@
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs border-collapse">
+                        <table class="w-full text-left text-xs border-collapse min-w-[700px]">
                             <thead>
                                 <tr id="assets-table-header" class="bg-slate-100 text-slate-700 uppercase font-bold text-[11px] border-b border-slate-200"></tr>
                             </thead>
@@ -1045,30 +1045,33 @@
         }
 
         function handleCreateTechnician(e) {
-            e.preventDefault();
-            const name = document.getElementById('new_tech_name').value.trim();
-            const user = document.getElementById('new_tech_user').value.trim().toLowerCase();
-            const pass = document.getElementById('new_tech_pass').value;
-            const fgas = document.getElementById('new_tech_fgas').value.trim();
+    e.preventDefault();
+    const name = document.getElementById('new_tech_name').value.trim();
+    const user = document.getElementById('new_tech_user').value.trim().toLowerCase();
+    const pass = document.getElementById('new_tech_pass').value;
+    const fgas = document.getElementById('new_tech_fgas').value.trim();
+    // 1. Recupera il ruolo dal menu a tendina
+    const role = document.getElementById('new_tech_role').value;
 
-            const db = getUsersDB();
-            if (db[user]) {
-                showToast("Username già esistente!", "error");
-                return;
-            }
+    const db = getUsersDB();
+    if (db[user]) {
+        showToast("Username già esistente!", "error");
+        return;
+    }
 
-            db[user] = { username: user, pass: pass, name: name, role: 'tecnico', fgas: fgas };
-            saveUsersDB(db);
-            showToast(`Tecnico ${name} creato!`, "success");
+    // 2. Passa la variabile 'role' invece della stringa fissa 'tecnico'
+    db[user] = { username: user, pass: pass, name: name, role: role, fgas: fgas };
+    saveUsersDB(db);
+    showToast(`Utente ${name} creato come ${role}!`, "success");
 
-            document.getElementById('new_tech_name').value = '';
-            document.getElementById('new_tech_user').value = '';
-            document.getElementById('new_tech_pass').value = '';
-            document.getElementById('new_tech_fgas').value = '';
+    document.getElementById('new_tech_name').value = '';
+    document.getElementById('new_tech_user').value = '';
+    document.getElementById('new_tech_pass').value = '';
+    document.getElementById('new_tech_fgas').value = '';
 
-            renderTechniciansList();
-            populateTechnicianSelect();
-        }
+    renderTechniciansList();
+    populateTechnicianSelect();
+}
 
         function deleteTechnician(username) {
             if (username === 'admin') return;
