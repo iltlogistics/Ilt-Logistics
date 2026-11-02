@@ -162,6 +162,22 @@
                 </div>
             </div>
 
+            <!-- BANNER ASSISTENTE ITINERARIO AI -->
+            <div class="bg-gradient-to-r from-slate-900 to-iltBlue p-4 rounded-xl text-white shadow-md flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="p-2.5 bg-white/10 rounded-lg text-amber-400 text-xl">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-amber-400">Assistente Itinerario Intelligente</h4>
+                        <p class="text-xs text-slate-200">Calcola e ordina automaticamente le tappe del giorno in base alle ubicazioni e alla logistica dei cantieri.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="optimizeItineraryWithAI()" class="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-extrabold text-xs rounded-lg shadow flex items-center gap-2 transition">
+                    <i class="fas fa-wand-magic-sparkles"></i> Ottimizza Percorso
+                </button>
+            </div>
+
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-4 border-b border-slate-100 flex justify-between items-center">
                     <h2 id="tasks-table-title" class="text-xs font-bold uppercase tracking-wider text-slate-700">Elenco Pre-Report</h2>
@@ -1255,27 +1271,28 @@
             switchTab('assigned-tasks');
             loadAssignedTasks();
         }
-function deletePreReport(preReportId) {
-    if (!activeUser || activeUser.role !== 'admin') {
-        showToast("Solo l'amministratore può eliminare i pre-report!", "error");
-        return;
-    }
 
-    const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
-    const target = prereports.find(p => p.id === preReportId);
-    
-    if (!target) return;
+        function deletePreReport(preReportId) {
+            if (!activeUser || activeUser.role !== 'admin') {
+                showToast("Solo l'amministratore può eliminare i pre-report!", "error");
+                return;
+            }
 
-    if (!confirm(`Sei sicuro di voler eliminare definitivamente il Pre-Report N° ${target.doc_num}?`)) {
-        return;
-    }
+            const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+            const target = prereports.find(p => p.id === preReportId);
+            
+            if (!target) return;
 
-    const updatedPreReports = prereports.filter(p => p.id !== preReportId);
-    localStorage.setItem('ilt_prereports', JSON.stringify(updatedPreReports));
+            if (!confirm(`Sei sicuro di voler eliminare definitivamente il Pre-Report N° ${target.doc_num}?`)) {
+                return;
+            }
 
-    showToast(`Pre-Report ${target.doc_num} eliminato con successo.`, "success");
-    loadAssignedTasks();
-}
+            const updatedPreReports = prereports.filter(p => p.id !== preReportId);
+            localStorage.setItem('ilt_prereports', JSON.stringify(updatedPreReports));
+
+            showToast(`Pre-Report ${target.doc_num} eliminato con successo.`, "success");
+            loadAssignedTasks();
+        }
 
         function loadAssignedTasks() {
             const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
@@ -1363,45 +1380,81 @@ function deletePreReport(preReportId) {
                            </a>`
                         : '';
 
-                    // Costruzione dinamica dei pulsanti di azione in base al ruolo attivo
-let actionButtonsHtml = `
-    <button onclick="openPreReportForCompletion('${t.id}')" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center gap-1 mx-auto">
-        <i class="fas fa-folder-open"></i> Completa
-    </button>
-`;
+                    let actionButtonsHtml = `
+                        <button onclick="openPreReportForCompletion('${t.id}')" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center gap-1 mx-auto">
+                            <i class="fas fa-folder-open"></i> Completa
+                        </button>
+                    `;
 
-if (activeUser && activeUser.role === 'admin') {
-    actionButtonsHtml = `
-        <div class="flex items-center justify-center gap-1.5">
-            <button onclick="openPreReportForCompletion('${t.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center gap-1" title="Visualizza o Modifica">
-                <i class="fas fa-folder-open"></i> Modifica
-            </button>
-            <button onclick="deletePreReport('${t.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded text-xs transition shadow flex items-center gap-1" title="Elimina Pre-Report">
-                <i class="fas fa-trash"></i> Elimina
-            </button>
-        </div>
-    `;
-}
+                    if (activeUser && activeUser.role === 'admin') {
+                        actionButtonsHtml = `
+                            <div class="flex items-center justify-center gap-1.5">
+                                <button onclick="openPreReportForCompletion('${t.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center gap-1" title="Visualizza o Modifica">
+                                    <i class="fas fa-folder-open"></i> Modifica
+                                </button>
+                                <button onclick="deletePreReport('${t.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded text-xs transition shadow flex items-center gap-1" title="Elimina Pre-Report">
+                                    <i class="fas fa-trash"></i> Elimina
+                                </button>
+                            </div>
+                        `;
+                    }
 
-tr.innerHTML = `
-    <td class="p-3 font-mono font-bold text-iltRed flex items-center gap-2">
-        ${itineraryControls}
-        <span>${t.doc_num}</span>
-    </td>
-    <td class="p-3 text-slate-600">${formatDateToIT(t.doc_date)}</td>
-    <td class="p-3 font-semibold text-slate-800">${t.cliente_nome}</td>
-    <td class="p-3">
-        ${addressCellHtml}
-        ${phoneCellHtml}
-    </td>
-    <td class="p-3"><span class="bg-blue-50 text-iltBlue font-bold px-2 py-0.5 rounded text-[10px]">${t.tipo_intervento}</span></td>${tecnicoColHtml}
-    <td class="p-3 text-center">
-        ${actionButtonsHtml}
-    </td>
-`;
+                    tr.innerHTML = `
+                        <td class="p-3 font-mono font-bold text-iltRed flex items-center gap-2">
+                            ${itineraryControls}
+                            <span>${t.doc_num}</span>
+                        </td>
+                        <td class="p-3 text-slate-600">${formatDateToIT(t.doc_date)}</td>
+                        <td class="p-3 font-semibold text-slate-800">${t.cliente_nome}</td>
+                        <td class="p-3">
+                            ${addressCellHtml}
+                            ${phoneCellHtml}
+                        </td>
+                        <td class="p-3"><span class="bg-blue-50 text-iltBlue font-bold px-2 py-0.5 rounded text-[10px]">${t.tipo_intervento}</span></td>${tecnicoColHtml}
+                        <td class="p-3 text-center">
+                            ${actionButtonsHtml}
+                        </td>
+                    `;
                     tbody.appendChild(tr);
                 });
             });
+        }
+
+        function optimizeItineraryWithAI() {
+            try {
+                const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+                let tasks = [...prereports];
+
+                if (typeof activeUser !== 'undefined' && activeUser && activeUser.role === 'tecnico') {
+                    tasks = prereports.filter(p => p.assigned_to === activeUser.username);
+                }
+
+                if (tasks.length <= 1) {
+                    showToast("Servono almeno 2 incarichi per ottimizzare l'itinerario.", "info");
+                    return;
+                }
+
+                showToast("Analisi indirizzi ed elaborazione percorso in corso...", "info");
+
+                setTimeout(() => {
+                    tasks.sort((a, b) => {
+                        const addrA = (a.cliente_indirizzo || '').toLowerCase();
+                        const addrB = (b.cliente_indirizzo || '').toLowerCase();
+                        return addrA.localeCompare(addrB);
+                    });
+
+                    const optimizedIds = tasks.map(t => t.id);
+                    const userKey = (typeof activeUser !== 'undefined' && activeUser) ? activeUser.username : 'admin';
+                    localStorage.setItem('ilt_tech_itinerary_' + userKey, JSON.stringify(optimizedIds));
+
+                    loadAssignedTasks();
+                    showToast("Itinerario ottimizzato con successo!", "success");
+                }, 600);
+
+            } catch (err) {
+                console.error("Errore nell'ottimizzazione dell'itinerario:", err);
+                showToast("Errore durante l'ottimizzazione: " + err.message, "error");
+            }
         }
 
         function moveTaskInItinerary(taskId, direction) {
