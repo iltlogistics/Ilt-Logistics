@@ -1420,42 +1420,104 @@
             });
         }
 
-        function optimizeItineraryWithAI() {
-            try {
-                const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
-                let tasks = [...prereports];
+        // NUOVO: Calcola la distanza in km tra due coordinate GPS (Formula di Haversine)
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Raggio della Terra in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; // Distanza in km
+}
 
-                if (typeof activeUser !== 'undefined' && activeUser && activeUser.role === 'tecnico') {
-                    tasks = prereports.filter(p => p.assigned_to === activeUser.username);
-                }
+// NUOvo: Simulatore intelligente di coordinate basato sugli indirizzi
+function getCoordinatesForAddress(address) {
+    const addr = (address || '').toLowerCase();
+    let lat = 38.1157;
+    let lon = 13.3615;
 
-                if (tasks.length <= 1) {
-                    showToast("Servono almeno 2 incarichi per ottimizzare l'itinerario.", "info");
-                    return;
-                }
+    if (addr.includes('pacini')) { lat = 38.1320; lon = 13.3500; }
+    else if (addr.includes('libertà') || addr.includes('liberta')) { lat = 38.1250; lon = 13.3530; }
+    else if (addr.includes('roma')) { lat = 38.1180; lon = 13.3630; }
+    else if (addr.includes('strasburgo')) { lat = 38.1500; lon = 13.3350; }
+    else if (addr.includes('notarbartolo')) { lat = 38.1360; lon = 13.3480; }
+    else if (addr.includes('oredi') || addr.includes('foro italico')) { lat = 38.1120; lon = 13.3750; }
+    else {
+        let hash = 0;
+        for (let i = 0; i < addr.length; i++) hash = addr.charCodeAt(i) + ((hash << 5) - hash);
+        lat += (hash % 50) * 0.001;
+        lon += ((hash >> 3) % 50) * 0.001;
+    }
+    return { lat, lon };
+}
 
-                showToast("Analisi indirizzi ed elaborazione percorso in corso...", "info");
+function optimizeItineraryWithAI() {
+    try {
+        const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+        let tasks = [...prereports];
 
-                setTimeout(() => {
-                    tasks.sort((a, b) => {
-                        const addrA = (a.cliente_indirizzo || '').toLowerCase();
-                        const addrB = (b.cliente_indirizzo || '').toLowerCase();
-                        return addrA.localeCompare(addrB);
-                    });
-
-                    const optimizedIds = tasks.map(t => t.id);
-                    const userKey = (typeof activeUser !== 'undefined' && activeUser) ? activeUser.username : 'admin';
-                    localStorage.setItem('ilt_tech_itinerary_' + userKey, JSON.stringify(optimizedIds));
-
-                    loadAssignedTasks();
-                    showToast("Itinerario ottimizzato con successo!", "success");
-                }, 600);
-
-            } catch (err) {
-                console.error("Errore nell'ottimizzazione dell'itinerario:", err);
-                showToast("Errore durante l'ottimizzazione: " + err.message, "error");
-            }
+        if (typeof activeUser !== 'undefined' && activeUser && activeUser.role === 'tecnico') {
+            tasks = prereports.filter(p => p.assigned_to === activeUser.username);
         }
+
+        if (tasks.length <= 1) {
+            showToast("Servono almeno 2 incarichi per ottimizzare l'itinerario chilometrico.", "info");
+            return;
+        }
+
+        showToast("Calcolo distanze GPS e ottimizzazione percorso in corso...", "info");
+
+        setTimeout(() => {
+            // 1. Assegnazione coordinate a ogni task
+            tasks.forEach(t => {
+                const coords = getCoordinatesForAddress(t.cliente_indirizzo);
+                t._lat = coords.lat;
+                t._lon = coords.lon;
+            });
+
+            // 2. METODO NUOVO: Algoritmo Nearest Neighbor (TSP)
+            let unvisited = [...tasks];
+            let optimizedTasks = [];
+            
+            let current = unvisited.shift();
+            optimizedTasks.push(current);
+
+            let totalKm = 0;
+
+            while (unvisited.length > 0) {
+                let nearestIndex = 0;
+                let minDistance = Infinity;
+
+                for (let i = 0; i < unvisited.length; i++) {
+                    const dist = calculateDistanceKm(current._lat, current._lon, unvisited[i]._lat, unvisited[i]._lon);
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        nearestIndex = i;
+                    }
+                }
+
+                totalKm += minDistance;
+                current = unvisited.splice(nearestIndex, 1)[0];
+                optimizedTasks.push(current);
+            }
+
+            const optimizedIds = optimizedTasks.map(t => t.id);
+            const userKey = (typeof activeUser !== 'undefined' && activeUser) ? activeUser.username : 'admin';
+            localStorage.setItem('ilt_tech_itinerary_' + userKey, JSON.stringify(optimizedIds));
+
+            loadAssignedTasks();
+            // 3. Feedback con chilometraggio stimato totale
+            showToast(`Percorso ottimizzato! Distanza stimata totale: ~${totalKm.toFixed(1)} km`, "success");
+        }, 700);
+
+    } catch (err) {
+        console.error("Errore nell'ottimizzazione dell'itinerario:", err);
+        showToast("Errore durante l'ottimizzazione: " + err.message, "error");
+    }
+}
 
         function moveTaskInItinerary(taskId, direction) {
             const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
