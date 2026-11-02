@@ -98,6 +98,34 @@
 
     <!-- INPUT FOTOCAMERA NASCOSTO PER SCANSIONE ETICHETTA -->
     <input type="file" id="labelScanInput" accept="image/*" capture="environment" class="hidden" onchange="handleLabelScanFile(event)">
+<!-- MODALE TRACKING CLIENTE -->
+    <div id="tracking-modal" class="hidden fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col h-[600px] border-[6px] border-slate-800 relative">
+            <!-- Simula lo schermo di uno smartphone -->
+            <div class="bg-slate-100 p-4 border-b border-slate-200 text-center relative">
+                <button onclick="document.getElementById('tracking-modal').classList.add('hidden')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+                <div class="inline-flex bg-white p-2 rounded-lg shadow-sm mb-2" id="tracking-logo"></div>
+                <h2 class="text-sm font-black text-slate-800">Il tuo intervento è programmato</h2>
+                <p class="text-[10px] text-slate-500 font-mono mt-1">Ticket: <span id="trk-id">INT-0000</span></p>
+            </div>
+            
+            <div class="p-5 flex-grow overflow-y-auto bg-slate-50 space-y-6">
+                <!-- Timeline -->
+                <div class="relative pl-4 border-l-2 border-slate-200 space-y-6" id="tracking-timeline">
+                    <!-- Generato dinamicamente via JS -->
+                </div>
+                
+                <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm mt-4">
+                    <h4 class="text-xs font-bold text-slate-700 mb-2 border-b pb-1">Dettagli Appuntamento</h4>
+                    <p class="text-[11px] text-slate-600"><strong>Cliente:</strong> <span id="trk-cliente"></span></p>
+                    <p class="text-[11px] text-slate-600"><strong>Indirizzo:</strong> <span id="trk-indirizzo"></span></p>
+                    <p class="text-[11px] text-slate-600"><strong>Tecnico:</strong> <span id="trk-tecnico"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- TOAST NOTIFICATIONS -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
@@ -1392,24 +1420,64 @@
                            </a>`
                         : '';
 
-                    let actionButtonsHtml = `
-                        <button onclick="openPreReportForCompletion('${t.id}')" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center gap-1 mx-auto">
-                            <i class="fas fa-folder-open"></i> Completa
-                        </button>
-                    `;
+                    // Sostituisce il blocco sopra
+const currentStatus = t.status || 'assegnato'; 
+let statusBadge = '';
+let actionButtonsHtml = '';
 
-                    if (activeUser && activeUser.role === 'admin') {
-                        actionButtonsHtml = `
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button onclick="openPreReportForCompletion('${t.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center gap-1" title="Visualizza o Modifica">
-                                    <i class="fas fa-folder-open"></i> Modifica
-                                </button>
-                                <button onclick="deletePreReport('${t.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded text-xs transition shadow flex items-center gap-1" title="Elimina Pre-Report">
-                                    <i class="fas fa-trash"></i> Elimina
-                                </button>
-                            </div>
-                        `;
-                    }
+if (activeUser && activeUser.role === 'admin') {
+    // VISTA ADMIN: Vede lo stato, modifica, elimina e apre il tracking cliente
+    const statusColors = {
+        'assegnato': 'bg-slate-100 text-slate-700',
+        'in_viaggio': 'bg-blue-100 text-blue-700 border-blue-300',
+        'in_lavorazione': 'bg-amber-100 text-amber-700 border-amber-300'
+    };
+    const statusLabels = {
+        'assegnato': 'In Attesa',
+        'in_viaggio': 'In Viaggio',
+        'in_lavorazione': 'In Lavorazione'
+    };
+    
+    statusBadge = `<div class="mt-1 text-[10px] font-bold px-2 py-0.5 rounded border ${statusColors[currentStatus]} text-center">${statusLabels[currentStatus]}</div>`;
+    
+    actionButtonsHtml = `
+        <div class="flex flex-col items-center justify-center gap-1.5">
+            ${statusBadge}
+            <div class="flex gap-1.5 mt-1">
+                <button onclick="openPreReportForCompletion('${t.id}')" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs shadow flex items-center gap-1">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button onclick="openTrackingModal('${t.id}')" class="px-2.5 py-1 bg-iltBlue hover:bg-blue-700 text-white font-bold rounded text-xs shadow flex items-center gap-1" title="Vedi Tracking Cliente">
+                    <i class="fas fa-route"></i>
+                </button>
+                <button onclick="deletePreReport('${t.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded text-xs shadow flex items-center gap-1">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `;
+} else {
+    // VISTA TECNICO: Pulsanti dinamici in base allo stato attuale
+    if (currentStatus === 'assegnato') {
+        actionButtonsHtml = `
+            <button onclick="updateTaskStatus('${t.id}', 'in_viaggio')" class="w-full px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded text-xs transition shadow flex items-center justify-center gap-1.5">
+                <i class="fas fa-truck-fast"></i> Parti (In Viaggio)
+            </button>
+        `;
+    } else if (currentStatus === 'in_viaggio') {
+        actionButtonsHtml = `
+            <button onclick="updateTaskStatus('${t.id}', 'in_lavorazione')" class="w-full px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center justify-center gap-1.5 animate-pulse">
+                <i class="fas fa-tools"></i> Sono sul Posto
+            </button>
+        `;
+    } else if (currentStatus === 'in_lavorazione') {
+        actionButtonsHtml = `
+            <button onclick="openPreReportForCompletion('${t.id}')" class="w-full px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white font-bold rounded text-xs transition shadow flex items-center justify-center gap-1.5">
+                <i class="fas fa-file-signature"></i> Compila Report
+            </button>
+        `;
+    }
+}
 
                     tr.innerHTML = `
                         <td class="p-3 font-mono font-bold text-iltRed flex items-center gap-2">
@@ -2262,6 +2330,80 @@ function optimizeItineraryWithAI() {
             html2pdf().set(opt).from(element).save();
         }
 
+// ... (tutte le altre funzioni precedenti) ...
+
+        // 1. FUNZIONE PER CAMBIARE STATO (Da incollare qui)
+        function updateTaskStatus(taskId, newStatus) {
+            let prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+            const index = prereports.findIndex(p => p.id === taskId);
+            
+            if (index !== -1) {
+                prereports[index].status = newStatus;
+                localStorage.setItem('ilt_prereports', JSON.stringify(prereports));
+                
+                let msg = newStatus === 'in_viaggio' ? "Hai segnalato la partenza. Il cliente è stato notificato." : "Intervento iniziato. Buon lavoro!";
+                showToast(msg, "success");
+                
+                loadAssignedTasks(); // Ricarica la tabella per mostrare il nuovo pulsante
+            }
+        }
+
+        // 2. FUNZIONE PER IL TRACKING (Da incollare qui)
+        function openTrackingModal(taskId) {
+            const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+            const task = prereports.find(p => p.id === taskId);
+            if (!task) return;
+
+            const status = task.status || 'assegnato';
+            
+            document.getElementById('trk-id').innerText = task.doc_num;
+            document.getElementById('trk-cliente').innerText = task.cliente_nome;
+            document.getElementById('trk-indirizzo').innerText = task.cliente_indirizzo;
+            document.getElementById('trk-tecnico').innerText = task.assigned_name;
+            document.getElementById('tracking-logo').innerHTML = RAW_SVG_LOGO;
+
+            const timeline = document.getElementById('tracking-timeline');
+            
+            const steps = [
+                { id: 'assegnato', icon: 'fa-calendar-check', title: 'Intervento Programmato', desc: 'Il tecnico ha ricevuto il tuo incarico.' },
+                { id: 'in_viaggio', icon: 'fa-truck-fast', title: 'Tecnico in Viaggio', desc: `Il tecnico ${task.assigned_name} sta arrivando.` },
+                { id: 'in_lavorazione', icon: 'fa-tools', title: 'Intervento in Corso', desc: 'Il tecnico è sul posto e sta lavorando.' }
+            ];
+
+            let html = '';
+            let isPast = true;
+
+            steps.forEach((s) => {
+                let colorClass = 'text-slate-300';
+                let bgClass = 'bg-slate-200';
+                let ringClass = '';
+
+                if (status === s.id) {
+                    colorClass = 'text-iltBlue';
+                    bgClass = 'bg-blue-100';
+                    ringClass = 'ring-4 ring-blue-50';
+                    isPast = false;
+                } else if (isPast) {
+                    colorClass = 'text-green-600';
+                    bgClass = 'bg-green-100';
+                }
+
+                html += `
+                    <div class="relative">
+                        <div class="absolute -left-[25px] top-1 h-5 w-5 rounded-full ${bgClass} ${ringClass} flex items-center justify-center">
+                            <i class="fas ${s.icon} text-[10px] ${colorClass}"></i>
+                        </div>
+                        <h3 class="text-xs font-bold text-slate-800 ${colorClass === 'text-slate-300' ? 'opacity-50' : ''}">${s.title}</h3>
+                        <p class="text-[10px] text-slate-500 mt-0.5 ${colorClass === 'text-slate-300' ? 'opacity-50' : ''}">${s.desc}</p>
+                    </div>
+                `;
+            });
+
+            timeline.innerHTML = html;
+            document.getElementById('tracking-modal').classList.remove('hidden');
+        }
+
+        // QUESTA E' LA FINE DEL TUO FILE (Lasciala intatta)
         window.onload = function() {
             initLogo();
             checkAuth();
