@@ -1458,9 +1458,48 @@
         function saveApiKey() { showToast("API Key salvata", "success"); }
         function resetForm() { document.getElementById('report-form').reset(); }
 
+        // --- FUNZIONE DI CREAZIONE AUTOMATICA ADMIN DEFAULT ---
+        async function createDefaultAdminIfNeeded() {
+            const defaultUsername = "admin";
+            const defaultEmail = "admin@iltlogistics.internal";
+            const defaultPass = "Palermo4ever";
+
+            try {
+                // Controlla se esiste già un utente con username 'admin' su Firestore
+                const querySnap = await db.collection(USERS_COLLECTION).where('username', '==', defaultUsername).get();
+                
+                if (querySnap.empty) {
+                    console.log("Account amministratore predefinito non trovato. Creazione in corso...");
+                    
+                    // Crea l'utente su Firebase Auth
+                    const credential = await auth.createUserWithEmailAndPassword(defaultEmail, defaultPass);
+                    
+                    // Crea il documento associato su Firestore nella collezione 'users'
+                    await db.collection(USERS_COLLECTION).doc(credential.user.uid).set({
+                        uid: credential.user.uid,
+                        name: "Amministratore",
+                        username: defaultUsername,
+                        email: defaultEmail,
+                        role: "admin",
+                        active: true,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    console.log("Account amministratore predefinito creato con successo!");
+                }
+            } catch (err) {
+                // Se l'utente Authentication esiste già ma manca su Firestore o viceversa, gestiamo l'errore senza bloccare l'app
+                console.log("Controllo admin completato o account già esistente:", err.message);
+            }
+        }
+
         // --- AVVIO E ASCOLTO FIREBASE ---
-        window.onload = function() {
+        window.onload = async function() {
             initLogo();
+            
+            // Crea automaticamente l'admin se non esiste
+            await createDefaultAdminIfNeeded();
+
             checkAuth();
             initDateAndDoc();
             setupCanvas('canvas-tecnico');
