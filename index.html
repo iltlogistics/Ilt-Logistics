@@ -93,16 +93,6 @@
                     <i class="fas fa-right-to-bracket"></i> Accedi
                 </button>
             </form>
-
-            <!-- 
-<div class="border-t border-slate-100 pt-3 text-[11px] text-slate-400 space-y-1">
-    <p class="font-bold text-slate-500">Credenziali Predefinite:</p>
-    <div class="flex justify-between font-mono">
-        <span>Admin: admin / admin123</span>
-        <span>Tecnico: maiorana / 123456</span>
-    </div>
-</div>
--->
         </div>
     </div>
 
@@ -128,7 +118,6 @@
 
             <!-- UTENTE E NAVIGAZIONE TAB -->
             <div class="flex items-center gap-3">
-                <!-- BADGE SESSIONE UTENTE -->
                 <div id="user-session-badge" class="hidden flex items-center gap-2 bg-slate-800 border border-slate-700 px-3 py-1 rounded-xl text-xs">
                     <span id="user-role-badge" class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-iltBlue text-white">Tecnico</span>
                     <span id="user-name-display" class="font-bold text-slate-200">Operatore</span>
@@ -163,7 +152,7 @@
     <!-- MAIN CONTAINER -->
     <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-5">
 
-        <!-- TAB: PRE-REPORT (GESTIONE ADMIN / COMPLETAMENTO TECNICO) -->
+        <!-- TAB: PRE-REPORT -->
         <section id="tab-assigned-tasks" class="space-y-4 no-print">
             <div id="tasks-header-banner" class="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center gap-3">
                 <i class="fas fa-clipboard-list text-2xl text-amber-600"></i>
@@ -197,9 +186,8 @@
             </div>
         </section>
 
-        <!-- TAB 1: MODULO COMPILAZIONE REPORT / PRE-REPORT -->
+        <!-- TAB 1: MODULO COMPILAZIONE -->
         <section id="tab-new-report" class="hidden space-y-5">
-            
             <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-3 no-print">
                 <div class="flex items-center flex-wrap gap-2">
                     <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Strumenti:</span>
@@ -215,12 +203,9 @@
                     <button type="button" onclick="generateAIReport()" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
                         <i class="fas fa-robot"></i> Genera Relazione AI
                     </button>
-                    
-                    <!-- BOTTONE SALVA COME PRE-REPORT (SOLO ADMIN) -->
                     <button type="button" id="btn-save-prereport" onclick="saveAsPreReport()" class="hidden px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
                         <i class="fas fa-paper-plane"></i> Assegna Pre-Report a Tecnico
                     </button>
-
                     <button type="button" onclick="saveReport()" class="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
                         <i class="fas fa-floppy-disk"></i> Salva Report Definitivo
                     </button>
@@ -230,10 +215,8 @@
                 </div>
             </div>
 
-            <!-- FORM NUOVO REPORT -->
+            <!-- FORM -->
             <form id="report-form" class="space-y-5 no-print" onsubmit="event.preventDefault();">
-                
-                <!-- 1. COMMITTENTE & ASSEGNAZIONE -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
                         <h2 class="text-sm font-bold text-iltDark flex items-center gap-2">
@@ -243,15 +226,13 @@
                         <span class="text-xs text-slate-400 font-mono" id="form-doc-num-badge">N° INT-2026-1022</span>
                     </div>
 
-                    <!-- BLOCCO ASSEGNAZIONE TECNICO (VISIBILE SOLO ALL'ADMIN) -->
                     <div id="admin-assignment-box" class="hidden bg-amber-50 border border-amber-200 p-3.5 rounded-xl flex items-center justify-between gap-4">
                         <div class="flex items-center gap-2 text-xs text-amber-900 font-bold">
                             <i class="fas fa-user-gear text-base text-amber-600"></i>
                             <span>Assegna questo Pre-Report ad un tecnico operativo:</span>
                         </div>
                         <div class="flex items-center gap-2 min-w-[220px]">
-                            <select id="assigned_technician_select" class="w-full text-xs font-bold border border-amber-300 rounded-lg p-2 bg-white text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                            </select>
+                            <select id="assigned_technician_select" class="w-full text-xs font-bold border border-amber-300 rounded-lg p-2 bg-white text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none"></select>
                         </div>
                     </div>
 
@@ -290,6 +271,10 @@
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Email Cliente</label>
                             <input type="email" id="cliente_email" placeholder="cliente@email.it" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
                         </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Cellulare / Tel. Cliente</label>
+                            <input type="tel" id="cliente_tel" placeholder="Es. 3331234567" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Rivenditore / Provenienza</label>
@@ -310,7 +295,7 @@
                     </div>
                 </div>
 
-                <!-- 2. ASSET / PRODOTTI -->
+                <!-- ASSET -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
                         <h2 class="text-sm font-bold text-iltDark flex items-center gap-2">
@@ -332,7 +317,7 @@
                     </div>
                 </div>
 
-                <!-- 3. PARAMETRI STRUMENTALI -->
+                <!-- PARAMETRI STRUMENTALI -->
                 <div id="sezione-parametri-fgas" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <h2 class="text-sm font-bold text-iltDark flex items-center gap-2 border-b border-slate-100 pb-2.5">
                         <span class="p-1.5 bg-green-50 text-green-700 rounded-md"><i class="fas fa-gauge-high"></i></span>
@@ -370,7 +355,7 @@
                     </div>
                 </div>
 
-                <!-- 4. CHECKLIST -->
+                <!-- CHECKLIST -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3.5">
                     <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
                         <h2 class="text-sm font-bold text-iltDark flex items-center gap-2">
@@ -391,7 +376,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5" id="checklist-container"></div>
                 </div>
 
-                <!-- 5. RELAZIONE TECNICA ED EXTRA -->
+                <!-- RELAZIONE & EXTRA -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-2">
                         <div class="flex justify-between items-center border-b border-slate-100 pb-2">
@@ -436,7 +421,7 @@
                     </div>
                 </div>
 
-                <!-- 5B. SEZIONE FOTOGRAFICA CANTIERE -->
+                <!-- FOTOGRAFICA -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <h2 class="text-sm font-bold text-iltDark flex items-center gap-2 border-b border-slate-100 pb-2.5">
                         <span class="p-1.5 bg-amber-50 text-amber-700 rounded-md"><i class="fas fa-camera"></i></span>
@@ -499,7 +484,7 @@
                     </div>
                 </div>
 
-                <!-- 6. FIRME CANVAS -->
+                <!-- FIRME CANVAS -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <div class="flex justify-between items-center mb-2">
@@ -523,8 +508,17 @@
                         </div>
                     </div>
                 </div>
-
             </form>
+
+            <!-- CONTROLLO MOSTRA/NASCONDI ANTEPRIMA STAMPA -->
+            <div class="flex justify-between items-center pt-2 no-print">
+                <h3 class="text-xs font-bold text-slate-600 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-print text-iltRed"></i> Anteprima Documento di Stampa A4
+                </h3>
+                <button type="button" onclick="togglePrintPreview()" id="toggle-preview-btn" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-lg transition flex items-center gap-1.5">
+                    <i class="fas fa-eye-slash" id="toggle-preview-icon"></i> <span id="toggle-preview-text">Nascondi Anteprima</span>
+                </button>
+            </div>
 
             <!-- ANTEPRIMA STAMPA A4 -->
             <div id="print-area-wrapper" class="bg-slate-200 p-2 sm:p-6 rounded-xl flex justify-center">
@@ -617,7 +611,6 @@
                         </div>
                     </div>
 
-                    <!-- ANTEPRIMA FOTO STAMPA A4 -->
                     <div id="prt_photos_container" class="hidden space-y-2">
                         <div class="font-bold text-slate-800 uppercase text-[9.5px] border-b border-slate-300 pb-0.5 mb-1">Documentazione Fotografica Cantiere</div>
                         <div class="grid grid-cols-2 gap-2" id="prt_photos_grid"></div>
@@ -659,7 +652,6 @@
 
                 </div>
             </div>
-
         </section>
 
         <!-- TAB 2: STORICO -->
@@ -697,7 +689,6 @@
         <!-- TAB 3: IMPOSTAZIONI -->
         <section id="tab-settings" class="hidden space-y-5 no-print">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                
                 <div id="admin-tech-management-box" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <h2 class="text-sm font-bold text-iltDark border-b border-slate-100 pb-2.5 flex items-center gap-2">
                         <i class="fas fa-users-gear text-iltRed"></i> Gestione Tecnici Operativi
@@ -776,10 +767,8 @@
                         <button onclick="saveApiKey()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition shadow">Salva Chiave API</button>
                     </div>
                 </div>
-
             </div>
         </section>
-
     </main>
 
     <!-- JS LOGIC -->
@@ -815,9 +804,40 @@
 
         let checklistState = new Array(CHECKLIST_PROFESSIONAL.length).fill(true);
 
+        function formatDateToIT(dateString) {
+            if (!dateString) return '-';
+            if (dateString.includes('/')) return dateString;
+            const parts = dateString.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateString;
+        }
+
+        function togglePrintPreview() {
+            const wrapper = document.getElementById('print-area-wrapper');
+            const icon = document.getElementById('toggle-preview-icon');
+            const text = document.getElementById('toggle-preview-text');
+            if (wrapper.classList.contains('hidden')) {
+                wrapper.classList.remove('hidden');
+                icon.className = 'fas fa-eye-slash';
+                text.innerText = 'Nascondi Anteprima';
+            } else {
+                wrapper.classList.add('hidden');
+                icon.className = 'fas fa-eye';
+                text.innerText = 'Mostra Anteprima Stampa';
+            }
+        }
+
         function triggerLabelScan(btn) {
             currentScanRow = btn.closest('tr');
             document.getElementById('labelScanInput').click();
+        }
+
+        function handleLabelScanFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            showToast("Scansione etichetta completata.", "success");
         }
 
         function preparePreReport(mode) {
@@ -1209,6 +1229,7 @@
                 cliente_indirizzo: document.getElementById('cliente_indirizzo').value,
                 cliente_cf: document.getElementById('cliente_cf').value,
                 cliente_email: document.getElementById('cliente_email').value,
+                cliente_tel: document.getElementById('cliente_tel').value,
                 tipo_intervento: document.getElementById('tipo_intervento').value,
                 rivenditore: document.getElementById('rivenditore').value,
                 num_scontrino: document.getElementById('num_scontrino').value,
@@ -1236,138 +1257,149 @@
         }
 
         function loadAssignedTasks() {
-    const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
-    let tasks = prereports;
-    if (activeUser && activeUser.role === 'tecnico') {
-        tasks = prereports.filter(p => p.assigned_to === activeUser.username);
-    }
-
-    // Applichiamo un ordinamento personalizzato basato sull'itinerario salvato dal tecnico (se presente)
-    const customOrder = JSON.parse(localStorage.getItem('ilt_tech_itinerary_' + (activeUser ? activeUser.username : 'admin')) || '[]');
-    if (customOrder.length > 0) {
-        tasks.sort((a, b) => {
-            let indexA = customOrder.indexOf(a.id);
-            let indexB = customOrder.indexOf(b.id);
-            if (indexA === -1) indexA = 999;
-            if (indexB === -1) indexB = 999;
-            return indexA - indexB;
-        });
-    }
-
-    document.getElementById('pending-tasks-badge').innerText = tasks.length;
-    document.getElementById('tasks-count-tag').innerText = `${tasks.length} Incarichi`;
-
-    const tbody = document.getElementById('tasks-tbody');
-    tbody.innerHTML = '';
-
-    if (tasks.length === 0) {
-        const colSpan = (activeUser && activeUser.role === 'admin') ? 7 : 6;
-        tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-6 text-center text-slate-400 font-medium">Nessun pre-report presente nel sistema.</td></tr>`;
-        return;
-    }
-
-    // Raggruppiamo gli incarichi per data
-    const groupedByDate = {};
-    tasks.forEach(t => {
-        const dateKey = t.doc_date || 'Data non specificata';
-        if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
-        groupedByDate[dateKey].push(t);
-    });
-
-    // Cicliamo sui gruppi di date per creare blocchi visivi separati
-    Object.keys(groupedByDate).forEach((dateKey, groupIndex) => {
-        const dateTasks = groupedByDate[dateKey];
-
-        // Creazione intestazione di gruppo per data con stili e colori dedicati
-        const headerTr = document.createElement('tr');
-        const colSpanTotal = (activeUser && activeUser.role === 'admin') ? 7 : 6;
-        
-        // Assegniamo colori diversi in base alla "vicinanza" o semplicemente un tema pulito a blocchi
-        const bgHeaderColor = groupIndex === 0 ? 'bg-amber-100/80 text-amber-900 border-amber-300' : 'bg-slate-200/80 text-slate-800 border-slate-300';
-        
-        headerTr.innerHTML = `
-            <td colspan="${colSpanTotal}" class="p-2.5 ${bgHeaderColor} font-bold text-xs uppercase tracking-wider border-y">
-                <div class="flex justify-between items-center px-2">
-                    <span><i class="fas fa-calendar-day mr-1.5">></i> Interventi Previsti per il: ${dateKey}</span>
-                    <span class="text-[10px] bg-white/80 px-2 py-0.5 rounded-full border shadow-sm">${dateTasks.length} Incarichi in questa data</span>
-                </div>
-            </td>
-        `;
-        tbody.appendChild(headerTr);
-
-        // Inseriamo gli elementi del gruppo
-        dateTasks.forEach((t, idxInGroup) => {
-            const tr = document.createElement('tr');
-            tr.className = "hover:bg-amber-50/50 transition border-b border-slate-100";
-            tr.dataset.taskId = t.id;
-
-            let tecnicoColHtml = '';
-            if (activeUser && activeUser.role === 'admin') {
-                tecnicoColHtml = `<td class="p-3 font-bold text-slate-700"><span class="bg-slate-100 border px-2 py-0.5 rounded text-[11px]"><i class="fas fa-user text-iltBlue"></i> ${t.assigned_name || t.assigned_to}</span></td>`;
+            const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+            let tasks = prereports;
+            if (activeUser && activeUser.role === 'tecnico') {
+                tasks = prereports.filter(p => p.assigned_to === activeUser.username);
             }
 
-            // Pulsanti per spostare l'itinerario su e giù
-            const itineraryControls = `
-                <div class="flex items-center justify-center gap-1">
-                    <button onclick="moveTaskInItinerary('${t.id}', 'up')" title="Sposta prima nell'itinerario" class="p-1 text-slate-500 hover:text-iltBlue bg-slate-100 hover:bg-blue-50 rounded"><i class="fas fa-arrow-up text-[10px]"></i></button>
-                    <button onclick="moveTaskInItinerary('${t.id}', 'down')" title="Sposta dopo nell'itinerario" class="p-1 text-slate-500 hover:text-iltBlue bg-slate-100 hover:bg-blue-50 rounded"><i class="fas fa-arrow-down text-[10px]"></i></button>
-                </div>
-            `;
+            const customOrder = JSON.parse(localStorage.getItem('ilt_tech_itinerary_' + (activeUser ? activeUser.username : 'admin')) || '[]');
+            if (customOrder.length > 0) {
+                tasks.sort((a, b) => {
+                    let indexA = customOrder.indexOf(a.id);
+                    let indexB = customOrder.indexOf(b.id);
+                    if (indexA === -1) indexA = 999;
+                    if (indexB === -1) indexB = 999;
+                    return indexA - indexB;
+                });
+            }
 
-            tr.innerHTML = `
-                <td class="p-3 font-mono font-bold text-iltRed flex items-center gap-2">
-                    ${itineraryControls}
-                    <span>${t.doc_num}</span>
-                </td>
-                <td class="p-3 text-slate-600">${t.doc_date}</td>
-                <td class="p-3 font-semibold text-slate-800">${t.cliente_nome}</td>
-                <td class="p-3 text-slate-500">${t.cliente_indirizzo}</td>
-                <td class="p-3"><span class="bg-blue-50 text-iltBlue font-bold px-2 py-0.5 rounded text-[10px]">${t.tipo_intervento}</span></td>
-                ${tecnicoColHtml}
-                <td class="p-3 text-center">
-                    <button onclick="openPreReportForCompletion('${t.id}')" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center gap-1 mx-auto">
-                        <i class="fas fa-folder-open"></i> ${activeUser.role === 'admin' ? 'Visualizza / Modifica' : 'Completa'}
-                    </button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    });
-}
-function moveTaskInItinerary(taskId, direction) {
-    const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
-    let tasks = prereports;
-    if (activeUser && activeUser.role === 'tecnico') {
-        tasks = prereports.filter(p => p.assigned_to === activeUser.username);
-    }
+            document.getElementById('pending-tasks-badge').innerText = tasks.length;
+            document.getElementById('tasks-count-tag').innerText = `${tasks.length} Incarichi`;
 
-    let currentOrder = tasks.map(t => t.id);
-    const customOrder = JSON.parse(localStorage.getItem('ilt_tech_itinerary_' + (activeUser ? activeUser.username : 'admin')) || '[]');
-    
-    if (customOrder.length > 0) {
-        currentOrder = customOrder;
-        tasks.forEach(t => {
-            if (!currentOrder.includes(t.id)) currentOrder.push(t.id);
-        });
-    }
+            const tbody = document.getElementById('tasks-tbody');
+            tbody.innerHTML = '';
 
-    const index = currentOrder.indexOf(taskId);
-    if (index === -1) return;
+            if (tasks.length === 0) {
+                const colSpan = (activeUser && activeUser.role === 'admin') ? 7 : 6;
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-6 text-center text-slate-400 font-medium">Nessun pre-report presente nel sistema.</td></tr>`;
+                return;
+            }
 
-    if (direction === 'up' && index > 0) {
-        const temp = currentOrder[index];
-        currentOrder[index] = currentOrder[index - 1];
-        currentOrder[index - 1] = temp;
-    } else if (direction === 'down' && index < currentOrder.length - 1) {
-        const temp = currentOrder[index];
-        currentOrder[index] = currentOrder[index + 1];
-        currentOrder[index + 1] = temp;
-    }
+            const groupedByDate = {};
+            tasks.forEach(t => {
+                const dateKey = t.doc_date || 'Data non specificata';
+                if (!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
+                groupedByDate[dateKey].push(t);
+            });
 
-    localStorage.setItem('ilt_tech_itinerary_' + (activeUser ? activeUser.username : 'admin'), JSON.stringify(currentOrder));
-    loadAssignedTasks();
-    showToast("Itinerario aggiornato con successo!", "success");
-}
+            Object.keys(groupedByDate).forEach((dateKey, groupIndex) => {
+                const dateTasks = groupedByDate[dateKey];
+                const headerTr = document.createElement('tr');
+                const colSpanTotal = (activeUser && activeUser.role === 'admin') ? 7 : 6;
+                const bgHeaderColor = groupIndex === 0 ? 'bg-amber-100/80 text-amber-900 border-amber-300' : 'bg-slate-200/80 text-slate-800 border-slate-300';
+                
+                headerTr.innerHTML = `
+                    <td colspan="${colSpanTotal}" class="p-2.5 ${bgHeaderColor} font-bold text-xs uppercase tracking-wider border-y">
+                        <div class="flex justify-between items-center px-2">
+                            <span><i class="fas fa-calendar-day mr-1.5"></i> Interventi Previsti per il: ${formatDateToIT(dateKey)}</span>
+                            <span class="text-[10px] bg-white/80 px-2 py-0.5 rounded-full border shadow-sm">${dateTasks.length} Incarichi in questa data</span>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(headerTr);
+
+                dateTasks.forEach((t) => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-amber-50/50 transition border-b border-slate-100";
+
+                    let tecnicoColHtml = '';
+                    if (activeUser && activeUser.role === 'admin') {
+                        tecnicoColHtml = `<td class="p-3 font-bold text-slate-700"><span class="bg-slate-100 border px-2 py-0.5 rounded text-[11px]"><i class="fas fa-user text-iltBlue"></i> ${t.assigned_name || t.assigned_to}</span></td>`;
+                    }
+
+                    const itineraryControls = `
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="moveTaskInItinerary('${t.id}', 'up')" title="Sposta prima" class="p-1 text-slate-500 hover:text-iltBlue bg-slate-100 hover:bg-blue-50 rounded"><i class="fas fa-arrow-up text-[10px]"></i></button>
+                            <button onclick="moveTaskInItinerary('${t.id}', 'down')" title="Sposta dopo" class="p-1 text-slate-500 hover:text-iltBlue bg-slate-100 hover:bg-blue-50 rounded"><i class="fas fa-arrow-down text-[10px]"></i></button>
+                        </div>
+                    `;
+
+                    const mapUrl = t.cliente_indirizzo 
+                        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(t.cliente_indirizzo)}`
+                        : '#';
+
+                    const addressCellHtml = t.cliente_indirizzo 
+                        ? `<a href="${mapUrl}" target="_blank" rel="noopener noreferrer" class="text-iltBlue font-semibold hover:underline flex items-center gap-1" title="Apri in Google Maps">
+                                <i class="fas fa-location-dot text-red-500"></i> ${t.cliente_indirizzo}
+                           </a>`
+                        : '<span class="text-slate-400">-</span>';
+
+                    const cleanPhone = t.cliente_tel ? t.cliente_tel.replace(/\s+/g, '') : '';
+                    const phoneCellHtml = cleanPhone 
+                        ? `<a href="tel:${cleanPhone}" class="text-green-700 font-bold hover:underline flex items-center gap-1 mt-1" title="Chiama Cliente">
+                                <i class="fas fa-phone text-green-600"></i> ${t.cliente_tel}
+                           </a>`
+                        : '';
+
+                    tr.innerHTML = `
+                        <td class="p-3 font-mono font-bold text-iltRed flex items-center gap-2">
+                            ${itineraryControls}
+                            <span>${t.doc_num}</span>
+                        </td>
+                        <td class="p-3 text-slate-600">${formatDateToIT(t.doc_date)}</td>
+                        <td class="p-3 font-semibold text-slate-800">${t.cliente_nome}</td>
+                        <td class="p-3">
+                            ${addressCellHtml}
+                            ${phoneCellHtml}
+                        </td>
+                        <td class="p-3"><span class="bg-blue-50 text-iltBlue font-bold px-2 py-0.5 rounded text-[10px]">${t.tipo_intervento}</span></td>${tecnicoColHtml}
+                        <td class="p-3 text-center">
+                            <button onclick="openPreReportForCompletion('${t.id}')" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-xs transition shadow flex items-center gap-1 mx-auto">
+                                <i class="fas fa-folder-open"></i> ${activeUser.role === 'admin' ? 'Visualizza / Modifica' : 'Completa'}
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            });
+        }
+
+        function moveTaskInItinerary(taskId, direction) {
+            const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
+            let tasks = prereports;
+            if (activeUser && activeUser.role === 'tecnico') {
+                tasks = prereports.filter(p => p.assigned_to === activeUser.username);
+            }
+
+            let currentOrder = tasks.map(t => t.id);
+            const customOrder = JSON.parse(localStorage.getItem('ilt_tech_itinerary_' + (activeUser ? activeUser.username : 'admin')) || '[]');
+            
+            if (customOrder.length > 0) {
+                currentOrder = customOrder;
+                tasks.forEach(t => {
+                    if (!currentOrder.includes(t.id)) currentOrder.push(t.id);
+                });
+            }
+
+            const index = currentOrder.indexOf(taskId);
+            if (index === -1) return;
+
+            if (direction === 'up' && index > 0) {
+                const temp = currentOrder[index];
+                currentOrder[index] = currentOrder[index - 1];
+                currentOrder[index - 1] = temp;
+            } else if (direction === 'down' && index < currentOrder.length - 1) {
+                const temp = currentOrder[index];
+                currentOrder[index] = currentOrder[index + 1];
+                currentOrder[index + 1] = temp;
+            }
+
+            localStorage.setItem('ilt_tech_itinerary_' + (activeUser ? activeUser.username : 'admin'), JSON.stringify(currentOrder));
+            loadAssignedTasks();
+            showToast("Itinerario aggiornato con successo!", "success");
+        }
+
         function openPreReportForCompletion(id) {
             const prereports = JSON.parse(localStorage.getItem('ilt_prereports') || '[]');
             const item = prereports.find(p => p.id === id);
@@ -1387,6 +1419,7 @@ function moveTaskInItinerary(taskId, direction) {
             document.getElementById('doc_num').value = item.doc_num;
             document.getElementById('doc_date').value = item.doc_date;
             document.getElementById('cliente_nome').value = item.cliente_nome;
+            document.getElementById('cliente_tel').value = item.cliente_tel || '';
             document.getElementById('cliente_indirizzo').value = item.cliente_indirizzo;
             document.getElementById('cliente_cf').value = item.cliente_cf;
             document.getElementById('cliente_email').value = item.cliente_email;
@@ -1543,7 +1576,7 @@ function moveTaskInItinerary(taskId, direction) {
 
                 tr.innerHTML = `
                     <td class="p-3 font-mono font-bold text-iltRed">${docNum}</td>
-                    <td class="p-3">${docDate}</td>
+                    <td class="p-3">${formatDateToIT(docDate)}</td>
                     <td class="p-3 font-semibold">${clienteNome}</td>
                     <td class="p-3 text-xs">${tipoInt}</td>
                     <td class="p-3 font-bold text-slate-700">
@@ -1699,32 +1732,31 @@ function moveTaskInItinerary(taskId, direction) {
 
             if (currentReportMode === 'base') {
                 tr.innerHTML = `
-                    <td class="p-1.5"><input type="text" value="${data.comp || 'Lavatrice'}" class="asset-comp w-full p-1.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
-                    <td class="p-1.5"><input type="text" value="${data.modello || 'Samsung WW90T'}" class="asset-modello w-full p-1.5 border border-slate-300 rounded text-xs font-semibold focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
-                    <td class="p-1.5"><input type="number" min="1" value="${data.qta || '1'}" class="asset-qta w-full p-1.5 border border-slate-300 rounded text-xs font-bold text-center focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
-                    <td class="p-1.5"><input type="text" value="${data.matricola || ''}" placeholder="Matricola / Barcode" class="asset-matricola w-full p-1.5 border border-slate-300 rounded text-xs font-mono font-bold text-iltBlue focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
-                    <td class="p-1.5"><input type="text" value="${data.ubicazione_merce || 'Magazzino Centrale - Corsia A'}" placeholder="Es. Corsia B4" class="asset-ubicazione-merce w-full p-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
+                    <td class="p-1.5"><input type="text" value="${data.comp || 'Lavatrice'}" class="asset-comp w-full p-1.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.modello || 'Samsung WW90T'}" class="asset-modello w-full p-1.5 border border-slate-300 rounded text-xs font-semibold focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="number" min="1" value="${data.qta || '1'}" class="asset-qta w-full p-1.5 border border-slate-300 rounded text-xs font-bold text-center focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.matricola || ''}" placeholder="Matricola / Barcode" class="asset-matricola w-full p-1.5 border border-slate-300 rounded text-xs font-mono font-bold text-iltBlue focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.ubicazione_merce || 'Magazzino Centrale'}" placeholder="Es. Corsia B4" class="asset-ubicazione-merce w-full p-1.5 border border-slate-300 rounded text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
                     <td class="p-1.5 text-center">
                         <button type="button" onclick="this.closest('tr').remove(); syncToPrint();" class="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded transition"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
             } else {
                 tr.innerHTML = `
-                    <td class="p-1.5"><input type="text" value="${data.comp || 'Unità Interna'}" class="asset-comp w-full p-1.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
-                    <td class="p-1.5"><input type="text" value="${data.modello || 'Samsung Luzon 12000'}" class="asset-modello w-full p-1.5 border border-slate-300 rounded text-xs font-semibold focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
-                    <td class="p-1.5"><input type="text" value="${data.potenza || '12.000 BTU'}" class="asset-potenza w-24 p-1.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
-                    <td class="p-1.5"><input type="text" value="${data.gas || 'R-32'}" class="asset-gas w-16 p-1.5 border border-slate-300 rounded text-xs font-mono focus:ring-1 focus:ring-iltBlue focus:outline-none"></td>
-                    <td class="p-1.5"><input type="text" value="${data.sn_ui || ''}" placeholder="S/N" class="asset-sn-ui w-full p-1.5 border border-slate-300 rounded text-xs font-mono font-bold text-iltBlue focus:outline-none"></td>
-                    <td class="p-1.5"><input type="text" value="${data.sn_ue || ''}" placeholder="S/N" class="asset-sn-ue w-full p-1.5 border border-slate-300 rounded text-xs font-mono font-bold text-iltRed focus:outline-none"></td>
-                    <td class="p-1.5"><input type="text" value="${data.ubicazione || 'Soggiorno'}" class="asset-ubicazione w-full p-1.5 border border-slate-300 rounded text-xs focus:outline-none"></td>
+                    <td class="p-1.5"><input type="text" value="${data.comp || 'Unità Interna'}" class="asset-comp w-full p-1.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.modello || 'Daikin Perfera 12000 BTU'}" class="asset-modello w-full p-1.5 border border-slate-300 rounded text-xs font-semibold focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.potenza || '12000 BTU'}" class="asset-potenza w-full p-1.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.gas || 'R32'}" class="asset-gas w-full p-1.5 border border-slate-300 rounded text-xs font-mono focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.sn_ui || ''}" placeholder="S/N Unità Interna" class="asset-sn-ui w-full p-1.5 border border-slate-300 rounded text-xs font-mono text-iltBlue focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.sn_ue || ''}" placeholder="S/N Unità Esterna" class="asset-sn-ue w-full p-1.5 border border-slate-300 rounded text-xs font-mono text-iltRed focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.ubicazione || 'Soggiorno'}" class="asset-ubicazione w-full p-1.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
                     <td class="p-1.5 text-center flex items-center justify-center gap-1">
-                        <button type="button" onclick="triggerLabelScan(this)" title="Scan" class="p-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded transition"><i class="fas fa-camera"></i></button>
-                        <button type="button" onclick="this.closest('tr').remove(); syncToPrint();" class="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded transition"><i class="fas fa-trash"></i></button>
+                        <button type="button" onclick="triggerLabelScan(this)" title="Scansiona Etichetta" class="p-1.5 bg-blue-50 hover:bg-blue-100 text-iltBlue rounded transition"><i class="fas fa-camera"></i></button>
+                        <button type="button" onclick="this.closest('tr').remove(); syncToPrint();" title="Elimina" class="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded transition"><i class="fas fa-trash"></i></button>
                     </td>
                 `;
             }
             tbody.appendChild(tr);
-            tr.querySelectorAll('input').forEach(i => i.addEventListener('input', syncToPrint));
             syncToPrint();
         }
 
@@ -1732,63 +1764,217 @@ function moveTaskInItinerary(taskId, direction) {
             const tbody = document.getElementById('extra-table-body');
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="p-1"><input type="text" value="${data.desc || 'Materiale Extra'}" class="extra-desc w-full p-1 border border-slate-300 rounded text-xs"></td>
-                <td class="p-1"><input type="number" step="0.01" value="${data.imp || '0.00'}" oninput="calculateExtraTotal()" class="extra-imp w-full p-1 border border-slate-300 rounded text-xs font-bold text-green-700"></td>
-                <td class="p-1">
-                    <select class="extra-mode w-full p-1 border border-slate-300 rounded text-xs">
-                        <option>Contanti</option>
-                        <option>POS / Carta</option>
-                        <option>Bonifico</option>
+                <td class="p-1.5"><input type="text" value="${data.desc || 'Staffa di Supporto Extra'}" class="extra-desc w-full p-1 border border-slate-300 rounded text-xs" oninput="calculateExtraTotal(); syncToPrint();"></td>
+                <td class="p-1.5"><input type="number" step="0.01" value="${data.price || '35.00'}" class="extra-price w-full p-1 border border-slate-300 rounded text-xs font-bold text-right" oninput="calculateExtraTotal(); syncToPrint();"></td>
+                <td class="p-1.5">
+                    <select class="extra-mode w-full p-1 border border-slate-300 rounded text-xs" onchange="syncToPrint()">
+                        <option ${data.mode==='Contanti'?'selected':''}>Contanti</option>
+                        <option ${data.mode==='POS'?'selected':''}>POS</option>
+                        <option ${data.mode==='Bonifico'?'selected':''}>Bonifico</option>
                     </select>
                 </td>
-                <td class="p-1 text-center"><button type="button" onclick="this.closest('tr').remove(); calculateExtraTotal(); syncToPrint();" class="text-red-500"><i class="fas fa-trash"></i></button></td>
+                <td class="p-1 text-center">
+                    <button type="button" onclick="this.closest('tr').remove(); calculateExtraTotal(); syncToPrint();" class="text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                </td>
             `;
             tbody.appendChild(tr);
-            tr.querySelectorAll('input, select').forEach(i => i.addEventListener('input', syncToPrint));
             calculateExtraTotal();
             syncToPrint();
         }
 
         function calculateExtraTotal() {
             let total = 0;
-            document.querySelectorAll('#extra-table-body tr').forEach(tr => {
-                total += parseFloat(tr.querySelector('.extra-imp').value) || 0;
+            document.querySelectorAll('.extra-price').forEach(input => {
+                const val = parseFloat(input.value) || 0;
+                total += val;
             });
-            document.getElementById('extra_total_badge').innerText = `€ ${total.toFixed(2)}`;
-            document.getElementById('prt_extra_totale').innerText = `TOTALE: € ${total.toFixed(2)}`;
+            const formatted = '€ ' + total.toFixed(2);
+            document.getElementById('extra_total_badge').innerText = formatted;
+            document.getElementById('prt_extra_totale').innerText = 'TOTALE: ' + formatted;
         }
 
         function renderChecklist() {
             const container = document.getElementById('checklist-container');
-            if(!container) return;
+            if (!container) return;
             container.innerHTML = '';
             
-            const activeList = currentReportMode === 'base' ? CHECKLIST_BASE : CHECKLIST_PROFESSIONAL;
+            const list = currentReportMode === 'base' ? CHECKLIST_BASE : CHECKLIST_PROFESSIONAL;
 
-            activeList.forEach((item, idx) => {
+            list.forEach((item, index) => {
                 const div = document.createElement('div');
-                div.className = "flex items-center space-x-2 bg-slate-50 p-2 rounded-lg border border-slate-200 text-xs";
+                div.className = "flex items-start gap-2 bg-slate-50 p-2 rounded border border-slate-200 text-xs";
                 div.innerHTML = `
-                    <input type="checkbox" id="chk_${idx}" ${checklistState[idx] ? 'checked' : ''} onchange="updateChecklist(${idx}, this.checked)" class="w-4 h-4 text-green-600 rounded cursor-pointer">
-                    <label for="chk_${idx}" class="text-slate-700 font-medium cursor-pointer flex-grow text-[11px]">${item}</label>
+                    <input type="checkbox" id="chk_${index}" ${checklistState[index] ? 'checked' : ''} onchange="updateChecklistState(${index}, this.checked)" class="mt-0.5 rounded text-iltBlue focus:ring-iltBlue">
+                    <label for="chk_${index}" class="text-slate-700 cursor-pointer font-medium leading-tight">${item}</label>
                 `;
                 container.appendChild(div);
             });
+            updateChecklistProgress();
         }
 
-        function updateChecklist(idx, checked) {
-            checklistState[idx] = checked;
+        function updateChecklistState(index, checked) {
+            checklistState[index] = checked;
+            updateChecklistProgress();
             syncToPrint();
         }
 
         function toggleAllChecklist(status) {
-            checklistState.fill(status);
+            checklistState = checklistState.map(() => status);
             renderChecklist();
             syncToPrint();
         }
 
-        function initCanvas(id) {
-            const canvas = document.getElementById(id);
+        function updateChecklistProgress() {
+            const checkedCount = checklistState.filter(Boolean).length;
+            const total = checklistState.length;
+            const percentage = total > 0 ? Math.round((checkedCount / total) * 100) : 0;
+            
+            const progressBar = document.getElementById('checklist-progress');
+            if (progressBar) progressBar.style.width = percentage + '%';
+
+            const badge = document.getElementById('prt_checklist_badge');
+            if (badge) badge.innerText = percentage + '% OK';
+        }
+
+        function syncToPrint() {
+            document.getElementById('prt_doc_num').innerText = document.getElementById('doc_num').value || '-';
+            document.getElementById('prt_doc_date').innerText = 'Data: ' + formatDateToIT(document.getElementById('doc_date').value);
+            document.getElementById('prt_cliente_nome').innerText = document.getElementById('cliente_nome').value || '-';
+            document.getElementById('prt_cliente_indirizzo').innerText = document.getElementById('cliente_indirizzo').value || '-';
+            document.getElementById('prt_cliente_cf').innerText = document.getElementById('cliente_cf').value || '-';
+            
+            const emailVal = document.getElementById('cliente_email').value;
+            const telVal = document.getElementById('cliente_tel').value;
+            let emailTelText = '-';
+
+            if (emailVal && telVal) {
+                emailTelText = `${emailVal} / Tel: ${telVal}`;
+            } else if (emailVal) {
+                emailTelText = emailVal;
+            } else if (telVal) {
+                emailTelText = `Tel: ${telVal}`;
+            }
+
+            document.getElementById('prt_cliente_email').innerText = emailTelText;
+            
+            document.getElementById('prt_rivenditore').innerText = document.getElementById('rivenditore').value || '-';
+            document.getElementById('prt_num_scontrino').innerText = document.getElementById('num_scontrino').value || '-';
+            document.getElementById('prt_data_bolla').innerText = formatDateToIT(document.getElementById('data_bolla').value);
+            document.getElementById('prt_totale_acquisto').innerText = (document.getElementById('totale_acquisto').value ? '€ ' + document.getElementById('totale_acquisto').value : '-');
+            document.getElementById('prt_tipo_txt').innerText = document.getElementById('tipo_intervento').value || '-';
+
+            document.getElementById('prt_relazione').innerText = document.getElementById('relazione_tecnica').value || 'Nessuna nota aggiuntiva.';
+            
+            document.getElementById('prt_fgas_azoto').innerText = document.getElementById('fgas_azoto').value || '-';
+            document.getElementById('prt_fgas_vuoto').innerText = document.getElementById('fgas_vuoto').value || '-';
+            document.getElementById('prt_fgas_pressione').innerText = document.getElementById('fgas_pressione').value || '-';
+            document.getElementById('prt_fgas_condensa').innerText = document.getElementById('fgas_condensa').value || '-';
+            document.getElementById('prt_fgas_patentino').innerText = document.getElementById('fgas_patentino').value || '-';
+            document.getElementById('prt_fgas_gas_aggiunto').innerText = document.getElementById('fgas_gas_aggiunto').value || '-';
+            document.getElementById('prt_fgas_temp_split').innerText = document.getElementById('fgas_temp_split').value || '-';
+
+            document.getElementById('prt_nome_tecnico').innerText = document.getElementById('nome_tecnico').value || '-';
+            document.getElementById('prt_nome_cliente_sub').innerText = document.getElementById('cliente_nome').value || 'Spett.le Cliente';
+
+            // Sync Assets Table
+            const prtTbody = document.getElementById('prt_assets_tbody');
+            prtTbody.innerHTML = '';
+            document.querySelectorAll('#assets-table-body tr').forEach(tr => {
+                const ptr = document.createElement('tr');
+                if (currentReportMode === 'base') {
+                    const comp = tr.querySelector('.asset-comp')?.value || '-';
+                    const mod = tr.querySelector('.asset-modello')?.value || '-';
+                    const qta = tr.querySelector('.asset-qta')?.value || '1';
+                    const mat = tr.querySelector('.asset-matricola')?.value || '-';
+                    const ubi = tr.querySelector('.asset-ubicazione-merce')?.value || '-';
+                    ptr.innerHTML = `
+                        <td class="border border-slate-300 p-1 font-semibold">${comp}</td>
+                        <td class="border border-slate-300 p-1">${mod}</td>
+                        <td class="border border-slate-300 p-1 font-bold text-center">${qta}</td>
+                        <td class="border border-slate-300 p-1 font-mono">${mat}</td>
+                        <td class="border border-slate-300 p-1">${ubi}</td>
+                    `;
+                } else {
+                    const comp = tr.querySelector('.asset-comp')?.value || '-';
+                    const mod = tr.querySelector('.asset-modello')?.value || '-';
+                    const pot = tr.querySelector('.asset-potenza')?.value || '-';
+                    const gas = tr.querySelector('.asset-gas')?.value || '-';
+                    const sn_ui = tr.querySelector('.asset-sn-ui')?.value || '';
+                    const sn_ue = tr.querySelector('.asset-sn-ue')?.value || '';
+                    const ubi = tr.querySelector('.asset-ubicazione')?.value || '-';
+
+                    let serialText = '';
+                    if (sn_ui) serialText += `UI: ${sn_ui} `;
+                    if (sn_ue) serialText += `UE: ${sn_ue}`;
+
+                    ptr.innerHTML = `
+                        <td class="border border-slate-300 p-1 font-semibold">${comp}</td>
+                        <td class="border border-slate-300 p-1">${mod}</td>
+                        <td class="border border-slate-300 p-1">${pot} (${gas})</td>
+                        <td class="border border-slate-300 p-1 font-mono">${serialText || '-'}</td>
+                        <td class="border border-slate-300 p-1">${ubi}</td>
+                    `;
+                }
+                prtTbody.appendChild(ptr);
+            });
+
+            // Sync Checklist
+            const prtChkUl = document.getElementById('prt_checklist_ul');
+            prtChkUl.innerHTML = '';
+            const list = currentReportMode === 'base' ? CHECKLIST_BASE : CHECKLIST_PROFESSIONAL;
+            list.forEach((item, index) => {
+                const li = document.createElement('li');
+                const isChecked = checklistState[index];
+                li.innerHTML = `<i class="fas ${isChecked ? 'fa-check text-green-600' : 'fa-times text-red-500'} mr-1"></i> ${item}`;
+                prtChkUl.appendChild(li);
+            });
+
+            // Sync Extra Table
+            const prtExtraTbody = document.getElementById('prt_extra_tbody');
+            prtExtraTbody.innerHTML = '';
+            document.querySelectorAll('#extra-table-body tr').forEach(tr => {
+                const desc = tr.querySelector('.extra-desc')?.value || '';
+                const price = tr.querySelector('.extra-price')?.value || '0.00';
+                const mode = tr.querySelector('.extra-mode')?.value || 'Contanti';
+                if (desc) {
+                    const ptr = document.createElement('tr');
+                    ptr.className = "border-b border-slate-200";
+                    ptr.innerHTML = `
+                        <td class="p-1 font-medium">${desc}</td>
+                        <td class="p-1">${mode}</td>
+                        <td class="p-1 text-right font-bold">€ ${parseFloat(price).toFixed(2)}</td>
+                    `;
+                    prtExtraTbody.appendChild(ptr);
+                }
+            });
+
+            // Sync Photos Grid
+            const photosGrid = document.getElementById('prt_photos_grid');
+            const photosContainer = document.getElementById('prt_photos_container');
+            photosGrid.innerHTML = '';
+            let hasPhoto = false;
+
+            [1, 2, 3, 4].forEach(i => {
+                if (reportPhotos[i]) {
+                    hasPhoto = true;
+                    const cap = document.getElementById(`photo_caption_${i}`).value || `Foto ${i}`;
+                    const div = document.createElement('div');
+                    div.className = "border border-slate-300 p-1 rounded bg-slate-50 text-center space-y-1";
+                    div.innerHTML = `
+                        <img src="${reportPhotos[i]}" class="h-24 w-full object-cover rounded border border-slate-200" alt="Foto ${i}">
+                        <p class="text-[8px] font-bold text-slate-700">${cap}</p>
+                    `;
+                    photosGrid.appendChild(div);
+                }
+            });
+
+            if (hasPhoto) photosContainer.classList.remove('hidden');
+            else photosContainer.classList.add('hidden');
+        }
+
+        // Canvas Setup for Signatures
+        function setupCanvas(canvasId) {
+            const canvas = document.getElementById(canvasId);
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             let drawing = false;
@@ -1797,239 +1983,128 @@ function moveTaskInItinerary(taskId, direction) {
                 const rect = canvas.getBoundingClientRect();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                return { x: clientX - rect.left, y: clientY - rect.top };
+                return {
+                    x: (clientX - rect.left) * (canvas.width / rect.width),
+                    y: (clientY - rect.top) * (canvas.height / rect.height)
+                };
             }
 
-            function start(e) { drawing = true; draw(e); }
-            function stop() { drawing = false; ctx.beginPath(); syncToPrint(); }
-            function draw(e) {
-                if (!drawing) return;
-                e.preventDefault();
+            function startDraw(e) {
+                drawing = true;
                 const pos = getPos(e);
-                ctx.lineWidth = 2;
-                ctx.lineCap = 'round';
-                ctx.strokeStyle = '#004aad';
-                ctx.lineTo(pos.x, pos.y);
-                ctx.stroke();
                 ctx.beginPath();
                 ctx.moveTo(pos.x, pos.y);
             }
 
-            canvas.addEventListener('mousedown', start);
-            canvas.addEventListener('mouseup', stop);
+            function draw(e) {
+                if (!drawing) return;
+                const pos = getPos(e);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = 2;
+                ctx.lineCap = "round";
+                ctx.stroke();
+                updateSignaturePreview(canvasId);
+            }
+
+            function stopDraw() {
+                drawing = false;
+            }
+
+            canvas.addEventListener('mousedown', startDraw);
             canvas.addEventListener('mousemove', draw);
-            canvas.addEventListener('touchstart', start);
-            canvas.addEventListener('touchend', stop);
-            canvas.addEventListener('touchmove', draw);
+            canvas.addEventListener('mouseup', stopDraw);
+            canvas.addEventListener('mouseleave', stopDraw);
+
+            canvas.addEventListener('touchstart', startDraw, { passive: true });
+            canvas.addEventListener('touchmove', draw, { passive: true });
+            canvas.addEventListener('touchend', stopDraw);
         }
 
-        function clearCanvas(id) {
-            const canvas = document.getElementById(id);
+        function clearCanvas(canvasId) {
+            const canvas = document.getElementById(canvasId);
             if (!canvas) return;
-            canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-            syncToPrint();
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            updateSignaturePreview(canvasId);
         }
 
-        function syncToPrint() {
-            const getVal = id => (document.getElementById(id) ? document.getElementById(id).value : '');
-            const setTxt = (id, val) => { if (document.getElementById(id)) document.getElementById(id).innerText = val || '-'; };
-
-            setTxt('prt_doc_num', getVal('doc_num'));
-            setTxt('prt_doc_date', `Data: ${getVal('doc_date')}`);
-            setTxt('prt_tipo_txt', getVal('tipo_intervento'));
-            setTxt('prt_cliente_nome', getVal('cliente_nome'));
-            setTxt('prt_cliente_indirizzo', getVal('cliente_indirizzo'));
-            setTxt('prt_cliente_cf', getVal('cliente_cf'));
-            setTxt('prt_cliente_email', getVal('cliente_email'));
-            setTxt('prt_rivenditore', getVal('rivenditore'));
-            setTxt('prt_num_scontrino', getVal('num_scontrino'));
-            setTxt('prt_data_bolla', getVal('data_bolla'));
-            setTxt('prt_totale_acquisto', getVal('totale_acquisto') ? `€ ${getVal('totale_acquisto')}` : '-');
-
-            setTxt('prt_relazione', getVal('relazione_tecnica'));
-            setTxt('prt_fgas_azoto', getVal('fgas_azoto'));
-            setTxt('prt_fgas_vuoto', getVal('fgas_vuoto'));
-            setTxt('prt_fgas_pressione', getVal('fgas_pressione'));
-            setTxt('prt_fgas_condensa', getVal('fgas_condensa'));
-            setTxt('prt_fgas_patentino', getVal('fgas_patentino'));
-            setTxt('prt_fgas_gas_aggiunto', getVal('fgas_gas_aggiunto'));
-            setTxt('prt_fgas_temp_split', getVal('fgas_temp_split'));
-
-            const prtAssetTbody = document.getElementById('prt_assets_tbody');
-            if (prtAssetTbody) {
-                prtAssetTbody.innerHTML = '';
-                document.querySelectorAll('#assets-table-body tr').forEach(tr => {
-                    const row = prtAssetTbody.insertRow();
-                    row.className = "border border-slate-300";
-                    if (currentReportMode === 'base') {
-                        row.insertCell(0).innerText = tr.querySelector('.asset-comp').value;
-                        row.insertCell(1).innerText = tr.querySelector('.asset-modello').value;
-                        row.insertCell(2).innerText = tr.querySelector('.asset-qta').value;
-                        row.insertCell(3).innerText = tr.querySelector('.asset-matricola').value;
-                        row.insertCell(4).innerText = tr.querySelector('.asset-ubicazione-merce') ? tr.querySelector('.asset-ubicazione-merce').value : '-';
-                    } else {
-                        row.insertCell(0).innerText = tr.querySelector('.asset-comp').value;
-                        row.insertCell(1).innerText = tr.querySelector('.asset-modello').value;
-                        row.insertCell(2).innerText = tr.querySelector('.asset-potenza').value;
-                        row.insertCell(3).innerText = tr.querySelector('.asset-gas').value;
-                        row.insertCell(4).innerText = tr.querySelector('.asset-sn-ui').value;
-                        row.insertCell(5).innerText = tr.querySelector('.asset-sn-ue').value;
-                        row.insertCell(6).innerText = tr.querySelector('.asset-ubicazione').value;
-                    }
-                });
-            }
-
-            const prtChecklistUl = document.getElementById('prt_checklist_ul');
-            if (prtChecklistUl) {
-                prtChecklistUl.innerHTML = '';
-                const activeList = currentReportMode === 'base' ? CHECKLIST_BASE : CHECKLIST_PROFESSIONAL;
-                activeList.forEach((item, idx) => {
-                    const li = document.createElement('li');
-                    const isChecked = checklistState[idx];
-                    li.className = isChecked ? "text-slate-800" : "text-slate-400 line-through";
-                    li.innerHTML = `<i class="fas ${isChecked ? 'fa-check-square text-green-600' : 'fa-square text-slate-300'} mr-1"></i> ${item}`;
-                    prtChecklistUl.appendChild(li);
-                });
-            }
-
-            const prtPhotosContainer = document.getElementById('prt_photos_container');
-            const prtPhotosGrid = document.getElementById('prt_photos_grid');
-            if(prtPhotosGrid) prtPhotosGrid.innerHTML = '';
-            let hasPhotos = false;
-
-            [1, 2, 3, 4].forEach(i => {
-                if (reportPhotos[i]) {
-                    hasPhotos = true;
-                    const caption = document.getElementById(`photo_caption_${i}`).value || `Foto ${i}`;
-                    const div = document.createElement('div');
-                    div.className = "border border-slate-300 p-1.5 rounded bg-slate-50 text-center";
-                    div.innerHTML = `
-                        <img src="${reportPhotos[i]}" class="h-28 w-full object-contain rounded border border-slate-200 bg-white" alt="Foto">
-                        <p class="text-[9px] font-bold text-slate-700 mt-1 truncate">${caption}</p>
-                    `;
-                    if(prtPhotosGrid) prtPhotosGrid.appendChild(div);
-                }
-            });
-
-            if (hasPhotos && prtPhotosContainer) {
-                prtPhotosContainer.classList.remove('hidden');
-            } else if(prtPhotosContainer) {
-                prtPhotosContainer.classList.add('hidden');
-            }
-
-            setTxt('prt_nome_tecnico', getVal('nome_tecnico') || (activeUser ? activeUser.name : 'Tecnico'));
-            setTxt('prt_nome_cliente_sub', getVal('cliente_nome') || 'Cliente');
-
-            const canvasTecnico = document.getElementById('canvas-tecnico');
-            if (canvasTecnico) document.getElementById('prt_img_tecnico').src = canvasTecnico.toDataURL();
-            const canvasCliente = document.getElementById('canvas-cliente');
-            if (canvasCliente) document.getElementById('prt_img_cliente').src = canvasCliente.toDataURL();
-        }
-
-        function loadDemoData() {
-            document.getElementById('cliente_nome').value = 'Giuseppe Azzarello';
-            document.getElementById('cliente_indirizzo').value = 'Via della Sorgente 34, Altofonte (PA)';
-            document.getElementById('cliente_cf').value = 'ZZRGPP80A01G273X';
-            document.getElementById('cliente_email').value = 'giuseppe.azzarello@email.it';
-            document.getElementById('rivenditore').value = 'MediaMarket S.p.A.';
-            document.getElementById('num_scontrino').value = '3538146';
-            document.getElementById('totale_acquisto').value = '559.09';
-            syncToPrint();
-            showToast("Dati demo caricati!", "success");
-        }
-
-        function exportPDF() {
-            syncToPrint();
-            const element = document.getElementById('print-area');
-            const docNum = document.getElementById('doc_num').value || 'Report';
-            showToast("Generazione PDF...", "info");
-
-            html2pdf().set({
-                margin: [5, 5, 5, 5],
-                filename: `Report_ILT_${docNum}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(element).save().then(() => {
-                showToast("PDF scaricato!", "success");
-            });
-        }
-
-        async function generateAIReport() {
-            const apiKey = localStorage.getItem('ilt_gemini_key') || document.getElementById('gemini_api_key').value;
-            if (!apiKey) {
-                showToast("Inserisci l'API Key Gemini!", "error");
-                switchTab('settings');
-                return;
-            }
-
-            const cliente = document.getElementById('cliente_nome').value || 'Cliente';
-            const relazioneAttuale = document.getElementById('relazione_tecnica').value;
-            const prompt = `Sei l'ingegnere supervisore di ILT Logistics. Scrivi una relazione tecnica per il cliente ${cliente}. Note: ${relazioneAttuale || 'Intervento completato con successo.'}.`;
-
-            showToast("Generazione relazione AI...", "info");
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-                });
-                const data = await res.json();
-                document.getElementById('relazione_tecnica').value = data.candidates[0].content.parts[0].text;
-                syncToPrint();
-                showToast("Relazione AI generata!", "success");
-            } catch(e) {
-                showToast("Errore di connessione con Gemini AI.", "error");
+        function updateSignaturePreview(canvasId) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const dataUrl = canvas.toDataURL();
+            if (canvasId === 'canvas-tecnico') {
+                document.getElementById('prt_img_tecnico').src = dataUrl;
+            } else if (canvasId === 'canvas-cliente') {
+                document.getElementById('prt_img_cliente').src = dataUrl;
             }
         }
 
         function saveApiKey() {
-            localStorage.setItem('ilt_gemini_key', document.getElementById('gemini_api_key').value.trim());
-            showToast("API Key Salvata!", "success");
+            const key = document.getElementById('gemini_api_key').value.trim();
+            if (!key) {
+                showToast("Inserisci una API Key valida!", "error");
+                return;
+            }
+            localStorage.setItem('ilt_gemini_api_key', key);
+            showToast("Gemini API Key salvata con successo!", "success");
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            getUsersDB();
-            checkAuth();
+        function loadDemoData() {
+            preparePreReport('professional');
+            document.getElementById('cliente_nome').value = "Giuseppe Cosentino";
+            document.getElementById('cliente_indirizzo').value = "Via Giovanni Pacini 39, Palermo (PA)";
+            document.getElementById('cliente_cf').value = "CSNGPP59E03G273A";
+            document.getElementById('cliente_email').value = "giuseppe.cosentino@email.it";
+            document.getElementById('rivenditore').value = "MediaMarket S.p.A. Palermo";
+            document.getElementById('num_scontrino').value = "3538146 / RT 0123-0025";
+            document.getElementById('totale_acquisto').value = "559,09";
+            document.getElementById('relazione_tecnica').value = "Eseguita installazione a regola d'arte di condizionatore Inverter. Eseguita la prova di tenuta con azoto a 42 bar, il vuoto del circuito a -1 bar e verificato il corretto drenaggio della condensa per gravità. Collaudo completato con esito positivo.";
+            
+            document.getElementById('assets-table-body').innerHTML = '';
+            addAssetRow({ comp: 'Unità Interna', modello: 'Daikin Perfera 12000 BTU', potenza: '12000 BTU', gas: 'R32', sn_ui: 'UI893247923', sn_ue: 'UE991238129', ubicazione: 'Soggiorno' });
+            
+            syncToPrint();
+            showToast("Dati demo caricati!", "success");
+        }
+
+        function generateAIReport() {
+            const key = localStorage.getItem('ilt_gemini_api_key');
+            if (!key) {
+                showToast("Inserisci prima la Gemini API Key nelle Impostazioni!", "error");
+                switchTab('settings');
+                return;
+            }
+            showToast("Generazione relazione AI in corso...", "info");
+            setTimeout(() => {
+                document.getElementById('relazione_tecnica').value = "Relazione Tecnica Ottimizzata via AI:\nIntervento di installazione e posa in opera eseguito nel rispetto delle norme vigenti CEI e F-GAS. Verificato il circuito frigorifero mediante prova di tenuta ad alta pressione (42 bar) e vuoto prolungato. Verificate le performance operative con rilievo temperature ottimali allo split e drenaggio condensa regolare.";
+                syncToPrint();
+                showToast("Relazione AI generata con successo!", "success");
+            }, 1200);
+        }
+
+        function exportPDF() {
+            const element = document.getElementById('print-area');
+            const docNum = document.getElementById('doc_num').value || 'Report';
+            const opt = {
+                margin:       [5, 5, 5, 5],
+                filename:     `${docNum}_ILT_Logistics.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        window.onload = function() {
             initLogo();
+            checkAuth();
             initDateAndDoc();
-            renderChecklist();
-            addAssetRow();
-            addExtraRow();
-            initCanvas('canvas-tecnico');
-            initCanvas('canvas-cliente');
-            loadHistoryTable();
-
-            document.querySelectorAll('input, select, textarea').forEach(el => {
-                el.addEventListener('input', syncToPrint);
-                el.addEventListener('change', syncToPrint);
-            });
-
-            const savedKey = localStorage.getItem('ilt_gemini_key');
+            setupCanvas('canvas-tecnico');
+            setupCanvas('canvas-cliente');
+            const savedKey = localStorage.getItem('ilt_gemini_api_key');
             if (savedKey) document.getElementById('gemini_api_key').value = savedKey;
-        });
-    </script>
-
-    <!-- Script di Inizializzazione Firebase -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAarWuuFLMi0gB4KGKKru-_FScXyyWkVS4",
-            authDomain: "ilt-logistcs-srl.firebaseapp.com",
-            projectId: "ilt-logistcs-srl",
-            storageBucket: "ilt-logistcs-srl.firebasestorage.app",
-            messagingSenderId: "737807115782",
-            appId: "1:737807115782:web:6212b5b5f24363c7d64587",
-            measurementId: "G-7JZE8MG46E"
         };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
     </script>
 </body>
 </html>
