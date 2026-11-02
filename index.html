@@ -14,6 +14,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     
     <script>
         tailwind.config = {
@@ -74,12 +75,12 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Username</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Email aziendale</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                             <i class="fas fa-user text-xs"></i>
                         </span>
-                        <input type="text" id="login_username" required placeholder="Es. admin o maiorana" class="w-full text-xs pl-9 p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        <input type="email" id="login_username" autocomplete="username" required placeholder="nome@azienda.it" class="w-full text-xs pl-9 p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-iltBlue focus:outline-none">
                     </div>
                 </div>
 
@@ -96,6 +97,7 @@
                 <button type="submit" class="w-full py-2.5 bg-iltRed hover:bg-red-700 text-white font-bold text-xs rounded-lg shadow-lg transition flex items-center justify-center gap-2">
                     <i class="fas fa-right-to-bracket"></i> Accedi
                 </button>
+                <button type="button" onclick="sendPasswordReset()" class="w-full text-xs text-iltBlue hover:underline">Password dimenticata?</button>
             </form>
         </div>
     </div>
@@ -696,8 +698,8 @@
                                 <input type="text" id="new_tech_name" required placeholder="Es. Mario Rossi" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Username</label>
-                                <input type="text" id="new_tech_user" required placeholder="Es. mrossi" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none">
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Email aziendale</label>
+                                <input type="email" id="new_tech_user" required placeholder="m.rossi@azienda.it" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
@@ -709,7 +711,6 @@
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Ruolo</label>
                                 <select id="new_tech_role" class="w-full text-xs font-bold border border-slate-300 rounded-lg p-2 bg-white text-slate-800">
                                     <option value="tecnico">Tecnico</option>
-                                    <option value="admin">Amministratore</option>
                                 </select>
                             </div>
                         </div>
@@ -729,7 +730,7 @@
                                 <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
                                     <tr>
                                         <th class="p-2">Nome</th>
-                                        <th class="p-2">Username</th>
+                                        <th class="p-2">Email</th>
                                         <th class="p-2">Patentino</th>
                                         <th class="p-2 text-center">Azione</th>
                                     </tr>
@@ -786,8 +787,13 @@
         // Inizializza Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-
-        let globalPreReports = []; // Cache sincronizzata in tempo reale con Firebase
+        const auth = firebase.auth();
+        const USERS_COLLECTION = 'users';
+        let prereportsUnsubscribe = null;
+        let techniciansUnsubscribe = null;
+        let globalPreReports = [];
+        let techniciansCache = [];
+        let authReady = false;
 
         const RAW_SVG_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 85" width="340" height="85"><defs><linearGradient id="gR" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff2e43"/><stop offset="50%" stop-color="#d61124"/><stop offset="100%" stop-color="#9b000e"/></linearGradient><linearGradient id="gD" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4a5157"/><stop offset="60%" stop-color="#2a2e33"/><stop offset="100%" stop-color="#15181b"/></linearGradient><linearGradient id="gB" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#003580"/><stop offset="50%" stop-color="#004aad"/><stop offset="100%" stop-color="#0066ff"/></linearGradient><radialGradient id="fG" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff" stop-opacity="1"/><stop offset="40%" stop-color="#ffffff" stop-opacity="0.8"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs><path d="M 12 35 C -5 18, 2 52, 28 68 C 68 84, 180 80, 295 52 C 235 73, 80 78, 32 63 C 14 53, 16 32, 28 36 Z" fill="url(#gB)"/><path d="M 22 35 C 8 24, 10 48, 32 61 C 72 75, 192 70, 305 46 C 245 65, 88 69, 38 56 C 22 48, 24 33, 36 36 Z" fill="url(#gR)"/><polygon points="68,14 88,14 62,68 42,68" fill="url(#gR)"/><circle cx="67" cy="15" r="9" fill="url(#fG)"/><path d="M 67 4 L 67 26 M 56 15 L 78 15 M 59 7 L 75 23 M 59 23 L 75 7" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/><polygon points="85,16 122,16 116,26 104,26 87,68 69,68 82,35 74,35 79,26 88,26" fill="url(#gD)"/><polygon points="108,36 132,36 118,68 101,68" fill="url(#gD)" opacity="0.9"/><text x="135" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="900" font-style="italic" font-size="38" fill="url(#gB)" letter-spacing="-1">Logistics</text><text x="282" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="700" font-style="italic" font-size="19" fill="url(#gB)">srl</text></svg>`;
 
@@ -926,51 +932,67 @@
             }
         }
 
-        function getUsersDB() {
-            const saved = localStorage.getItem('ilt_users_db');
-            if (saved) return JSON.parse(saved);
-            const defaultDB = {
-                'admin': { username: 'admin', pass: 'admin123', name: 'Amministratore', role: 'admin', fgas: '' },
-                'maiorana': { username: 'maiorana', pass: '123456', name: 'Maiorana Antonino', role: 'tecnico', fgas: 'XPERT/FGAS/23/2529' }
-            };
-            localStorage.setItem('ilt_users_db', JSON.stringify(defaultDB));
-            return defaultDB;
+        // --- AUTENTICAZIONE E PROFILI FIREBASE ---
+        function setLoginError(message) {
+            document.getElementById('login-error-msg').innerText = message;
+            document.getElementById('login-error').classList.remove('hidden');
         }
 
-        function saveUsersDB(db) { localStorage.setItem('ilt_users_db', JSON.stringify(db)); }
-
-        function handleCreateTechnician(e) {
+        async function handleCreateTechnician(e) {
             e.preventDefault();
+            if (!activeUser || activeUser.role !== 'admin') return;
             const name = document.getElementById('new_tech_name').value.trim();
-            const user = document.getElementById('new_tech_user').value.trim().toLowerCase();
+            const email = document.getElementById('new_tech_user').value.trim().toLowerCase();
             const pass = document.getElementById('new_tech_pass').value;
             const fgas = document.getElementById('new_tech_fgas').value.trim();
-            const role = document.getElementById('new_tech_role').value;
-            const dbUsers = getUsersDB();
-            if (dbUsers[user]) { showToast("Username esistente!", "error"); return; }
-            dbUsers[user] = { username: user, pass: pass, name: name, role: role, fgas: fgas };
-            saveUsersDB(dbUsers);
-            showToast(`Utente ${name} creato!`, "success");
-            renderTechniciansList();
-            populateTechnicianSelect();
+            if (pass.length < 6) { showToast('La password deve contenere almeno 6 caratteri.', 'error'); return; }
+            let secondaryApp;
+            try {
+                secondaryApp = firebase.initializeApp(firebaseConfig, 'ilt-user-creation-' + Date.now());
+                const secondaryAuth = secondaryApp.auth();
+                const credential = await secondaryAuth.createUserWithEmailAndPassword(email, pass);
+                await db.collection(USERS_COLLECTION).doc(credential.user.uid).set({
+                    uid: credential.user.uid, email, name, role: 'tecnico', fgas,
+                    active: true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                await secondaryAuth.signOut();
+                await secondaryApp.delete();
+                document.querySelector('#admin-tech-management-box form').reset();
+                showToast(`Account tecnico ${name} creato.`, 'success');
+            } catch (err) {
+                if (secondaryApp) { try { await secondaryApp.delete(); } catch (_) {} }
+                showToast('Creazione account non riuscita: ' + (err.code || err.message), 'error');
+            }
         }
 
-        function deleteTechnician(username) {
-            if (username === 'admin') return;
-            const dbUsers = getUsersDB();
-            delete dbUsers[username];
-            saveUsersDB(dbUsers);
-            renderTechniciansList();
-            populateTechnicianSelect();
+        async function deleteTechnician(uid) {
+            if (!activeUser || activeUser.role !== 'admin' || !uid) return;
+            if (!confirm('Disattivare questo tecnico? Non potrà più accedere; l’account Auth andrà eliminato da Firebase Console o tramite Cloud Function.')) return;
+            try {
+                await db.collection(USERS_COLLECTION).doc(uid).update({ active: false, disabledAt: firebase.firestore.FieldValue.serverTimestamp() });
+                showToast('Tecnico disattivato. Per revocare anche l’accesso Auth, elimina/disabilita l’utente in Firebase Console.', 'success');
+            } catch (err) { showToast('Errore: ' + err.message, 'error'); }
+        }
+
+        function subscribeTechnicians() {
+            if (techniciansUnsubscribe) techniciansUnsubscribe();
+            if (!activeUser || activeUser.role !== 'admin') return;
+            techniciansUnsubscribe = db.collection(USERS_COLLECTION).where('role', '==', 'tecnico').onSnapshot(snapshot => {
+                techniciansCache = snapshot.docs.map(d => ({ uid: d.id, ...d.data() })).filter(u => u.active !== false);
+                renderTechniciansList();
+                populateTechnicianSelect();
+            }, err => showToast('Errore caricamento tecnici: ' + err.message, 'error'));
         }
 
         function renderTechniciansList() {
             const tbody = document.getElementById('technicians-tbody');
             if (!tbody) return;
             tbody.innerHTML = '';
-            Object.values(getUsersDB()).filter(u => u.role === 'tecnico').forEach(t => {
+            techniciansCache.forEach(t => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td class="p-2 font-bold">${t.name}</td><td class="p-2 text-slate-500">${t.username}</td><td class="p-2 font-mono">${t.fgas || '-'}</td><td class="p-2 text-center"><button onclick="deleteTechnician('${t.username}')" class="text-red-500"><i class="fas fa-trash"></i></button></td>`;
+                const safeName = String(t.name || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                const safeEmail = String(t.email || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+                tr.innerHTML = `<td class="p-2 font-bold">${safeName}</td><td class="p-2 text-slate-500">${safeEmail}</td><td class="p-2 font-mono">${t.fgas || '-'}</td><td class="p-2 text-center"><button onclick="deleteTechnician('${t.uid}')" class="text-red-500" title="Disattiva"><i class="fas fa-user-slash"></i></button></td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -979,47 +1001,80 @@
             const select = document.getElementById('assigned_technician_select');
             if (!select) return;
             select.innerHTML = '';
-            Object.values(getUsersDB()).filter(u => u.role === 'tecnico').forEach(t => {
+            techniciansCache.forEach(t => {
                 const opt = document.createElement('option');
-                opt.value = t.username;
-                opt.innerText = `${t.name} (${t.username})`;
+                opt.value = t.uid;
+                opt.innerText = `${t.name} (${t.email})`;
                 select.appendChild(opt);
             });
         }
 
-        function checkAuth() {
-            const savedUser = localStorage.getItem('ilt_active_user');
-            const dbUsers = getUsersDB();
-            if (savedUser && dbUsers[savedUser]) {
-                activeUser = dbUsers[savedUser];
-                document.getElementById('login-modal').classList.add('hidden');
-                updateUserBadge();
-                applyRolePermissions();
-            } else {
-                document.getElementById('login-modal').classList.remove('hidden');
-            }
-        }
-
-        function handleLoginSubmit(e) {
+        async function handleLoginSubmit(e) {
             e.preventDefault();
-            const u = document.getElementById('login_username').value.trim().toLowerCase();
-            const p = document.getElementById('login_password').value;
-            const dbUsers = getUsersDB();
-            if (dbUsers[u] && dbUsers[u].pass === p) {
-                activeUser = dbUsers[u];
-                localStorage.setItem('ilt_active_user', activeUser.username);
-                document.getElementById('login-modal').classList.add('hidden');
-                updateUserBadge();
-                applyRolePermissions();
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
+            const email = document.getElementById('login_username').value.trim().toLowerCase();
+            const password = document.getElementById('login_password').value;
+            const errorBox = document.getElementById('login-error');
+            errorBox.classList.add('hidden');
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (err) {
+                setLoginError(err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found'
+                    ? 'Email o password non corretti.' : 'Accesso non riuscito: ' + err.message);
             }
         }
 
-        function logoutUser() {
-            localStorage.removeItem('ilt_active_user');
+        async function sendPasswordReset() {
+            const email = document.getElementById('login_username').value.trim().toLowerCase();
+            if (!email) { setLoginError('Inserisci prima la tua email aziendale.'); return; }
+            try {
+                await auth.sendPasswordResetEmail(email);
+                showToast('Email per reimpostare la password inviata, se l’account esiste.', 'success');
+            } catch (err) { setLoginError('Invio reset password non riuscito: ' + err.message); }
+        }
+
+        async function logoutUser() {
+            try { await auth.signOut(); }
+            catch (err) { showToast('Errore durante la disconnessione: ' + err.message, 'error'); }
+        }
+
+        async function handleFirebaseUser(user) {
+            if (prereportsUnsubscribe) { prereportsUnsubscribe(); prereportsUnsubscribe = null; }
+            if (techniciansUnsubscribe) { techniciansUnsubscribe(); techniciansUnsubscribe = null; }
+            globalPreReports = [];
+            techniciansCache = [];
             activeUser = null;
-            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('user-session-badge').classList.add('hidden');
+            if (!user) {
+                document.getElementById('login-modal').classList.remove('hidden');
+                return;
+            }
+            try {
+                const profileSnap = await db.collection(USERS_COLLECTION).doc(user.uid).get();
+                if (!profileSnap.exists) {
+                    await auth.signOut();
+                    setLoginError('Profilo non configurato. Chiedi all’amministratore di abilitare il tuo account.');
+                    return;
+                }
+                const profile = profileSnap.data();
+                if (profile.active === false || !['admin', 'tecnico'].includes(profile.role)) {
+                    await auth.signOut();
+                    setLoginError('Account disattivato o ruolo non autorizzato.');
+                    return;
+                }
+                activeUser = { uid: user.uid, email: user.email, name: profile.name || user.email, role: profile.role, fgas: profile.fgas || '' };
+                document.getElementById('login-modal').classList.add('hidden');
+                updateUserBadge();
+                applyRolePermissions();
+                startFirestoreListeners();
+            } catch (err) {
+                console.error('Errore caricamento profilo:', err);
+                await auth.signOut();
+                setLoginError('Impossibile leggere il profilo: ' + err.message);
+            }
+        }
+
+        function checkAuth() {
+            auth.onAuthStateChanged(handleFirebaseUser);
         }
 
         function updateUserBadge() {
@@ -1040,43 +1095,45 @@
 
         function applyRolePermissions() {
             if (!activeUser) return;
-            const btnProf = document.getElementById('tab-btn-professional');
-            const btnBase = document.getElementById('tab-btn-base');
-            const btnSavePre = document.getElementById('btn-save-prereport');
-            const adminBox = document.getElementById('admin-assignment-box');
-            const thTecnicoCol = document.getElementById('th-tecnico-col');
-
-            if (activeUser.role === 'admin') {
-                if (btnProf) btnProf.classList.remove('hidden');
-                if (btnBase) btnBase.classList.remove('hidden');
-                if (btnSavePre) btnSavePre.classList.remove('hidden');
-                if (adminBox) adminBox.classList.remove('hidden');
-                if (thTecnicoCol) thTecnicoCol.classList.remove('hidden');
-                populateTechnicianSelect();
-                renderTechniciansList();
-            } else {
-                if (btnProf) btnProf.classList.add('hidden');
-                if (btnBase) btnBase.classList.add('hidden');
-                if (btnSavePre) btnSavePre.classList.add('hidden');
-                if (adminBox) adminBox.classList.add('hidden');
-                if (thTecnicoCol) thTecnicoCol.classList.add('hidden');
-            }
+            const isAdmin = activeUser.role === 'admin';
+            ['tab-btn-professional', 'tab-btn-base', 'btn-save-prereport', 'admin-assignment-box', 'th-tecnico-col', 'admin-tech-management-box', 'admin-logo-box'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('hidden', !isAdmin);
+            });
+            if (isAdmin) subscribeTechnicians();
             switchTab('assigned-tasks');
             loadHistoryTable();
         }
 
+        function startFirestoreListeners() {
+            if (!activeUser) return;
+            if (prereportsUnsubscribe) prereportsUnsubscribe();
+            let query = db.collection('prereports');
+            if (activeUser.role === 'tecnico') query = query.where('assigned_uid', '==', activeUser.uid);
+            prereportsUnsubscribe = query.onSnapshot(snapshot => {
+                globalPreReports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                loadAssignedTasks();
+            }, error => {
+                console.error('Errore Firestore prereports:', error);
+                showToast('Errore sincronizzazione incarichi: ' + error.message, 'error');
+            });
+        }
+
         // --- CLOUD FIRESTOR - GESTIONE INCARICHI ---
         function saveAsPreReport() {
-            if (activeUser.role !== 'admin') return;
-            const techUser = document.getElementById('assigned_technician_select').value;
-            const dbUsers = getUsersDB();
-            const techObj = dbUsers[techUser] || { name: techUser };
+            if (!activeUser || activeUser.role !== 'admin') return;
+            const techUid = document.getElementById('assigned_technician_select').value;
+            const techObj = techniciansCache.find(t => t.uid === techUid);
+            if (!techObj) { showToast('Seleziona un tecnico valido.', 'error'); return; }
 
             const prereportData = {
                 doc_num: document.getElementById('doc_num').value,
                 doc_date: document.getElementById('doc_date').value,
-                assigned_to: techUser,
+                assigned_uid: techUid,
+                assigned_to: techObj.email,
                 assigned_name: techObj.name,
+                created_by: activeUser.uid,
+                created_at: firebase.firestore.FieldValue.serverTimestamp(),
                 cliente_nome: document.getElementById('cliente_nome').value,
                 cliente_indirizzo: document.getElementById('cliente_indirizzo').value,
                 cliente_cf: document.getElementById('cliente_cf').value,
@@ -1101,22 +1158,25 @@
             }).catch(err => showToast("Errore: " + err.message, "error"));
         }
 
-        function updateTaskStatus(taskId, newStatus) {
-            db.collection("prereports").doc(taskId).update({ status: newStatus }).then(() => {
-                showToast("Stato aggiornato sul Cloud!", "success");
-            });
+        async function updateTaskStatus(taskId, newStatus) {
+            if (!activeUser || activeUser.role !== 'tecnico') return;
+            try {
+                await db.collection('prereports').doc(taskId).update({ status: newStatus, updated_at: firebase.firestore.FieldValue.serverTimestamp() });
+                showToast('Stato aggiornato sul Cloud!', 'success');
+            } catch (err) { showToast('Aggiornamento non riuscito: ' + err.message, 'error'); }
         }
 
-        function deletePreReportCloud(id) {
-            if (activeUser.role !== 'admin') return;
-            if (!confirm("Eliminare dal Cloud?")) return;
-            db.collection("prereports").doc(id).delete().then(() => showToast("Eliminato.", "success"));
+        async function deletePreReportCloud(id) {
+            if (!activeUser || activeUser.role !== 'admin') return;
+            if (!confirm('Eliminare dal Cloud?')) return;
+            try { await db.collection('prereports').doc(id).delete(); showToast('Eliminato.', 'success'); }
+            catch (err) { showToast('Eliminazione non riuscita: ' + err.message, 'error'); }
         }
 
         function loadAssignedTasks() {
             let tasks = [...globalPreReports];
             if (activeUser && activeUser.role === 'tecnico') {
-                tasks = globalPreReports.filter(p => p.assigned_to === activeUser.username);
+                tasks = globalPreReports.filter(p => p.assigned_uid === activeUser.uid);
             }
 
             document.getElementById('pending-tasks-badge').innerText = tasks.length;
@@ -1396,16 +1456,6 @@
             addAssetRow();
             addExtraRow();
 
-            // Ascolta i dati da Firestore in tempo reale
-            db.collection("prereports").onSnapshot((snapshot) => {
-                globalPreReports = [];
-                snapshot.forEach((doc) => {
-                    globalPreReports.push({ id: doc.id, ...doc.data() });
-                });
-                loadAssignedTasks();
-            }, (error) => {
-                console.error("Errore Firebase:", error);
-            });
         };
     </script>
 </body>
