@@ -163,24 +163,27 @@
                 </div>
 
                 <nav class="flex flex-wrap items-center gap-1.5 bg-slate-800/90 p-1 rounded-xl border border-slate-700">
-                    <button onclick="switchTab('assigned-tasks')" id="tab-btn-tasks" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
-                        <i class="fas fa-list-check text-amber-400"></i> <span id="tab-tasks-label">Pre-Report</span>
-                        <span id="pending-tasks-badge" class="bg-amber-500 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
-                    </button>
-                    <button onclick="switchTab('new-report', false, 'professional'); preparePreReport('professional')" id="tab-btn-professional" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-iltRed text-white flex items-center gap-1.5 shadow transition">
-                        <i class="fas fa-file-signature"></i> <span>Professional</span>
-                    </button>
-                    <button onclick="switchTab('new-report', false, 'base'); preparePreReport('base')" id="tab-btn-base" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
-                        <i class="fas fa-file-lines"></i> <span>Base</span>
-                    </button>
-                    <button onclick="switchTab('history')" id="tab-btn-history" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
-                        <i class="fas fa-history"></i> <span>Storico</span>
-                        <span id="history-badge" class="bg-slate-700 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
-                    </button>
-                    <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
-                        <i class="fas fa-sliders"></i> <span>Impostazioni</span>
-                    </button>
-                </nav>
+    <button onclick="switchTab('assigned-tasks')" id="tab-btn-tasks" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+        <i class="fas fa-list-check text-amber-400"></i> <span id="tab-tasks-label">Pre-Report</span>
+        <span id="pending-tasks-badge" class="bg-amber-500 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+    </button>
+    <button onclick="switchTab('new-report', false, 'professional'); preparePreReport('professional')" id="tab-btn-professional" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-iltRed text-white flex items-center gap-1.5 shadow transition">
+        <i class="fas fa-fan"></i> <span>Professionale Clima</span>
+    </button>
+    <button onclick="switchTab('new-report', false, 'caldaia'); preparePreReport('caldaia')" id="tab-btn-caldaia" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-600 text-white flex items-center gap-1.5 shadow transition hover:bg-amber-700">
+        <i class="fas fa-fire"></i> <span>Professionale Caldaia</span>
+    </button>
+    <button onclick="switchTab('new-report', false, 'base'); preparePreReport('base')" id="tab-btn-base" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+        <i class="fas fa-file-lines"></i> <span>Base</span>
+    </button>
+    <button onclick="switchTab('history')" id="tab-btn-history" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+        <i class="fas fa-history"></i> <span>Storico</span>
+        <span id="history-badge" class="bg-slate-700 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+    </button>
+    <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+        <i class="fas fa-sliders"></i> <span>Impostazioni</span>
+    </button>
+</nav>
             </div>
         </div>
     </header>
@@ -303,10 +306,15 @@
     <!-- NOTA L'AGGIUNTA DI onchange="gestisciTipoIntervento()" QUI SOTTO -->
     <select id="tipo_intervento" onchange="gestisciTipoIntervento()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-semibold text-slate-700 focus:ring-2 focus:ring-iltBlue focus:outline-none">
         <option>Installazione & Collaudo Climatizzatore</option>
+        <option>Consegna e Installazione & Collaudo Climatizzatore</option>
         <option>Sopralluogo Tecnico & Fattibilità Impianto</option>
-        <option>Manutenzione Ordinaria / Pulizia Filtri & Sanificazione</option>
-        <option>Manutenzione Straordinaria & Riparazione</option>
+        <option>Manutenzione clima Ordinaria / Pulizia Filtri & Sanificazione</option>
+        <option>Manutenzione clima Straordinaria & Riparazione</option>
         <option>Ricerca Perdita Refrigerante & Ricarica F-GAS</option>
+        <option>Installazione & Collaudo Caldaia / Sistema Termico</option>
+        <option>Consegna e Installazione & Collaudo Caldaia / Sistema Termico</option>
+        <option>Manutenzione Ordinaria & Controllo Fumi Caldaia</option>
+    <option>Manutenzione Straordinaria & Riparazione Caldaia</option>
     </select>
 </div>
                         <div>
@@ -382,24 +390,26 @@
                     </div>
                 </div>
 
-                <!-- PARAMETRI STRUMENTALI & F-GAS (PROFESSIONALE) -->
-<div id="sezione-parametri-fgas" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <!-- SEZIONE 3: PARAMETRI STRUMENTALI (CLIMA O CALDAIA) -->
+<div id="sezione-parametri-container" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
     <h2 class="text-sm font-bold text-iltDark flex items-center gap-2 border-b border-slate-100 pb-2.5">
-        <span class="p-1.5 bg-green-50 text-green-700 rounded-md"><i class="fas fa-gauge-high"></i></span>
-        <span>3. Parametri Strumentali, Elettrici & Normativa F-GAS</span>
+        <span class="p-1.5 bg-green-50 text-green-700 rounded-md" id="sezione-3-icon"><i class="fas fa-gauge-high"></i></span>
+        <span id="sezione-3-titolo">3. Parametri Strumentali, Elettrici & Normativa F-GAS</span>
     </h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+
+    <!-- BLOCCO CLIMA (F-GAS) -->
+    <div id="blocco-parametri-clima" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Tenuta Azoto (bar)</label>
-            <input type="text" id="fgas_azoto" value="42 bar (Superata)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+            <input type="text" id="fgas_azoto" value="42 bar (Superata)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
         </div>
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Prova Vuoto Circuito</label>
-            <input type="text" id="fgas_vuoto" value="-1.0 bar (30 min) OK" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+            <input type="text" id="fgas_vuoto" value="-1.0 bar (30 min) OK" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
         </div>
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo Refrigerante</label>
-            <select id="fgas_tipo_gas" onchange="calcolaCO2Eq()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none">
+            <select id="fgas_tipo_gas" onchange="calcolaCO2Eq(); syncToPrint();" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none">
                 <option value="R32" data-gwp="675">R32 (GWP 675)</option>
                 <option value="R410A" data-gwp="2088">R410A (GWP 2088)</option>
                 <option value="R134a" data-gwp="1430">R134a (GWP 1430)</option>
@@ -408,33 +418,79 @@
         </div>
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Carica Gas Caricata (kg)</label>
-            <input type="number" step="0.01" id="fgas_kg_carica" value="1.20" oninput="calcolaCO2Eq()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+            <input type="number" step="0.01" id="fgas_kg_carica" value="1.20" oninput="calcolaCO2Eq(); syncToPrint();" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
         </div>
-
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Tonnellate CO2 Eq.</label>
             <input type="text" id="fgas_co2_eq" readonly value="0.81 t" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-slate-700 bg-slate-50">
         </div>
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Assorbimento Elettrico (A)</label>
-            <input type="text" id="fgas_ampere" value="4.5 A (Max 6.2A)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+            <input type="text" id="fgas_ampere" value="4.5 A (Max 6.2A)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
         </div>
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">N° Patentino F-GAS</label>
-            <input type="text" id="fgas_patentino" value="XPERT/FGAS/23/2529" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none">
+            <input type="text" id="fgas_patentino" value="XPERT/FGAS/23/2529" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
         </div>
         <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Drenaggio Condensa</label>
-            <input type="text" id="fgas_condensa" value="Test Flusso Ok per Gravità" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+            <input type="text" id="fgas_condensa" value="Test Flusso Ok per Gravità" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
         </div>
-
         <div class="sm:col-span-2">
             <label class="block text-xs font-semibold text-slate-600 mb-1">Temperature Aria Split & Delta-T (°C)</label>
-            <input type="text" id="fgas_temp_split" value="Mandata: +12°C | Ripresa: +24°C (ΔT: 12°C OK)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+            <input type="text" id="fgas_temp_split" value="Mandata: +12°C | Ripresa: +24°C (ΔT: 12°C OK)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
         </div>
         <div class="sm:col-span-2">
             <label class="block text-xs font-semibold text-slate-600 mb-1">Pressioni di Esercizio Linee (Bar)</label>
-            <input type="text" id="fgas_pressione" value="Bassa Pressione: 8.5 bar | Alta Pressione: 28.0 bar" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+            <input type="text" id="fgas_pressione" value="Bassa Pressione: 8.5 bar | Alta Pressione: 28.0 bar" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
+        </div>
+    </div>
+
+    <!-- BLOCCO CALDAIA -->
+    <div id="blocco-parametri-caldaia" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tenuta Impianto Gas (bar/mbar)</label>
+            <input type="text" id="term_tenuta_gas" value="Prova Ok a 100 mbar (UNI 7129)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo Alimentazione Gas</label>
+            <select id="term_tipo_gas" onchange="syncToPrint()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-bold text-amber-700 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                <option value="Metano (G20)">Metano (G20)</option>
+                <option value="GPL (G31)">GPL (G31)</option>
+                <option value="Aria Propanata">Aria Propanata</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Pressione Idraulica (bar)</label>
+            <input type="text" id="term_pressione_idr" value="1.2 bar (OK)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tiraggio Canna Fumaria (Pa)</label>
+            <input type="text" id="term_tiraggio" value="-12.5 Pa (A norma)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">CO In Combustione (ppm)</label>
+            <input type="text" id="term_co_ppm" value="24 ppm" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">CO2 % / O2 % Fumi</label>
+            <input type="text" id="term_co2_fumi" value="CO2: 9.1% | O2: 4.8%" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Rendimento Combustione (%)</label>
+            <input type="text" id="term_rendimento" value="94.2% (Classe A)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-green-700 focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Temp. Fumi / Ambiente (°C)</label>
+            <input type="text" id="term_temp_fumi" value="Fumi: +68°C | Amb: +20°C" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+        </div>
+        <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Codice Catasto / Libretto Impianto</label>
+            <input type="text" id="term_codice_catasto" value="CIT-PA-2026-9842" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-amber-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+        </div>
+        <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Bollino Termico / Certificazione</label>
+            <input type="text" id="term_bollino" value="Bollino Verde N° 8492048 - Valido fino al 2028" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
         </div>
     </div>
 </div>
@@ -631,7 +687,7 @@
                     </div>
 
                     <div>
-                        <div class="font-bold text-slate-800 uppercase text-[9.5px] border-b border-slate-300 pb-0.5 mb-1">1. Apparecchiature</div>
+                        <div class="font-bold text-slate-800 uppercase text-[9.5px] border-b border-slate-300 pb-0.5 mb-1" id="prt_section_2_title">1. Apparecchiature</div>
                         <table class="w-full text-left border-collapse border border-slate-300 text-[9.5px]">
                             <thead>
                                 <tr class="bg-slate-800 text-white font-bold">
@@ -653,17 +709,9 @@
 
                     <div class="grid grid-cols-2 gap-3">
                         <div id="prt-box-fgas" class="border border-slate-300 p-2 rounded bg-slate-50">
-    <div class="font-bold text-slate-800 uppercase border-b border-slate-200 pb-0.5 mb-1 text-[9px]">3. Verifiche F-GAS & Elettriche</div>
-    <ul class="space-y-0.5 text-[9.5px]">
-        <li><strong>Tenuta Azoto:</strong> <span id="prt_fgas_azoto">-</span></li>
-        <li><strong>Prova Vuoto:</strong> <span id="prt_fgas_vuoto">-</span></li>
-        <li><strong>Refrigerante / Carica:</strong> <span id="prt_fgas_gas_info">-</span></li>
-        <li><strong>Tonnellate CO2 Eq.:</strong> <span id="prt_fgas_co2">-</span></li>
-        <li><strong>Assorbimento:</strong> <span id="prt_fgas_ampere">-</span></li>
-        <li><strong>Pressioni Linee:</strong> <span id="prt_fgas_pressione">-</span></li>
-        <li><strong>Temp. & Delta-T:</strong> <span id="prt_fgas_temp">-</span></li>
-        <li><strong>Drenaggio Condensa:</strong> <span id="prt_fgas_condensa">-</span></li>
-        <li><strong>Patentino F-GAS:</strong> <span id="prt_fgas_patentino" class="font-mono font-bold text-iltBlue">-</span></li>
+    <div class="font-bold text-slate-800 uppercase border-b border-slate-200 pb-0.5 mb-1 text-[9px]" id="prt-titolo-sez3">3. Verifiche F-GAS & Elettriche</div>
+    <ul class="space-y-0.5 text-[9.5px]" id="prt-ul-sez3">
+        <!-- Voci dinamiche gestite via JS -->
     </ul>
 </div>
                         <div class="border border-slate-300 p-2 rounded bg-slate-50">
@@ -831,6 +879,17 @@
             "Apposizione targhetta F-GAS ed etichettatura macchina"
         ];
 
+        const CHECKLIST_CALDAIA = [
+            "Verifica ed esecuzione prova di tenuta impianto adduzione gas (UNI 7129)",
+            "Controllo e pulizia scambiatore primario / bruciatore",
+            "Verifica corretta evacuazione fumi e tiraggio canna fumaria",
+            "Controllo e taratura vaso d'espansione e valvola di sicurezza 3 bar",
+            "Verifica funzionamento termostato di sicurezza e sonde NTC",
+            "Analisi dei fumi di combustione e rilievo rendimento energetico",
+            "Compilazione / Aggiornamento Libretto d'Impianto Termico (D.P.R. 74/2013)",
+            "Rilascio bollino di efficienza energetica / Report di avvenuto controllo"
+        ];
+
         const CHECKLIST_BASE = [
             "Verifica integrità imballo e assenza danni da trasporto",
             "Controllo corrispondenza prodotto con documento d'acquisto",
@@ -845,7 +904,6 @@
         window.initFirebaseApp = function() {
             window.FB.onAuthStateChanged(window.FB.auth, async (user) => {
                 if (user) {
-                    // Recuperiamo il ruolo dell'utente da Firestore (collezione 'users')
                     const userDocRef = window.FB.doc(window.FB.db, "users", user.uid);
                     const userDoc = await window.FB.getDoc(userDocRef);
                     if (userDoc.exists()) {
@@ -900,35 +958,66 @@
             const tipoInterventoSelect = document.getElementById('tipo_intervento');
             const section2Title = document.getElementById('section-2-title');
             const addRowBtnText = document.getElementById('add-row-btn-text');
-            const fgasFormSection = document.getElementById('sezione-parametri-fgas');
-            const fgasPrintBox = document.getElementById('prt-box-fgas');
             
+            const containerParametri = document.getElementById('sezione-parametri-container');
+            const bloccoClima = document.getElementById('blocco-parametri-clima');
+            const bloccoCaldaia = document.getElementById('blocco-parametri-caldaia');
+            const fgasPrintBox = document.getElementById('prt-box-fgas');
+
             if (mode === 'base') {
                 if (titleBadge) titleBadge.innerText = "MODALITÀ: BASE";
                 if (section2Title) section2Title.innerText = "2. Lista Prodotti in Consegna";
                 if (addRowBtnText) addRowBtnText.innerText = "Aggiungi Prodotto";
-                if (fgasFormSection) fgasFormSection.classList.add('hidden');
+                
+                if (containerParametri) containerParametri.classList.add('hidden');
                 if (fgasPrintBox) fgasPrintBox.classList.add('hidden');
-                tipoInterventoSelect.innerHTML = `<option>Consegna Base</option><option>Consegna e incasso</option><option>Ritiro Raee</option>`;
-                checklistState = new Array(CHECKLIST_BASE.length).fill(true);
-            } else {
-                if (titleBadge) titleBadge.innerText = "MODALITÀ: PROFESSIONAL";
+
+                tipoInterventoSelect.innerHTML = `
+                    <option>Consegna Base</option>
+                    <option>Consegna e incasso</option>
+                    <option>Ritiro Raee</option>`;
+
+            } else if (mode === 'caldaia') {
+                if (titleBadge) titleBadge.innerText = "MODALITÀ: PROFESSIONALE CALDAIA";
+                if (section2Title) section2Title.innerText = "2. Censimento Generatore Termico & S/N";
+                if (addRowBtnText) addRowBtnText.innerText = "Aggiungi Caldaia";
+                
+                if (containerParametri) containerParametri.classList.remove('hidden');
+                if (bloccoClima) bloccoClima.classList.add('hidden');
+                if (bloccoCaldaia) bloccoCaldaia.classList.remove('hidden');
+                if (fgasPrintBox) fgasPrintBox.classList.remove('hidden');
+
+                document.getElementById('sezione-3-titolo').innerText = "3. Parametri Strumentali, Combustione & Normativa Impianti Termici";
+                document.getElementById('sezione-3-icon').innerHTML = `<i class="fas fa-fire text-amber-600"></i>`;
+
+                tipoInterventoSelect.innerHTML = `
+                    <option>Installazione & Collaudo Caldaia / Generatore Termico</option>
+                    <option>Manutenzione Ordinaria & Controllo Fumi Caldaia</option>
+                    <option>Manutenzione Straordinaria & Riparazione Caldaia</option>
+                    <option>Sopralluogo Tecnico & Fattibilità Impianto Gas/Fumi</option>
+                    <option>Prova di Tenuta Impianto Gas (UNI 7129 / 11528)</option>`;
+
+            } else { // Modalità Clima ('professional')
+                if (titleBadge) titleBadge.innerText = "MODALITÀ: PROFESSIONALE CLIMA";
                 if (section2Title) section2Title.innerText = "2. Censimento Apparecchiature & S/N";
                 if (addRowBtnText) addRowBtnText.innerText = "Aggiungi Macchina";
-                if (fgasFormSection) fgasFormSection.classList.remove('hidden');
+
+                if (containerParametri) containerParametri.classList.remove('hidden');
+                if (bloccoCaldaia) bloccoCaldaia.classList.add('hidden');
+                if (bloccoClima) bloccoClima.classList.remove('hidden');
                 if (fgasPrintBox) fgasPrintBox.classList.remove('hidden');
-                
-                // Voci complete per la modalità Professional (con Sopralluogo e altre opzioni)
+
+                document.getElementById('sezione-3-titolo').innerText = "3. Parametri Strumentali, Elettrici & Normativa F-GAS";
+                document.getElementById('sezione-3-icon').innerHTML = `<i class="fas fa-gauge-high text-green-700"></i>`;
+
                 tipoInterventoSelect.innerHTML = `
                     <option>Installazione & Collaudo Climatizzatore</option>
                     <option>Sopralluogo Tecnico & Fattibilità Impianto</option>
                     <option>Manutenzione Ordinaria / Pulizia Filtri & Sanificazione</option>
                     <option>Manutenzione Straordinaria & Riparazione</option>
-                    <option>Ricerca Perdita Refrigerante & Ricarica F-GAS</option>
-                `;
-                
-                checklistState = new Array(CHECKLIST_PROFESSIONAL.length).fill(true);
+                    <option>Ricerca Perdita Refrigerante & Ricarica F-GAS</option>`;
             }
+
             document.getElementById('assets-table-body').innerHTML = '';
             renderTableHeader();
             renderChecklist();
@@ -936,11 +1025,24 @@
             syncToPrint();
         }
 
+        function applyRolePermissions() {
+            if (!activeUser) return;
+            const isAdmin = activeUser.role === 'admin';
+            ['tab-btn-professional', 'tab-btn-caldaia', 'tab-btn-base', 'btn-save-prereport', 'admin-assignment-box', 'th-tecnico-col', 'admin-tech-management-box', 'admin-logo-box'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.toggle('hidden', !isAdmin);
+            });
+            if (isAdmin) loadUsersData();
+            switchTab('assigned-tasks');
+        }
+
         function renderTableHeader() {
             const headerTr = document.getElementById('assets-table-header');
             if (!headerTr) return;
             if (currentReportMode === 'base') {
                 headerTr.innerHTML = `<th class="p-2">Tipologia</th><th class="p-2">Modello</th><th class="p-2 w-20">Q.ta</th><th class="p-2">Matricola</th><th class="p-2">Ubicazione</th><th class="p-2 text-center">Azione</th>`;
+            } else if (currentReportMode === 'caldaia') {
+                headerTr.innerHTML = `<th class="p-2">Marca</th><th class="p-2">Modello Caldaia</th><th class="p-2">Potenza (kW)</th><th class="p-2">Tipo Gas</th><th class="p-2">Matricola / S/N</th><th class="p-2">Note</th><th class="p-2">Ubicazione</th><th class="p-2 text-center">Azione</th>`;
             } else {
                 headerTr.innerHTML = `<th class="p-2">Marca</th><th class="p-2">Modello</th><th class="p-2">Potenza</th><th class="p-2">Gas</th><th class="p-2">S/N UI</th><th class="p-2">S/N UE</th><th class="p-2">Ubicazione</th><th class="p-2 text-center">Azione</th>`;
             }
@@ -962,6 +1064,7 @@
             };
             reader.readAsDataURL(file);
         }
+
         function clearPhoto(index) {
             reportPhotos[index] = null;
             document.getElementById(`photo_file_${index}`).value = '';
@@ -997,7 +1100,6 @@
             showToast('Ripristinato logo predefinito.', 'info');
         }
 
-        // --- GESTIONE UTENTI & AUTENTICAZIONE FIREBASE ---
         function setLoginError(message) {
             document.getElementById('login-error-msg').innerText = message;
             document.getElementById('login-error').classList.remove('hidden');
@@ -1053,17 +1155,6 @@
             syncToPrint();
         }
 
-        function applyRolePermissions() {
-            if (!activeUser) return;
-            const isAdmin = activeUser.role === 'admin';
-            ['tab-btn-professional', 'tab-btn-base', 'btn-save-prereport', 'admin-assignment-box', 'th-tecnico-col', 'admin-tech-management-box', 'admin-logo-box'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.classList.toggle('hidden', !isAdmin);
-            });
-            if (isAdmin) loadUsersData();
-            switchTab('assigned-tasks');
-        }
-
         async function handleCreateUser(e) {
             e.preventDefault();
             if (!activeUser || activeUser.role !== 'admin') return;
@@ -1073,7 +1164,6 @@
             const role = document.getElementById('new_user_role').value;
 
             try {
-                // Nota: Per creare utenti programmaticamente senza scollegare l'admin corrente, l'ideale è usare Firebase Admin SDK (Backend) o creare un'istanza secondaria di Firebase Auth. Per semplicità frontend, creiamo il record su Firestore utente.
                 const cred = await window.FB.createUserWithEmailAndPassword(window.FB.auth, email, pass);
                 await window.FB.setDoc(window.FB.doc(window.FB.db, "users", cred.user.uid), { name, email, role });
                 document.querySelector('#admin-tech-management-box form').reset();
@@ -1118,7 +1208,6 @@
             });
         }
 
-        // --- GESTIONE INCARICHI (FIRESTORE) ---
         async function saveAsPreReport() {
             if (!activeUser || activeUser.role !== 'admin') return;
             const techUid = document.getElementById('assigned_technician_select').value;
@@ -1315,35 +1404,94 @@
             syncToPrint();
         }
 
-        function addAssetRow(data = {}) {
-            renderTableHeader();
-            const tbody = document.getElementById('assets-table-body');
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="p-1.5"><input type="text" value="${data.comp || 'Daikin'}" class="asset-comp w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
-                <td class="p-1.5"><input type="text" value="${data.modello || 'CX35V3B1'}" class="asset-modello w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
-                <td class="p-1.5"><input type="text" value="${data.potenza || '12000 BTU'}" class="asset-potenza w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
-                <td class="p-1.5"><input type="text" value="${data.gas || 'R32'}" class="asset-gas w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
-                <td class="p-1.5"><input type="text" value="${data.sn_ui || ''}" placeholder="S/N UI" class="asset-sn-ui w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
-                <td class="p-1.5"><input type="text" value="${data.sn_ue || ''}" placeholder="S/N UE" class="asset-sn-ue w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
-                <td class="p-1.5"><input type="text" value="${data.ubicazione || 'Soggiorno'}" class="asset-ubicazione w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
-                <td class="p-1.5 text-center"><button type="button" onclick="this.closest('tr').remove(); syncToPrint();" class="text-red-500"><i class="fas fa-trash"></i></button></td>
-            `;
-            tbody.appendChild(tr);
-            syncToPrint();
+// Sincronizzazione della tabella prodotti/apparecchiature per la stampa
+    const prtAssetsTbody = document.getElementById('prt_assets_tbody');
+    const prtSec2Title = document.getElementById('prt_section_2_title');
+    if (prtAssetsTbody) {
+        prtAssetsTbody.innerHTML = '';
+        const rows = document.querySelectorAll('#assets-table-body tr');
+        
+        if (prtSec2Title) {
+            prtSec2Title.innerText = currentReportMode === 'base' ? '2. Lista Prodotti in Consegna' : '1. Apparecchiature';
         }
 
-        function addExtraRow(data = {}) {
-            const tbody = document.getElementById('extra-table-body');
+        rows.forEach(tr => {
+            if (currentReportMode === 'base') {
+                const tipo = tr.querySelector('.asset-comp')?.value || '-';
+                const modello = tr.querySelector('.asset-modello')?.value || '-';
+                const qta = tr.querySelector('.asset-potenza')?.value || '-'; // Usiamo il campo potenza come quantità/misura nella base
+                const mat = tr.querySelector('.asset-gas')?.value || '-';     // Usiamo il campo gas come matricola/lotto nella base
+                const ubicazione = tr.querySelector('.asset-ubicazione')?.value || '-';
+                
+                prtAssetsTbody.innerHTML += `
+                    <tr>
+                        <td class="border border-slate-300 p-1 font-semibold">${tipo}</td>
+                        <td class="border border-slate-300 p-1">${modello}</td>
+                        <td class="border border-slate-300 p-1 text-center font-bold">${qta}</td>
+                        <td class="border border-slate-300 p-1 font-mono">${mat}</td>
+                        <td class="border border-slate-300 p-1">${ubicazione}</td>
+                    </tr>`;
+            } else {
+                const comp = tr.querySelector('.asset-comp')?.value || '-';
+                const modello = tr.querySelector('.asset-modello')?.value || '-';
+                const potenza = tr.querySelector('.asset-potenza')?.value || '-';
+                const gas = tr.querySelector('.asset-gas')?.value || '-';
+                const snUi = tr.querySelector('.asset-sn-ui')?.value || '';
+                const snUe = tr.querySelector('.asset-sn-ue')?.value || '';
+                const ubicazione = tr.querySelector('.asset-ubicazione')?.value || '-';
+                
+                prtAssetsTbody.innerHTML += `
+                    <tr>
+                        <td class="border border-slate-300 p-1 font-semibold">${comp}</td>
+                        <td class="border border-slate-300 p-1">${modello}</td>
+                        <td class="border border-slate-300 p-1">${potenza} / ${gas}</td>
+                        <td class="border border-slate-300 p-1 font-mono">UI: ${snUi}<br>UE: ${snUe}</td>
+                        <td class="border border-slate-300 p-1">${ubicazione}</td>
+                    </tr>`;
+            }
+        });
+    }
+
+        function addAssetRow(data = {}) {
+            const tbody = document.getElementById('assets-table-body');
+            if (!tbody) return;
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="p-1.5"><input type="text" value="${data.desc || ''}" class="extra-desc w-full p-1 border rounded text-xs" oninput="calculateExtraTotal(); syncToPrint();"></td>
-                <td class="p-1.5"><input type="number" step="0.01" value="${data.price || '0.00'}" class="extra-price w-full p-1 border rounded text-xs text-right" oninput="calculateExtraTotal(); syncToPrint();"></td>
-                <td class="p-1.5"><select class="extra-mode w-full p-1 border rounded text-xs"><option>Contanti</option><option>POS</option></select></td>
-                <td class="p-1 text-center"><button type="button" onclick="this.closest('tr').remove(); calculateExtraTotal();" class="text-red-500"><i class="fas fa-times"></i></button></td>
-            `;
+            tr.className = "border-b border-slate-100";
+
+            if (currentReportMode === 'base') {
+                tr.innerHTML = `
+                    <td class="p-1.5"><input type="text" value="${data.comp || ''}" placeholder="Es. Condizionatore / Accessorio" class="asset-comp w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.modello || ''}" placeholder="Modello" class="asset-modello w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.potenza || '1'}" placeholder="Q.tà" class="asset-potenza w-full p-1.5 border rounded text-xs text-center focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.gas || ''}" placeholder="Matricola / Lotto" class="asset-gas w-full p-1.5 border rounded text-xs font-mono focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.ubicazione || ''}" placeholder="Destinazione" class="asset-ubicazione w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5 text-center"><button type="button" onclick="this.closest('tr').remove(); syncToPrint();" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-trash-can"></i></button></td>
+                `;
+            } else if (currentReportMode === 'caldaia') {
+                tr.innerHTML = `
+                    <td class="p-1.5"><input type="text" value="${data.comp || ''}" placeholder="Marca" class="asset-comp w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.modello || ''}" placeholder="Modello" class="asset-modello w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.potenza || ''}" placeholder="kW" class="asset-potenza w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.gas || ''}" placeholder="Metano/GPL" class="asset-gas w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.sn_ui || ''}" placeholder="Matricola S/N" class="asset-sn-ui w-full p-1.5 border rounded text-xs font-mono focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.sn_ue || ''}" placeholder="Note" class="asset-sn-ue w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.ubicazione || ''}" placeholder="Locale" class="asset-ubicazione w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5 text-center"><button type="button" onclick="this.closest('tr').remove(); syncToPrint();" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-trash-can"></i></button></td>
+                `;
+            } else {
+                tr.innerHTML = `
+                    <td class="p-1.5"><input type="text" value="${data.comp || ''}" placeholder="Marca" class="asset-comp w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.modello || ''}" placeholder="Modello" class="asset-modello w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.potenza || ''}" placeholder="Potenza" class="asset-potenza w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.gas || ''}" placeholder="Gas" class="asset-gas w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.sn_ui || ''}" placeholder="S/N UI" class="asset-sn-ui w-full p-1.5 border rounded text-xs font-mono focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.sn_ue || ''}" placeholder="S/N UE" class="asset-sn-ue w-full p-1.5 border rounded text-xs font-mono focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5"><input type="text" value="${data.ubicazione || ''}" placeholder="Ubicazione" class="asset-ubicazione w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
+                    <td class="p-1.5 text-center"><button type="button" onclick="this.closest('tr').remove(); syncToPrint();" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-trash-can"></i></button></td>
+                `;
+            }
             tbody.appendChild(tr);
-            calculateExtraTotal();
+            syncToPrint();
         }
 
         function calculateExtraTotal() {
@@ -1356,28 +1504,37 @@
             const container = document.getElementById('checklist-container');
             if (!container) return;
             container.innerHTML = '';
-            const list = currentReportMode === 'base' ? CHECKLIST_BASE : CHECKLIST_PROFESSIONAL;
-            list.forEach((item, index) => {
-                container.innerHTML += `<div class="flex items-start gap-2 bg-slate-50 p-2 rounded border text-xs"><input type="checkbox" checked onchange="syncToPrint()" class="mt-0.5"><label class="text-slate-700 font-medium">${item}</label></div>`;
+            
+            let list = CHECKLIST_PROFESSIONAL;
+            if (currentReportMode === 'base') list = CHECKLIST_BASE;
+            if (currentReportMode === 'caldaia') list = CHECKLIST_CALDAIA;
+
+            list.forEach((item) => {
+                container.innerHTML += `
+                    <div class="flex items-start gap-2 bg-slate-50 p-2 rounded border text-xs">
+                        <input type="checkbox" checked onchange="syncToPrint()" class="mt-0.5">
+                        <label class="text-slate-700 font-medium">${item}</label>
+                    </div>`;
             });
+            syncToPrint();
         }
 
         function toggleAllChecklist(status) {
             document.querySelectorAll('#checklist-container input[type="checkbox"]').forEach(cb => cb.checked = status);
             syncToPrint();
         }
-function calcolaCO2Eq() {
-    const selectGas = document.getElementById('fgas_tipo_gas');
-    if (!selectGas) return;
-    const selectedOption = selectGas.options[selectGas.selectedIndex];
-    const gwp = parseFloat(selectedOption.getAttribute('data-gwp')) || 0;
-    const kg = parseFloat(document.getElementById('fgas_kg_carica').value) || 0;
-    
-    // Formula tonnellate CO2 equivalente = (kg * GWP) / 1000
-    const co2Eq = (kg * gwp) / 1000;
-    document.getElementById('fgas_co2_eq').value = co2Eq.toFixed(2) + ' t';
-    syncToPrint();
-}
+
+        function calcolaCO2Eq() {
+            const selectGas = document.getElementById('fgas_tipo_gas');
+            if (!selectGas) return;
+            const selectedOption = selectGas.options[selectGas.selectedIndex];
+            const gwp = parseFloat(selectedOption.getAttribute('data-gwp')) || 0;
+            const kg = parseFloat(document.getElementById('fgas_kg_carica').value) || 0;
+            
+            const co2Eq = (kg * gwp) / 1000;
+            document.getElementById('fgas_co2_eq').value = co2Eq.toFixed(2) + ' t';
+            syncToPrint();
+        }
 
         async function saveReport() {
             const reportData = {
@@ -1420,37 +1577,140 @@ function calcolaCO2Eq() {
         }
 
         function syncToPrint() {
-    document.getElementById('prt_doc_num').innerText = document.getElementById('doc_num').value || '-';
-    document.getElementById('prt_doc_date').innerText = 'Data: ' + formatDateToIT(document.getElementById('doc_date').value);
-    document.getElementById('prt_cliente_nome').innerText = document.getElementById('cliente_nome').value || '-';
-    document.getElementById('prt_cliente_indirizzo').innerText = document.getElementById('cliente_indirizzo').value || '-';
-    document.getElementById('prt_cliente_cf').innerText = document.getElementById('cliente_cf').value || '-';
-    document.getElementById('prt_cliente_email').innerText = document.getElementById('cliente_email').value || '-';
-    document.getElementById('prt_rivenditore').innerText = document.getElementById('rivenditore').value || '-';
-    document.getElementById('prt_num_scontrino').innerText = document.getElementById('num_scontrino').value || '-';
-    document.getElementById('prt_totale_acquisto').innerText = document.getElementById('totale_acquisto').value ? '€ ' + document.getElementById('totale_acquisto').value : '-';
-    document.getElementById('prt_tipo_txt').innerText = document.getElementById('tipo_intervento').value || '-';
-    document.getElementById('prt_relazione').innerText = document.getElementById('relazione_tecnica').value || '-';
-    document.getElementById('prt_nome_tecnico').innerText = document.getElementById('nome_tecnico').value || '-';
-    document.getElementById('prt_nome_cliente_sub').innerText = document.getElementById('cliente_nome').value || '-';
+            document.getElementById('prt_doc_num').innerText = document.getElementById('doc_num').value || '-';
+            document.getElementById('prt_doc_date').innerText = 'Data: ' + formatDateToIT(document.getElementById('doc_date').value);
+            document.getElementById('prt_cliente_nome').innerText = document.getElementById('cliente_nome').value || '-';
+            document.getElementById('prt_cliente_indirizzo').innerText = document.getElementById('cliente_indirizzo').value || '-';
+            document.getElementById('prt_cliente_cf').innerText = document.getElementById('cliente_cf').value || '-';
+            document.getElementById('prt_cliente_email').innerText = document.getElementById('cliente_email').value || '-';
+            document.getElementById('prt_rivenditore').innerText = document.getElementById('rivenditore').value || '-';
+            document.getElementById('prt_num_scontrino').innerText = document.getElementById('num_scontrino').value || '-';
+            document.getElementById('prt_totale_acquisto').innerText = document.getElementById('totale_acquisto').value ? '€ ' + document.getElementById('totale_acquisto').value : '-';
+            document.getElementById('prt_tipo_txt').innerText = document.getElementById('tipo_intervento').value || '-';
+            document.getElementById('prt_relazione').innerText = document.getElementById('relazione_tecnica').value || '-';
+            document.getElementById('prt_nome_tecnico').innerText = document.getElementById('nome_tecnico').value || '-';
+            document.getElementById('prt_nome_cliente_sub').innerText = document.getElementById('cliente_nome').value || '-';
 
-    // --- AGGIUNTA: Sincronizzazione campi F-GAS & Professionali ---
-    if (document.getElementById('prt_fgas_azoto')) {
-        document.getElementById('prt_fgas_azoto').innerText = document.getElementById('fgas_azoto').value || '-';
-        document.getElementById('prt_fgas_vuoto').innerText = document.getElementById('fgas_vuoto').value || '-';
-        
-        const tipoGas = document.getElementById('fgas_tipo_gas').value;
-        const kgCarica = document.getElementById('fgas_kg_carica').value;
-        document.getElementById('prt_fgas_gas_info').innerText = `${tipoGas} (${kgCarica} kg)`;
-        
-        document.getElementById('prt_fgas_co2').innerText = document.getElementById('fgas_co2_eq').value || '-';
-        document.getElementById('prt_fgas_ampere').innerText = document.getElementById('fgas_ampere').value || '-';
-        document.getElementById('prt_fgas_pressione').innerText = document.getElementById('fgas_pressione').value || '-';
-        document.getElementById('prt_fgas_temp').innerText = document.getElementById('fgas_temp_split').value || '-';
-        document.getElementById('prt_fgas_condensa').innerText = document.getElementById('fgas_condensa').value || '-';
-        document.getElementById('prt_fgas_patentino').innerText = document.getElementById('fgas_patentino').value || '-';
-    }
-}
+            // Sincronizzazione della tabella prodotti/apparecchiature per la stampa
+            const prtAssetsTbody = document.getElementById('prt_assets_tbody');
+            const prtSec2Title = document.getElementById('prt_section_2_title');
+            if (prtAssetsTbody) {
+                prtAssetsTbody.innerHTML = '';
+                const rows = document.querySelectorAll('#assets-table-body tr');
+                
+                if (prtSec2Title) {
+                    prtSec2Title.innerText = currentReportMode === 'base' ? '2. Lista Prodotti in Consegna' : '1. Apparecchiature';
+                }
+
+                rows.forEach(tr => {
+                    if (currentReportMode === 'base') {
+                        const tipo = tr.querySelector('.asset-comp')?.value || '-';
+                        const modello = tr.querySelector('.asset-modello')?.value || '-';
+                        const qta = tr.querySelector('.asset-potenza')?.value || '-';
+                        const mat = tr.querySelector('.asset-gas')?.value || '-';
+                        const ubicazione = tr.querySelector('.asset-ubicazione')?.value || '-';
+                        
+                        prtAssetsTbody.innerHTML += `
+                            <tr>
+                                <td class="border border-slate-300 p-1 font-semibold">${tipo}</td>
+                                <td class="border border-slate-300 p-1">${modello}</td>
+                                <td class="border border-slate-300 p-1 text-center font-bold">${qta}</td>
+                                <td class="border border-slate-300 p-1 font-mono">${mat}</td>
+                                <td class="border border-slate-300 p-1">${ubicazione}</td>
+                            </tr>`;
+                    } else {
+                        const comp = tr.querySelector('.asset-comp')?.value || '-';
+                        const modello = tr.querySelector('.asset-modello')?.value || '-';
+                        const potenza = tr.querySelector('.asset-potenza')?.value || '-';
+                        const gas = tr.querySelector('.asset-gas')?.value || '-';
+                        const snUi = tr.querySelector('.asset-sn-ui')?.value || '';
+                        const snUe = tr.querySelector('.asset-sn-ue')?.value || '';
+                        const ubicazione = tr.querySelector('.asset-ubicazione')?.value || '-';
+                        
+                        prtAssetsTbody.innerHTML += `
+                            <tr>
+                                <td class="border border-slate-300 p-1 font-semibold">${comp}</td>
+                                <td class="border border-slate-300 p-1">${modello}</td>
+                                <td class="border border-slate-300 p-1">${potenza} / ${gas}</td>
+                                <td class="border border-slate-300 p-1 font-mono">UI: ${snUi}<br>UE: ${snUe}</td>
+                                <td class="p-1 border border-slate-300">${ubicazione}</td>
+                            </tr>`;
+                    }
+                });
+            }
+
+            // Sincronizzazione dinamica della Checklist per la stampa
+            const prtChecklistUl = document.getElementById('prt_checklist_ul');
+            const prtChecklistBadge = document.getElementById('prt_checklist_badge');
+            
+            if (prtChecklistUl) {
+                prtChecklistUl.innerHTML = '';
+                let activeList = CHECKLIST_PROFESSIONAL;
+                if (currentReportMode === 'base') activeList = CHECKLIST_BASE;
+                if (currentReportMode === 'caldaia') activeList = CHECKLIST_CALDAIA;
+
+                const checkboxes = document.querySelectorAll('#checklist-container input[type="checkbox"]');
+                let checkedCount = 0;
+
+                activeList.forEach((item, index) => {
+                    const isChecked = checkboxes[index] ? checkboxes[index].checked : true;
+                    if (isChecked) checkedCount++;
+                    
+                    prtChecklistUl.innerHTML += `
+                        <li class="flex items-center gap-1.5">
+                            <i class="fas ${isChecked ? 'fa-check text-green-600' : 'fa-xmark text-red-500'}"></i>
+                            <span class="${isChecked ? '' : 'line-through text-slate-400'}">${item}</span>
+                        </li>`;
+                });
+
+                if (prtChecklistBadge) {
+                    const percentage = Math.round((checkedCount / activeList.length) * 100);
+                    prtChecklistBadge.innerText = percentage + '% OK';
+                }
+            }
+
+            // Sincronizzazione dinamica della Sezione 3
+            const titSez3 = document.getElementById('prt-titolo-sez3');
+            const ulSez3 = document.getElementById('prt-ul-sez3');
+
+            if (currentReportMode === 'caldaia') {
+                if (titSez3) titSez3.innerText = "3. Verifiche Combustione & Impianto Termico";
+                if (ulSez3) {
+                    ulSez3.innerHTML = `
+                        <li><strong>Tenuta Impianto Gas:</strong> ${document.getElementById('term_tenuta_gas')?.value || '-'}</li>
+                        <li><strong>Alimentazione Gas:</strong> ${document.getElementById('term_tipo_gas')?.value || '-'}</li>
+                        <li><strong>Pressione Idraulica:</strong> ${document.getElementById('term_pressione_idr')?.value || '-'}</li>
+                        <li><strong>Tiraggio Canna Fumaria:</strong> ${document.getElementById('term_tiraggio')?.value || '-'}</li>
+                        <li><strong>CO in Combustione:</strong> ${document.getElementById('term_co_ppm')?.value || '-'}</li>
+                        <li><strong>CO2 / O2 Fumi:</strong> ${document.getElementById('term_co2_fumi')?.value || '-'}</li>
+                        <li><strong>Rendimento Termico:</strong> <span class="font-bold text-green-700">${document.getElementById('term_rendimento')?.value || '-'}</span></li>
+                        <li><strong>Temp. Fumi / Ambiente:</strong> ${document.getElementById('term_temp_fumi')?.value || '-'}</li>
+                        <li><strong>Catasto Impianti:</strong> <span class="font-mono font-bold">${document.getElementById('term_codice_catasto')?.value || '-'}</span></li>
+                        <li><strong>Bollino Termico:</strong> ${document.getElementById('term_bollino')?.value || '-'}</li>
+                    `;
+                }
+            } else if (currentReportMode === 'professional') {
+                if (titSez3) titSez3.innerText = "3. Verifiche F-GAS & Elettriche";
+                if (ulSez3) {
+                    const tipoGas = document.getElementById('fgas_tipo_gas')?.value || '-';
+                    const kgCarica = document.getElementById('fgas_kg_carica')?.value || '0';
+                    ulSez3.innerHTML = `
+                        <li><strong>Tenuta Azoto:</strong> ${document.getElementById('fgas_azoto')?.value || '-'}</li>
+                        <li><strong>Prova Vuoto:</strong> ${document.getElementById('fgas_vuoto')?.value || '-'}</li>
+                        <li><strong>Refrigerante / Carica:</strong> ${tipoGas} (${kgCarica} kg)</li>
+                        <li><strong>Tonnellate CO2 Eq.:</strong> ${document.getElementById('fgas_co2_eq')?.value || '-'}</li>
+                        <li><strong>Assorbimento Elettrico:</strong> ${document.getElementById('fgas_ampere')?.value || '-'}</li>
+                        <li><strong>Pressioni Linee:</strong> ${document.getElementById('fgas_pressione')?.value || '-'}</li>
+                        <li><strong>Temp. & Delta-T:</strong> ${document.getElementById('fgas_temp_split')?.value || '-'}</li>
+                        <li><strong>Drenaggio Condensa:</strong> ${document.getElementById('fgas_condensa')?.value || '-'}</li>
+                        <li><strong>Patentino F-GAS:</strong> <span class="font-mono font-bold text-iltBlue">${document.getElementById('fgas_patentino')?.value || '-'}</span></li>
+                    `;
+                }
+            } else {
+                if (titSez3) titSez3.innerText = "3. Note Tecniche / Consegna";
+                if (ulSez3) ulSez3.innerHTML = `<li>Nessun parametro strumentale richiesto per la modalità Base.</li>`;
+            }
+        }
 
         function showToast(msg, type = 'info') {
             const container = document.getElementById('toast-container');
@@ -1501,57 +1761,33 @@ function calcolaCO2Eq() {
                 updateSig(canvasId);
                 e.preventDefault();
             }
-function gestisciTipoIntervento() {
-    const selectElement = document.getElementById('tipo_intervento');
-    if (!selectElement) return;
-    
-    const tipo = selectElement.value;
-    const sezioneFgas = document.getElementById('sezione-parametri-fgas');
-    const fgasPrintBox = document.getElementById('prt-box-fgas');
-    const relazioneInput = document.getElementById('relazione_tecnica');
 
-    // Controlliamo se la stringa contiene "Sopralluogo" (case-insensitive o esatto)
-    const isSopralluogo = tipo.toLowerCase().includes('sopralluogo');
+            function gestisciTipoIntervento() {
+                const selectElement = document.getElementById('tipo_intervento');
+                if (!selectElement) return;
+                
+                const tipo = selectElement.value;
+                const relazioneInput = document.getElementById('relazione_tecnica');
+                const isSopralluogo = tipo.toLowerCase().includes('sopralluogo');
 
-    if (isSopralluogo) {
-        // Nascondiamo visivamente la sezione F-GAS
-        if (sezioneFgas) {
-            sezioneFgas.style.display = 'none'; // Usiamo style.display per essere sicuri al 100% che sparisca
-        }
-        if (fgasPrintBox) {
-            fgasPrintBox.style.display = 'none';
-        }
-        
-        // Inseriamo il testo automatico se vuoto
-        if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
-            relazioneInput.value = "Sopralluogo eseguito per verifica fattibilità installazione. Verificata predisposizione elettrica, posizionamento unità interna/esterna e percorso scarico condensa.";
-        }
-    } else {
-        // Mostriamo nuovamente la sezione F-GAS per gli altri interventi
-        if (sezioneFgas) {
-            sezioneFgas.style.display = 'block';
-        }
-        if (fgasPrintBox) {
-            fgasPrintBox.style.display = 'block';
-        }
-    }
+                if (isSopralluogo) {
+                    if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
+                        relazioneInput.value = "Sopralluogo eseguito per verifica fattibilità installazione. Verificata predisposizione elettrica/gas, posizionamento unità e percorso scarico condensa/fumi.";
+                    }
+                } else if (tipo.toLowerCase().includes('manutenzione')) {
+                    if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
+                        relazioneInput.value = "Eseguita pulizia e sanificazione filtri / bruciatore. Verifica drenaggio ed esecuzione test di funzionamento termico.";
+                    }
+                } else if (tipo.toLowerCase().includes('installazione')) {
+                    if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
+                        relazioneInput.value = "Installazione completata a regola d'arte. Eseguita prova di tenuta e collaudo funzionale iniziale.";
+                    }
+                }
 
-    // Template per manutenzione o installazione
-    if (tipo.toLowerCase().includes('manutenzione ordinaria')) {
-        if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
-            relazioneInput.value = "Eseguita pulizia e sanificazione filtri unità interna. Verifica drenaggio condensa ed esecuzione test di funzionamento termico.";
-        }
-    } else if (tipo.toLowerCase().includes('installazione')) {
-        if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
-            relazioneInput.value = "Installazione completata a regola d'arte. Eseguita prova di tenuta con azoto a 42 bar, vuoto di 30 min e collaudo con rilievo parametri Delta-T.";
-        }
-    }
-
-    // Sincronizza l'anteprima di stampa
-    if (typeof syncToPrint === 'function') {
-        syncToPrint();
-    }
-}
+                if (typeof syncToPrint === 'function') {
+                    syncToPrint();
+                }
+            }
 
             function stopDraw() { drawing = false; }
 
