@@ -1028,11 +1028,17 @@
         function applyRolePermissions() {
             if (!activeUser) return;
             const isAdmin = activeUser.role === 'admin';
+            
+            // Elementi visibili SOLO all'amministratore
             ['tab-btn-professional', 'tab-btn-caldaia', 'tab-btn-base', 'btn-save-prereport', 'admin-assignment-box', 'th-tecnico-col', 'admin-tech-management-box', 'admin-logo-box'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.toggle('hidden', !isAdmin);
             });
-            if (isAdmin) loadUsersData();
+
+            // Se l'utente è un tecnico, carichiamo la schermata dei suoi incarichi assegnati
+            if (isAdmin) {
+                loadUsersData();
+            }
             switchTab('assigned-tasks');
         }
 
@@ -1281,6 +1287,8 @@
 
         function loadAssignedTasks() {
             let tasks = [...globalPreReports];
+            
+            // Se l'utente loggato è un tecnico, filtra solo i suoi incarichi
             if (activeUser && activeUser.role === 'tecnico') {
                 tasks = globalPreReports.filter(p => p.assigned_uid === activeUser.uid);
             }
@@ -1290,6 +1298,7 @@
 
             const tbody = document.getElementById('tasks-tbody');
             tbody.innerHTML = '';
+            
             if (tasks.length === 0) {
                 const colSpan = (activeUser && activeUser.role === 'admin') ? 7 : 6;
                 tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-6 text-center text-slate-400">Nessun incarico presente nel Cloud.</td></tr>`;
@@ -1305,20 +1314,22 @@
                 let actionButtonsHtml = '';
 
                 if (activeUser.role === 'admin') {
+                    // Azioni disponibili per l'Admin
                     actionButtonsHtml = `
                         <div class="flex items-center justify-center gap-1">
                             <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 border">${currentStatus}</span>
-                            <button onclick="openPreReportForCompletion('${t.id}')" class="p-1 bg-amber-500 text-slate-900 rounded"><i class="fas fa-edit"></i></button>
-                            <button onclick="openTrackingModal('${t.id}')" class="p-1 bg-iltBlue text-white rounded"><i class="fas fa-route"></i></button>
-                            <button onclick="deletePreReportCloud('${t.id}')" class="p-1 bg-red-600 text-white rounded"><i class="fas fa-trash"></i></button>
+                            <button onclick="openPreReportForCompletion('${t.id}')" class="p-1 bg-amber-500 text-slate-900 rounded" title="Modifica"><i class="fas fa-edit"></i></button>
+                            <button onclick="openTrackingModal('${t.id}')" class="p-1 bg-iltBlue text-white rounded" title="Traccia"><i class="fas fa-route"></i></button>
+                            <button onclick="deletePreReportCloud('${t.id}')" class="p-1 bg-red-600 text-white rounded" title="Elimina"><i class="fas fa-trash"></i></button>
                         </div>`;
                 } else {
+                    // Azioni dinamiche per il Tecnico sul campo
                     if (currentStatus === 'assegnato') {
-                        actionButtonsHtml = `<button onclick="updateTaskStatus('${t.id}', 'in_viaggio')" class="px-3 py-1.5 bg-blue-600 text-white font-bold rounded text-xs">Parti</button>`;
+                        actionButtonsHtml = `<button onclick="updateTaskStatus('${t.id}', 'in_viaggio')" class="px-3 py-1.5 bg-blue-600 text-white font-bold rounded text-xs shadow hover:bg-blue-700">In Viaggio</button>`;
                     } else if (currentStatus === 'in_viaggio') {
-                        actionButtonsHtml = `<button onclick="updateTaskStatus('${t.id}', 'in_lavorazione')" class="px-3 py-1.5 bg-amber-500 text-slate-900 font-bold rounded text-xs">Sul Posto</button>`;
+                        actionButtonsHtml = `<button onclick="updateTaskStatus('${t.id}', 'in_lavorazione')" class="px-3 py-1.5 bg-amber-500 text-slate-900 font-bold rounded text-xs shadow hover:bg-amber-600">Sul Posto</button>`;
                     } else {
-                        actionButtonsHtml = `<button onclick="openPreReportForCompletion('${t.id}')" class="px-3 py-1.5 bg-green-600 text-white font-bold rounded text-xs">Compila</button>`;
+                        actionButtonsHtml = `<button onclick="openPreReportForCompletion('${t.id}')" class="px-3 py-1.5 bg-green-600 text-white font-bold rounded text-xs shadow hover:bg-green-700">Compila Report</button>`;
                     }
                 }
 
