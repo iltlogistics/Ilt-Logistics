@@ -3,19 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ILT Logistics S.r.l. - Gestione Report Interventi HVAC & Cloud</title>
+    <title>ILT Logistics S.r.l. - Gestione Report Interventi HVAC & Cloud (Firebase)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- html2pdf.js CDN for Direct PDF Export -->
+    <!-- html2pdf.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, getDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CONFIGURAZIONE FIREBASE (Sostituisci con le tue credenziali del progetto Firebase)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA4y7w91L1OPq2_vKxWICGaFE3d4ID02GU",
+  authDomain: "iltlogisitcssrl.firebaseapp.com",
+  projectId: "iltlogisitcssrl",
+  storageBucket: "iltlogisitcssrl.firebasestorage.app",
+  messagingSenderId: "872541639268",
+  appId: "1:872541639268:web:dfc2fd1d019bca46c0c571"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Esponiamo gli oggetti globalmente per l'app
+        window.FB = { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, getDoc, query, where, onSnapshot };
+        
+        // Avvio controllo auth al caricamento
+        window.initFirebaseApp();
+    </script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -36,36 +58,24 @@
             body { background: white; color: black; font-size: 11pt; }
             @page { margin: 10mm; size: A4 portrait; }
         }
-        .canvas-container {
-            touch-action: none;
-        }
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
+        .canvas-container { touch-action: none; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800 font-sans flex flex-col">
 
     <!-- MODALE DI LOGIN -->
     <div id="login-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 no-print">
-        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-6 transform transition-all">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full p-6 space-y-6">
             <div class="text-center space-y-2">
                 <div class="inline-flex p-3 bg-red-50 rounded-2xl text-iltRed mb-1">
                     <i class="fas fa-user-lock text-3xl"></i>
                 </div>
-                <h2 class="text-xl font-black text-slate-800 tracking-tight">Accesso Riservato Cloud</h2>
-                <p class="text-xs text-slate-500">Inserisci le credenziali username e password per accedere.</p>
+                <h2 class="text-xl font-black text-slate-800 tracking-tight">Accesso Cloud Firebase</h2>
+                <p class="text-xs text-slate-500">Accedi con le tue credenziali aziendali registrate su Firebase Auth.</p>
             </div>
 
             <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
@@ -75,12 +85,12 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Username</label>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Email Aziendale</label>
                     <div class="relative">
                         <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                            <i class="fas fa-user text-xs"></i>
+                            <i class="fas fa-envelope text-xs"></i>
                         </span>
-                        <input type="text" id="login_username" autocomplete="username" required placeholder="Inserisci username" class="w-full text-xs pl-9 p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        <input type="email" id="login_email" autocomplete="email" required placeholder="nome@iltlogistics.it" class="w-full text-xs pl-9 p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-iltBlue focus:outline-none">
                     </div>
                 </div>
 
@@ -95,7 +105,7 @@
                 </div>
 
                 <button type="submit" class="w-full py-2.5 bg-iltRed hover:bg-red-700 text-white font-bold text-xs rounded-lg shadow-lg transition flex items-center justify-center gap-2">
-                    <i class="fas fa-right-to-bracket"></i> Accedi
+                    <i class="fas fa-right-to-bracket"></i> Accedi al Cloud
                 </button>
             </form>
         </div>
@@ -137,9 +147,9 @@
                 <div>
                     <h1 class="text-base font-bold tracking-tight leading-tight flex items-center gap-2">
                         <span id="appHeaderCompanyName">ILT Logistics S.r.l.</span>
-                        <span class="text-[10px] bg-iltRed text-white px-2 py-0.5 rounded font-mono uppercase tracking-wider">CLOUD HVAC</span>
+                        <span class="text-[10px] bg-iltRed text-white px-2 py-0.5 rounded font-mono uppercase tracking-wider">HVAC & CLOUD</span>
                     </h1>
-                    <p class="text-[11px] text-slate-300">Servizi Tecnici, Impiantistica & Assistenza</p>
+                    <p class="text-[11px] text-slate-300">Servizi Tecnici, Impiantistica & Assistenza Cloud</p>
                 </div>
             </div>
 
@@ -184,7 +194,7 @@
                 <i class="fas fa-clipboard-list text-2xl text-amber-600"></i>
                 <div>
                     <h3 id="tasks-banner-title" class="text-sm font-bold text-amber-900">Pre-Report in Cloud</h3>
-                    <p id="tasks-banner-desc" class="text-xs text-amber-700">Sincronizzazione in tempo reale tra amministrazione e tecnici in cantiere.</p>
+                    <p id="tasks-banner-desc" class="text-xs text-amber-700">Gestione centralizzata e sincrona degli incarichi tramite Firestore.</p>
                 </div>
             </div>
 
@@ -246,10 +256,10 @@
                         <i class="fas fa-robot"></i> Relazione AI
                     </button>
                     <button type="button" id="btn-save-prereport" onclick="saveAsPreReport()" class="hidden px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
-                        <i class="fas fa-paper-plane"></i> Assegna al Cloud
+                        <i class="fas fa-paper-plane"></i> Assegna Incarico Cloud
                     </button>
                     <button type="button" onclick="saveReport()" class="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
-                        <i class="fas fa-floppy-disk"></i> Salva Storico
+                        <i class="fas fa-floppy-disk"></i> Salva Storico Cloud
                     </button>
                     <button type="button" onclick="exportPDF()" class="px-3.5 py-1.5 bg-iltRed hover:bg-red-700 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 shadow transition">
                         <i class="fas fa-file-pdf"></i> PDF
@@ -380,7 +390,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Drenaggio Condensa</label>
-                            <input type="text" id="fgas_condensa" value="Test Flusso Ok per Gravità" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            <input type="text" id="fgas_condensa" value="Test Flusso Ok per Gravità" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">N° Patentino F-GAS</label>
@@ -471,7 +481,6 @@
                     </h2>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <!-- Foto 1-4 -->
                         <div class="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-2 text-center">
                             <div class="h-32 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center overflow-hidden bg-white relative cursor-pointer" onclick="triggerPhotoUpload(1)">
                                 <img id="photo_preview_1" class="w-full h-full object-cover hidden" alt="Foto 1">
@@ -657,9 +666,9 @@
                 <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                     <div>
                         <h2 class="text-base font-bold text-iltDark flex items-center gap-2">
-                            <i class="fas fa-boxes-packing text-iltRed"></i> Storico Interventi
+                            <i class="fas fa-boxes-packing text-iltRed"></i> Storico Interventi Cloud
                         </h2>
-                        <p class="text-xs text-slate-500">Report chiusi e salvati.</p>
+                        <p class="text-xs text-slate-500">Report chiusi sincronizzati su Firestore.</p>
                     </div>
                     <span id="history-total-count" class="text-xs bg-slate-100 border px-3 py-1 rounded-full font-bold text-slate-700">0 Report</span>
                 </div>
@@ -687,18 +696,18 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <div id="admin-tech-management-box" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <h2 class="text-sm font-bold text-iltDark border-b border-slate-100 pb-2.5 flex items-center gap-2">
-                        <i class="fas fa-users-gear text-iltRed"></i> Gestione Utenti (Tecnici e Amministratori)
+                        <i class="fas fa-users-gear text-iltRed"></i> Gestione Utenti (Firebase Auth)
                     </h2>
                     <form onsubmit="handleCreateUser(event)" class="space-y-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                        <h3 class="text-xs font-bold text-slate-700 uppercase"><i class="fas fa-user-plus text-iltBlue mr-1"></i> Crea Nuovo Profilo</h3>
+                        <h3 class="text-xs font-bold text-slate-700 uppercase"><i class="fas fa-user-plus text-iltBlue mr-1"></i> Registra Nuovo Operatore</h3>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-[11px] font-semibold text-slate-600 mb-1">Nome e Cognome</label>
                                 <input type="text" id="new_user_name" required placeholder="Es. Mario Rossi" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Username</label>
-                                <input type="text" id="new_user_username" required placeholder="Es. m.rossi" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none">
+                                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Email</label>
+                                <input type="email" id="new_user_email" required placeholder="mario@iltlogistics.it" class="w-full text-xs border border-slate-300 rounded-lg p-2 focus:outline-none">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
@@ -715,20 +724,19 @@
                             </div>
                         </div>
                         <button type="submit" class="w-full py-2 bg-iltBlue hover:bg-blue-800 text-white font-bold text-xs rounded-lg transition shadow flex items-center justify-center gap-1.5">
-                            <i class="fas fa-user-plus"></i> Crea Profilo
+                            <i class="fas fa-user-plus"></i> Registra su Firebase
                         </button>
                     </form>
 
                     <div class="space-y-2">
-                        <h3 class="text-xs font-bold text-slate-700 uppercase">Utenti Registrati</h3>
+                        <h3 class="text-xs font-bold text-slate-700 uppercase">Operatori Abilitati</h3>
                         <div class="border border-slate-200 rounded-lg overflow-hidden">
                             <table class="w-full text-left text-xs min-w-[500px]">
                                 <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-[10px]">
                                     <tr>
                                         <th class="p-2">Nome</th>
-                                        <th class="p-2">Username</th>
+                                        <th class="p-2">Email</th>
                                         <th class="p-2">Ruolo</th>
-                                        <th class="p-2 text-center">Azione</th>
                                     </tr>
                                 </thead>
                                 <tbody id="technicians-tbody" class="divide-y divide-slate-100"></tbody>
@@ -766,35 +774,15 @@
         </section>
     </main>
 
-    <!-- JS LOGIC + FIREBASE -->
+    <!-- JS LOGIC FIREBASE -->
     <script>
-        // --- CONFIGURAZIONE FIREBASE ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyAarWuuFLMi0gB4KGKKru-_FScXyyWkVS4",
-            authDomain: "ilt-logistcs-srl.firebaseapp.com",
-            databaseURL: "https://ilt-logistcs-srl-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "ilt-logistcs-srl",
-            storageBucket: "ilt-logistcs-srl.firebasestorage.app",
-            messagingSenderId: "737807115782",
-            appId: "1:737807115782:web:45ebb3a26fc8acbed64587",
-            measurementId: "G-P0F52XS0DY"
-        };
-
-        // Inizializza Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-        const USERS_COLLECTION = 'users';
-        let prereportsUnsubscribe = null;
-        let usersUnsubscribe = null;
-        let globalPreReports = [];
-        let usersCache = [];
-
         const RAW_SVG_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 85" width="340" height="85"><defs><linearGradient id="gR" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff2e43"/><stop offset="50%" stop-color="#d61124"/><stop offset="100%" stop-color="#9b000e"/></linearGradient><linearGradient id="gD" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4a5157"/><stop offset="60%" stop-color="#2a2e33"/><stop offset="100%" stop-color="#15181b"/></linearGradient><linearGradient id="gB" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#003580"/><stop offset="50%" stop-color="#004aad"/><stop offset="100%" stop-color="#0066ff"/></linearGradient><radialGradient id="fG" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff" stop-opacity="1"/><stop offset="40%" stop-color="#ffffff" stop-opacity="0.8"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs><path d="M 12 35 C -5 18, 2 52, 28 68 C 68 84, 180 80, 295 52 C 235 73, 80 78, 32 63 C 14 53, 16 32, 28 36 Z" fill="url(#gB)"/><path d="M 22 35 C 8 24, 10 48, 32 61 C 72 75, 192 70, 305 46 C 245 65, 88 69, 38 56 C 22 48, 24 33, 36 36 Z" fill="url(#gR)"/><polygon points="68,14 88,14 62,68 42,68" fill="url(#gR)"/><circle cx="67" cy="15" r="9" fill="url(#fG)"/><path d="M 67 4 L 67 26 M 56 15 L 78 15 M 59 7 L 75 23 M 59 23 L 75 7" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/><polygon points="85,16 122,16 116,26 104,26 87,68 69,68 82,35 74,35 79,26 88,26" fill="url(#gD)"/><polygon points="108,36 132,36 118,68 101,68" fill="url(#gD)" opacity="0.9"/><text x="135" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="900" font-style="italic" font-size="38" fill="url(#gB)" letter-spacing="-1">Logistics</text><text x="282" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="700" font-style="italic" font-size="19" fill="url(#gB)">srl</text></svg>`;
 
         let activeUser = null;
         let currentReportMode = 'professional';
         let reportPhotos = { 1: null, 2: null, 3: null, 4: null };
+        let globalPreReports = [];
+        let usersCache = [];
 
         const CHECKLIST_PROFESSIONAL = [
             "Prova di tenuta con azoto (minimo 42 bar) superata",
@@ -818,7 +806,34 @@
             "Consegna libretto uso/manutenzione e istruzioni al cliente"
         ];
 
-        let checklistState = new Array(CHECKLIST_PROFESSIONAL.length).fill(true);
+        window.initFirebaseApp = function() {
+            window.FB.onAuthStateChanged(window.FB.auth, async (user) => {
+                if (user) {
+                    // Recuperiamo il ruolo dell'utente da Firestore (collezione 'users')
+                    const userDocRef = window.FB.doc(window.FB.db, "users", user.uid);
+                    const userDoc = await window.FB.getDoc(userDocRef);
+                    if (userDoc.exists()) {
+                        const data = userDoc.data();
+                        activeUser = { uid: user.uid, email: user.email, name: data.name, role: data.role };
+                    } else {
+                        activeUser = { uid: user.uid, email: user.email, name: user.email, role: 'tecnico' };
+                    }
+                    applyUserSession();
+                } else {
+                    activeUser = null;
+                    document.getElementById('login-modal').classList.remove('hidden');
+                    document.getElementById('user-session-badge').classList.add('hidden');
+                }
+            });
+
+            initLogo();
+            initDateAndDoc();
+            setupCanvas('canvas-tecnico');
+            setupCanvas('canvas-cliente');
+            renderChecklist();
+            addAssetRow();
+            addExtraRow();
+        }
 
         function formatDateToIT(dateString) {
             if (!dateString) return '-';
@@ -859,7 +874,6 @@
                 if (fgasFormSection) fgasFormSection.classList.add('hidden');
                 if (fgasPrintBox) fgasPrintBox.classList.add('hidden');
                 tipoInterventoSelect.innerHTML = `<option>Consegna Base</option><option>Consegna e incasso</option><option>Ritiro Raee</option>`;
-                checklistState = new Array(CHECKLIST_BASE.length).fill(true);
             } else {
                 if (titleBadge) titleBadge.innerText = "MODALITÀ: PROFESSIONAL";
                 if (section2Title) section2Title.innerText = "2. Censimento Apparecchiature & S/N";
@@ -867,7 +881,6 @@
                 if (fgasFormSection) fgasFormSection.classList.remove('hidden');
                 if (fgasPrintBox) fgasPrintBox.classList.remove('hidden');
                 tipoInterventoSelect.innerHTML = `<option>Installazione & Collaudo Climatizzatore</option><option>Manutenzione Ordinaria / Pulizia Filtri</option>`;
-                checklistState = new Array(CHECKLIST_PROFESSIONAL.length).fill(true);
             }
             document.getElementById('assets-table-body').innerHTML = '';
             renderTableHeader();
@@ -915,187 +928,73 @@
             const navContainer = document.getElementById('appHeaderLogoContainer');
             const prtContainer = document.getElementById('prt_logo_container');
             const setContainer = document.getElementById('settingsLogoContainer');
-            if (customLogo) {
-                const html = `<img src="${customLogo}" class="h-8 w-auto object-contain">`;
-                if (navContainer) navContainer.innerHTML = html;
-                if (prtContainer) prtContainer.innerHTML = html;
-                if (setContainer) setContainer.innerHTML = html;
-            } else {
-                if (navContainer) navContainer.innerHTML = RAW_SVG_LOGO;
-                if (prtContainer) prtContainer.innerHTML = RAW_SVG_LOGO;
-                if (setContainer) setContainer.innerHTML = RAW_SVG_LOGO;
-            }
+            const html = customLogo ? `<img src="${customLogo}" class="h-8 w-auto object-contain">` : RAW_SVG_LOGO;
+            [navContainer, prtContainer, setContainer].forEach(c => { if(c) c.innerHTML = html; });
         }
 
-        // --- GESTIONE UTENTI & AUTENTICAZIONE VIA USERNAME ---
+        function handleLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                localStorage.setItem('ilt_custom_logo', evt.target.result);
+                initLogo();
+                showToast('Logo aziendale aggiornato!', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function resetDefaultLogo() {
+            localStorage.removeItem('ilt_custom_logo');
+            initLogo();
+            showToast('Ripristinato logo predefinito.', 'info');
+        }
+
+        // --- GESTIONE UTENTI & AUTENTICAZIONE FIREBASE ---
         function setLoginError(message) {
             document.getElementById('login-error-msg').innerText = message;
             document.getElementById('login-error').classList.remove('hidden');
         }
 
-        async function handleCreateUser(e) {
-            e.preventDefault();
-            if (!activeUser || activeUser.role !== 'admin') return;
-            const name = document.getElementById('new_user_name').value.trim();
-            const username = document.getElementById('new_user_username').value.trim().toLowerCase();
-            const pass = document.getElementById('new_user_pass').value;
-            const role = document.getElementById('new_user_role').value;
-
-            if (pass.length < 6) { showToast('La password deve contenere almeno 6 caratteri.', 'error'); return; }
-
-            // Generiamo un indirizzo email fittizio interno basato sull'username per rispettare Firebase Auth
-            const internalEmail = `${username}@iltlogistics.internal`;
-
-            let secondaryApp;
-            try {
-                secondaryApp = firebase.initializeApp(firebaseConfig, 'ilt-user-creation-' + Date.now());
-                const secondaryAuth = secondaryApp.auth();
-                const credential = await secondaryAuth.createUserWithEmailAndPassword(internalEmail, pass);
-                
-                await db.collection(USERS_COLLECTION).doc(credential.user.uid).set({
-                    uid: credential.user.uid,
-                    name: name,
-                    username: username,
-                    email: internalEmail,
-                    role: role,
-                    active: true,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                await secondaryAuth.signOut();
-                await secondaryApp.delete();
-                document.querySelector('#admin-tech-management-box form').reset();
-                showToast(`Profilo "${name}" (${role}) creato con successo!`, 'success');
-            } catch (err) {
-                if (secondaryApp) { try { await secondaryApp.delete(); } catch (_) {} }
-                showToast('Creazione profilo non riuscita: ' + (err.message || err), 'error');
-            }
-        }
-
-        async function deleteUser(uid) {
-            if (!activeUser || activeUser.role !== 'admin' || !uid) return;
-            if (!confirm('Disattivare questo utente? Non potrà più effettuare l’accesso.')) return;
-            try {
-                await db.collection(USERS_COLLECTION).doc(uid).update({ active: false });
-                showToast('Utente disattivato correttamente.', 'success');
-            } catch (err) { showToast('Errore: ' + err.message, 'error'); }
-        }
-
-        function subscribeUsers() {
-            if (usersUnsubscribe) usersUnsubscribe();
-            if (!activeUser || activeUser.role !== 'admin') return;
-            usersUnsubscribe = db.collection(USERS_COLLECTION).onSnapshot(snapshot => {
-                usersCache = snapshot.docs.map(d => ({ uid: d.id, ...d.data() })).filter(u => u.active !== false);
-                renderUsersList();
-                populateTechnicianSelect();
-            }, err => showToast('Errore caricamento utenti: ' + err.message, 'error'));
-        }
-
-        function renderUsersList() {
-            const tbody = document.getElementById('technicians-tbody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            usersCache.forEach(u => {
-                const tr = document.createElement('tr');
-                const safeName = String(u.name || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-                const safeUser = String(u.username || '-').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-                const roleBadge = u.role === 'admin' ? '<span class="bg-red-100 text-red-800 px-1.5 py-0.5 rounded text-[10px] font-bold">Admin</span>' : '<span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[10px] font-bold">Tecnico</span>';
-                
-                tr.innerHTML = `<td class="p-2 font-bold">${safeName}</td><td class="p-2 text-slate-500 font-mono">${safeUser}</td><td class="p-2">${roleBadge}</td><td class="p-2 text-center"><button onclick="deleteUser('${u.uid}')" class="text-red-500" title="Disattiva"><i class="fas fa-user-slash"></i></button></td>`;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function populateTechnicianSelect() {
-            const select = document.getElementById('assigned_technician_select');
-            if (!select) return;
-            select.innerHTML = '';
-            // Filtriamo solo i tecnici per l'assegnazione dei pre-report
-            const tecniciOnly = usersCache.filter(u => u.role === 'tecnico');
-            tecniciOnly.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t.uid;
-                opt.innerText = `${t.name} (${t.username})`;
-                select.appendChild(opt);
-            });
-        }
-
         async function handleLoginSubmit(e) {
             e.preventDefault();
-            const usernameInput = document.getElementById('login_username').value.trim().toLowerCase();
+            const email = document.getElementById('login_email').value.trim();
             const password = document.getElementById('login_password').value;
             const errorBox = document.getElementById('login-error');
             errorBox.classList.add('hidden');
 
             try {
-                // Cerchiamo l'utente su Firestore tramite lo username inserito
-                const querySnap = await db.collection(USERS_COLLECTION).where('username', '==', usernameInput).get();
-                if (querySnap.empty) {
-                    setLoginError('Username non trovato.');
-                    return;
-                }
-                const userData = querySnap.docs[0].data();
-                if (userData.active === false) {
-                    setLoginError('Questo account è stato disattivato.');
-                    return;
-                }
-
-                // Eseguiamo il login Firebase Auth usando l'email interna associata
-                await auth.signInWithEmailAndPassword(userData.email, password);
-            } catch (err) {
-                setLoginError('Password non corretta o accesso non riuscito.');
+                await window.FB.signInWithEmailAndPassword(window.FB.auth, email, password);
+                showToast('Accesso effettuato con successo!', 'success');
+            } catch (error) {
+                setLoginError('Errore di accesso: ' + error.message);
             }
         }
 
         async function logoutUser() {
-            try { await auth.signOut(); }
-            catch (err) { showToast('Errore durante la disconnessione: ' + err.message, 'error'); }
-        }
-
-        async function handleFirebaseUser(user) {
-            if (prereportsUnsubscribe) { prereportsUnsubscribe(); prereportsUnsubscribe = null; }
-            if (usersUnsubscribe) { usersUnsubscribe(); usersUnsubscribe = null; }
-            globalPreReports = [];
-            usersCache = [];
-            activeUser = null;
-            document.getElementById('user-session-badge').classList.add('hidden');
-            if (!user) {
-                document.getElementById('login-modal').classList.remove('hidden');
-                return;
-            }
             try {
-                const profileSnap = await db.collection(USERS_COLLECTION).doc(user.uid).get();
-                if (!profileSnap.exists) {
-                    await auth.signOut();
-                    setLoginError('Profilo non trovato nel database.');
-                    return;
-                }
-                const profile = profileSnap.data();
-                if (profile.active === false || !['admin', 'tecnico'].includes(profile.role)) {
-                    await auth.signOut();
-                    setLoginError('Account disattivato o non autorizzato.');
-                    return;
-                }
-                activeUser = { uid: user.uid, username: profile.username, name: profile.name, role: profile.role };
-                document.getElementById('login-modal').classList.add('hidden');
-                updateUserBadge();
-                applyRolePermissions();
-                startFirestoreListeners();
-            } catch (err) {
-                console.error('Errore caricamento profilo:', err);
-                await auth.signOut();
-                setLoginError('Errore di accesso: ' + err.message);
+                await window.FB.signOut(window.FB.auth);
+                activeUser = null;
+                document.getElementById('login-modal').classList.remove('hidden');
+                document.getElementById('user-session-badge').classList.add('hidden');
+            } catch (error) {
+                showToast('Errore durante il logout', 'error');
             }
         }
 
-        function checkAuth() {
-            auth.onAuthStateChanged(handleFirebaseUser);
+        function applyUserSession() {
+            if (!activeUser) return;
+            document.getElementById('login-modal').classList.add('hidden');
+            updateUserBadge();
+            applyRolePermissions();
+            listenPreReports();
+            listenHistoryReports();
         }
 
         function updateUserBadge() {
             if (!activeUser) return;
             document.getElementById('user-session-badge').classList.remove('hidden');
-            document.getElementById('user-name-display').innerText = activeUser.name;
+            document.getElementById('user-name-display').innerText = activeUser.name || activeUser.email;
             const rBadge = document.getElementById('user-role-badge');
             if (activeUser.role === 'admin') {
                 rBadge.innerText = 'Admin';
@@ -1103,7 +1002,7 @@
             } else {
                 rBadge.innerText = 'Tecnico';
             }
-            document.getElementById('nome_tecnico').value = activeUser.name;
+            document.getElementById('nome_tecnico').value = activeUser.name || '';
             syncToPrint();
         }
 
@@ -1114,27 +1013,66 @@
                 const el = document.getElementById(id);
                 if (el) el.classList.toggle('hidden', !isAdmin);
             });
-            if (isAdmin) subscribeUsers();
+            if (isAdmin) loadUsersData();
             switchTab('assigned-tasks');
-            loadHistoryTable();
         }
 
-        function startFirestoreListeners() {
-            if (!activeUser) return;
-            if (prereportsUnsubscribe) prereportsUnsubscribe();
-            let query = db.collection('prereports');
-            if (activeUser.role === 'tecnico') query = query.where('assigned_uid', '==', activeUser.uid);
-            prereportsUnsubscribe = query.onSnapshot(snapshot => {
-                globalPreReports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                loadAssignedTasks();
-            }, error => {
-                console.error('Errore Firestore prereports:', error);
-                showToast('Errore sincronizzazione incarichi: ' + error.message, 'error');
+        async function handleCreateUser(e) {
+            e.preventDefault();
+            if (!activeUser || activeUser.role !== 'admin') return;
+            const name = document.getElementById('new_user_name').value.trim();
+            const email = document.getElementById('new_user_email').value.trim();
+            const pass = document.getElementById('new_user_pass').value;
+            const role = document.getElementById('new_user_role').value;
+
+            try {
+                // Nota: Per creare utenti programmaticamente senza scollegare l'admin corrente, l'ideale è usare Firebase Admin SDK (Backend) o creare un'istanza secondaria di Firebase Auth. Per semplicità frontend, creiamo il record su Firestore utente.
+                const cred = await window.FB.createUserWithEmailAndPassword(window.FB.auth, email, pass);
+                await window.FB.setDoc(window.FB.doc(window.FB.db, "users", cred.user.uid), { name, email, role });
+                document.querySelector('#admin-tech-management-box form').reset();
+                loadUsersData();
+                showToast(`Operatore "${name}" registrato con successo!`, 'success');
+            } catch (err) {
+                showToast('Errore registrazione: ' + err.message, 'error');
+            }
+        }
+
+        async function loadUsersData() {
+            const querySnapshot = await window.FB.getDocs(window.FB.collection(window.FB.db, "users"));
+            usersCache = [];
+            querySnapshot.forEach((docSnap) => {
+                usersCache.push({ uid: docSnap.id, ...docSnap.data() });
+            });
+            renderUsersList();
+            populateTechnicianSelect();
+        }
+
+        function renderUsersList() {
+            const tbody = document.getElementById('technicians-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            usersCache.forEach(u => {
+                const tr = document.createElement('tr');
+                const roleBadge = u.role === 'admin' ? '<span class="bg-red-100 text-red-800 px-1.5 py-0.5 rounded text-[10px] font-bold">Admin</span>' : '<span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[10px] font-bold">Tecnico</span>';
+                tr.innerHTML = `<td class="p-2 font-bold">${u.name || '-'}</td><td class="p-2 text-slate-500 font-mono">${u.email}</td><td class="p-2">${roleBadge}</td>`;
+                tbody.appendChild(tr);
             });
         }
 
-        // --- GESTIONE INCARICHI E PRE-REPORT ---
-        function saveAsPreReport() {
+        function populateTechnicianSelect() {
+            const select = document.getElementById('assigned_technician_select');
+            if (!select) return;
+            select.innerHTML = '';
+            usersCache.filter(u => u.role === 'tecnico').forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.uid;
+                opt.innerText = `${t.name} (${t.email})`;
+                select.appendChild(opt);
+            });
+        }
+
+        // --- GESTIONE INCARICHI (FIRESTORE) ---
+        async function saveAsPreReport() {
             if (!activeUser || activeUser.role !== 'admin') return;
             const techUid = document.getElementById('assigned_technician_select').value;
             const techObj = usersCache.find(u => u.uid === techUid);
@@ -1146,7 +1084,7 @@
                 assigned_uid: techUid,
                 assigned_name: techObj.name,
                 created_by: activeUser.uid,
-                created_at: firebase.firestore.FieldValue.serverTimestamp(),
+                created_at: new Date().toISOString(),
                 cliente_nome: document.getElementById('cliente_nome').value,
                 cliente_indirizzo: document.getElementById('cliente_indirizzo').value,
                 cliente_cf: document.getElementById('cliente_cf').value,
@@ -1160,30 +1098,49 @@
                 assets: getAssetsData(),
                 relazione: document.getElementById('relazione_tecnica').value,
                 photos: reportPhotos,
-                status: 'assegnato',
-                captions: { 1: document.getElementById('photo_caption_1').value, 2: document.getElementById('photo_caption_2').value }
+                status: 'assegnato'
             };
 
-            db.collection("prereports").add(prereportData).then(() => {
-                showToast("Incarico salvato sul Cloud!", 'success');
+            try {
+                await window.FB.addDoc(window.FB.collection(window.FB.db, "prereports"), prereportData);
+                showToast("Incarico salvato su Firestore!", 'success');
                 resetForm();
                 switchTab('assigned-tasks');
-            }).catch(err => showToast("Errore: " + err.message, "error"));
+            } catch (e) {
+                showToast("Errore salvataggio: " + e.message, 'error');
+            }
+        }
+
+        function listenPreReports() {
+            const q = window.FB.collection(window.FB.db, "prereports");
+            window.FB.onSnapshot(q, (snapshot) => {
+                globalPreReports = [];
+                snapshot.forEach((docSnap) => {
+                    globalPreReports.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                loadAssignedTasks();
+            });
         }
 
         async function updateTaskStatus(taskId, newStatus) {
-            if (!activeUser || activeUser.role !== 'tecnico') return;
             try {
-                await db.collection('prereports').doc(taskId).update({ status: newStatus, updated_at: firebase.firestore.FieldValue.serverTimestamp() });
-                showToast('Stato aggiornato sul Cloud!', 'success');
-            } catch (err) { showToast('Aggiornamento non riuscito: ' + err.message, 'error'); }
+                const docRef = window.FB.doc(window.FB.db, "prereports", taskId);
+                await window.FB.updateDoc(docRef, { status: newStatus });
+                showToast('Stato aggiornato!', 'success');
+            } catch (e) {
+                showToast('Errore aggiornamento', 'error');
+            }
         }
 
         async function deletePreReportCloud(id) {
             if (!activeUser || activeUser.role !== 'admin') return;
-            if (!confirm('Eliminare dal Cloud?')) return;
-            try { await db.collection('prereports').doc(id).delete(); showToast('Eliminato.', 'success'); }
-            catch (err) { showToast('Eliminazione non riuscita: ' + err.message, 'error'); }
+            if (!confirm('Eliminare questo incarico dal Cloud?')) return;
+            try {
+                await window.FB.deleteDoc(window.FB.doc(window.FB.db, "prereports", id));
+                showToast('Incarico eliminato.', 'success');
+            } catch (e) {
+                showToast('Errore eliminazione', 'error');
+            }
         }
 
         function loadAssignedTasks() {
@@ -1199,7 +1156,7 @@
             tbody.innerHTML = '';
             if (tasks.length === 0) {
                 const colSpan = (activeUser && activeUser.role === 'admin') ? 7 : 6;
-                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-6 text-center text-slate-400">Nessun incarico nel Cloud.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-6 text-center text-slate-400">Nessun incarico presente nel Cloud.</td></tr>`;
                 return;
             }
 
@@ -1271,7 +1228,6 @@
             document.getElementById('tracking-modal').classList.remove('hidden');
         }
 
-        // Funzioni di supporto report e UI
         function getAssetsData() {
             const assets = [];
             document.querySelectorAll('#assets-table-body tr').forEach(tr => {
@@ -1359,7 +1315,12 @@
             });
         }
 
-        function saveReport() {
+        function toggleAllChecklist(status) {
+            document.querySelectorAll('#checklist-container input[type="checkbox"]').forEach(cb => cb.checked = status);
+            syncToPrint();
+        }
+
+        async function saveReport() {
             const reportData = {
                 num: document.getElementById('doc_num').value,
                 date: document.getElementById('doc_date').value,
@@ -1368,25 +1329,34 @@
                 tecnico: activeUser ? activeUser.name : 'Tecnico',
                 extraTotal: document.getElementById('extra_total_badge').innerText,
                 assets: getAssetsData(),
-                photos: reportPhotos
+                photos: reportPhotos,
+                created_at: new Date().toISOString()
             };
-            let history = JSON.parse(localStorage.getItem('ilt_reports_history') || '[]');
-            history.unshift(reportData);
-            localStorage.setItem('ilt_reports_history', JSON.stringify(history));
-            showToast("Report salvato nello storico!", "success");
-            loadHistoryTable();
-            switchTab('history');
+
+            try {
+                await window.FB.addDoc(window.FB.collection(window.FB.db, "reports_history"), reportData);
+                showToast("Report salvato nello storico Cloud!", "success");
+                switchTab('history');
+            } catch (e) {
+                showToast("Errore salvataggio storico: " + e.message, 'error');
+            }
         }
 
-        function loadHistoryTable() {
-            const history = JSON.parse(localStorage.getItem('ilt_reports_history') || '[]');
-            document.getElementById('history-badge').innerText = history.length;
-            document.getElementById('history-total-count').innerText = `${history.length} Report`;
-            const tbody = document.getElementById('history-tbody');
-            tbody.innerHTML = '';
-            if (history.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Nessun report.</td></tr>`; return; }
-            history.forEach(r => {
-                tbody.innerHTML += `<tr class="border-b"><td class="p-3 font-mono font-bold text-iltRed">${r.num}</td><td class="p-3">${r.date}</td><td class="p-3 font-semibold">${r.cliente}</td><td class="p-3">${r.tipo}</td><td class="p-3">${r.tecnico}</td><td class="p-3 text-green-700">${r.extraTotal}</td><td class="p-3 text-center"><button onclick="showToast('Visualizzazione storico','info')" class="text-iltBlue font-bold">Visualizza</button></td></tr>`;
+        function listenHistoryReports() {
+            const q = window.FB.collection(window.FB.db, "reports_history");
+            window.FB.onSnapshot(q, (snapshot) => {
+                let history = [];
+                snapshot.forEach((docSnap) => {
+                    history.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                document.getElementById('history-badge').innerText = history.length;
+                document.getElementById('history-total-count').innerText = `${history.length} Report`;
+                const tbody = document.getElementById('history-tbody');
+                tbody.innerHTML = '';
+                if (history.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Nessun report nel Cloud.</td></tr>`; return; }
+                history.forEach(r => {
+                    tbody.innerHTML += `<tr class="border-b"><td class="p-3 font-mono font-bold text-iltRed">${r.num}</td><td class="p-3">${r.date}</td><td class="p-3 font-semibold">${r.cliente}</td><td class="p-3">${r.tipo}</td><td class="p-3">${r.tecnico}</td><td class="p-3 text-green-700">${r.extraTotal}</td><td class="p-3 text-center"><button onclick="showToast('Visualizzazione storico Cloud','info')" class="text-iltBlue font-bold">Visualizza</button></td></tr>`;
+                });
             });
         }
 
@@ -1431,9 +1401,39 @@
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             let drawing = false;
-            canvas.addEventListener('mousedown', (e) => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
-            canvas.addEventListener('mousemove', (e) => { if (drawing) { ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke(); updateSig(canvasId); } });
-            window.addEventListener('mouseup', () => drawing = false);
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                return { x: clientX - rect.left, y: clientY - rect.top };
+            }
+
+            function startDraw(e) {
+                drawing = true;
+                const pos = getPos(e);
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+                e.preventDefault();
+            }
+
+            function draw(e) {
+                if (!drawing) return;
+                const pos = getPos(e);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+                updateSig(canvasId);
+                e.preventDefault();
+            }
+
+            function stopDraw() { drawing = false; }
+
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', draw);
+            window.addEventListener('mouseup', stopDraw);
+            canvas.addEventListener('touchstart', startDraw, { passive: false });
+            canvas.addEventListener('touchmove', draw, { passive: false });
+            window.addEventListener('touchend', stopDraw);
         }
 
         function updateSig(canvasId) {
@@ -1457,57 +1457,6 @@
         function generateAIReport() { showToast("Generato con AI", "success"); }
         function saveApiKey() { showToast("API Key salvata", "success"); }
         function resetForm() { document.getElementById('report-form').reset(); }
-
-        // --- FUNZIONE DI CREAZIONE AUTOMATICA ADMIN DEFAULT ---
-        async function createDefaultAdminIfNeeded() {
-            const defaultUsername = "admin";
-            const defaultEmail = "admin@iltlogistics.internal";
-            const defaultPass = "Palermo4ever";
-
-            try {
-                // Controlla se esiste già un utente con username 'admin' su Firestore
-                const querySnap = await db.collection(USERS_COLLECTION).where('username', '==', defaultUsername).get();
-                
-                if (querySnap.empty) {
-                    console.log("Account amministratore predefinito non trovato. Creazione in corso...");
-                    
-                    // Crea l'utente su Firebase Auth
-                    const credential = await auth.createUserWithEmailAndPassword(defaultEmail, defaultPass);
-                    
-                    // Crea il documento associato su Firestore nella collezione 'users'
-                    await db.collection(USERS_COLLECTION).doc(credential.user.uid).set({
-                        uid: credential.user.uid,
-                        name: "Amministratore",
-                        username: defaultUsername,
-                        email: defaultEmail,
-                        role: "admin",
-                        active: true,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    
-                    console.log("Account amministratore predefinito creato con successo!");
-                }
-            } catch (err) {
-                // Se l'utente Authentication esiste già ma manca su Firestore o viceversa, gestiamo l'errore senza bloccare l'app
-                console.log("Controllo admin completato o account già esistente:", err.message);
-            }
-        }
-
-        // --- AVVIO E ASCOLTO FIREBASE ---
-        window.onload = async function() {
-            initLogo();
-            
-            // Crea automaticamente l'admin se non esiste
-            await createDefaultAdminIfNeeded();
-
-            checkAuth();
-            initDateAndDoc();
-            setupCanvas('canvas-tecnico');
-            setupCanvas('canvas-cliente');
-            renderChecklist();
-            addAssetRow();
-            addExtraRow();
-        };
     </script>
 </body>
 </html>
