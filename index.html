@@ -38,13 +38,13 @@
                 const userDoc = await window.FB.getDoc(userDocRef);
                 if (userDoc.exists()) {
                     const data = userDoc.data();
-                    activeUser = { uid: user.uid, email: user.email, name: data.name, role: data.role };
+                    window.activeUser = { uid: user.uid, email: user.email, name: data.name, role: data.role };
                 } else {
-                    activeUser = { uid: user.uid, email: user.email, name: user.email, role: 'tecnico' };
+                    window.activeUser = { uid: user.uid, email: user.email, name: user.email, role: 'tecnico' };
                 }
                 applyUserSession();
             } else {
-                activeUser = null;
+                window.activeUser = null;
                 document.getElementById('login-modal').classList.remove('hidden');
                 document.getElementById('user-session-badge').classList.add('hidden');
             }
@@ -887,11 +887,11 @@
                 <div class="flex justify-between items-center border-b border-slate-100 pb-3">
                     <div>
                         <h2 class="text-base font-bold text-iltDark flex items-center gap-2">
-                            <i class="fas fa-boxes-packing text-iltRed"></i> Storico Interventi Cloud
+                            <i class="fas fa-boxes-packing text-iltRed"></i> Storico Interventi & Resoconti Cloud
                         </h2>
-                        <p class="text-xs text-slate-500">Report chiusi sincronizzati su Firestore.</p>
+                        <p class="text-xs text-slate-500">Documenti e report chiusi sincronizzati su Firestore.</p>
                     </div>
-                    <span id="history-total-count" class="text-xs bg-slate-100 border px-3 py-1 rounded-full font-bold text-slate-700">0 Report</span>
+                    <span id="history-total-count" class="text-xs bg-slate-100 border px-3 py-1 rounded-full font-bold text-slate-700">0 Documenti</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-xs border-collapse min-w-[600px]">
@@ -899,10 +899,10 @@
                             <tr class="bg-slate-100 text-slate-700 uppercase text-[11px] font-bold border-b border-slate-200">
                                 <th class="p-3">N° Doc</th>
                                 <th class="p-3">Data</th>
-                                <th class="p-3">Cliente</th>
+                                <th class="p-3">Cliente / Dettagli</th>
                                 <th class="p-3">Tipologia</th>
                                 <th class="p-3">Operatore</th>
-                                <th class="p-3">Extra</th>
+                                <th class="p-3">Extra / Totale</th>
                                 <th class="p-3 text-center">Azioni</th>
                             </tr>
                         </thead>
@@ -995,16 +995,72 @@
         </section>
     </main>
 
-    <!-- JS LOGIC FIREBASE -->
-    <script>
-        const RAW_SVG_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 85" width="340" height="85"><defs><linearGradient id="gR" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff2e43"/><stop offset="50%" stop-color="#d61124"/><stop offset="100%" stop-color="#9b000e"/></linearGradient><linearGradient id="gD" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4a5157"/><stop offset="60%" stop-color="#2a2e33"/><stop offset="100%" stop-color="#15181b"/></linearGradient><linearGradient id="gB" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#003580"/><stop offset="50%" stop-color="#004aad"/><stop offset="100%" stop-color="#0066ff"/></linearGradient><radialGradient id="fG" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff" stop-opacity="1"/><stop offset="40%" stop-color="#ffffff" stop-opacity="0.8"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs><path d="M 12 35 C -5 18, 2 52, 28 68 C 68 84, 180 80, 295 52 C 235 73, 80 78, 32 63 C 14 53, 16 32, 28 36 Z" fill="url(#gB)"/><path d="M 22 35 C 8 24, 10 48, 32 61 C 72 75, 192 70, 305 46 C 245 65, 88 69, 38 56 C 22 48, 24 33, 36 36 Z" fill="url(#gR)"/><polygon points="68,14 88,14 62,68 42,68" fill="url(#gR)"/><circle cx="67" cy="15" r="9" fill="url(#fG)"/><path d="M 67 4 L 67 26 M 56 15 L 78 15 M 59 7 L 75 23 M 59 23 L 75 7" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/><polygon points="85,16 122,16 116,26 104,26 87,68 69,68 82,35 74,35 79,26 88,26" fill="url(#gD)"/><polygon points="108,36 132,36 118,68 101,68" fill="url(#gD)" opacity="0.9"/><text x="135" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="900" font-style="italic" font-size="38" fill="url(#gB)" letter-spacing="-1">Logistics</text><text x="282" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="700" font-style="italic" font-size="19" fill="url(#gB)">srl</text></svg>`;
+    <!-- JS LOGIC FIREBASE & APP -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, getDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        let activeUser = null;
-        let currentReportMode = 'professional';
-        let reportPhotos = { 1: null, 2: null, 3: null, 4: null };
-        let globalPreReports = [];
-        let globalHistoryReports = [];
-        let usersCache = [];
+        const firebaseConfig = {
+            apiKey: "AIzaSyA4y7w91L1OPq2_vKxWICGaFE3d4ID02GU",
+            authDomain: "iltlogisitcssrl.firebaseapp.com",
+            projectId: "iltlogisitcssrl",
+            storageBucket: "iltlogisitcssrl.firebasestorage.app",
+            messagingSenderId: "872541639268",
+            appId: "1:872541639268:web:dfc2fd1d019bca46c0c571"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Esponiamo le variabili e funzioni globalmente
+        window.FB = { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, getDoc, query, where, onSnapshot };
+        
+        window.activeUser = null;
+        window.currentReportMode = 'professional';
+        window.reportPhotos = { 1: null, 2: null, 3: null, 4: null };
+        window.globalPreReports = [];
+        window.globalHistoryReports = [];
+        window.globalDailyReports = [];
+        window.usersCache = [];
+
+        window.FB.onAuthStateChanged(window.FB.auth, async (user) => {
+            if (user) {
+                const userDocRef = window.FB.doc(window.FB.db, "users", user.uid);
+                const userDoc = await window.FB.getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    window.activeUser = { uid: user.uid, email: user.email, name: data.name, role: data.role };
+                } else {
+                    window.activeUser = { uid: user.uid, email: user.email, name: user.email, role: 'tecnico' };
+                }
+                applyUserSession();
+            } else {
+                window.activeUser = null;
+                document.getElementById('login-modal').classList.remove('hidden');
+                document.getElementById('user-session-badge').classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initLogo();
+            initDateAndDoc();
+            setupCanvas('canvas-tecnico');
+            setupCanvas('canvas-cliente');
+            renderChecklist();
+            addAssetRow();
+            addExtraRow();
+            addDailyExpenseRow();
+            addDailyFuelRow();
+            const dateInput = document.getElementById('daily_report_date');
+            if(dateInput) dateInput.valueAsDate = new Date();
+        });
+    </script>
+
+    <script>
+        // Funzioni dell'applicazione rese globali ed esenti da errori di sintassi
+        const RAW_SVG_LOGO = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 85" width="340" height="85"><defs><linearGradient id="gR" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff2e43"/><stop offset="50%" stop-color="#d61124"/><stop offset="100%" stop-color="#9b000e"/></linearGradient><linearGradient id="gD" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#4a5157"/><stop offset="60%" stop-color="#2a2e33"/><stop offset="100%" stop-color="#15181b"/></linearGradient><linearGradient id="gB" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#003580"/><stop offset="50%" stop-color="#004aad"/><stop offset="100%" stop-color="#0066ff"/></linearGradient><radialGradient id="fG" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff" stop-opacity="1"/><stop offset="40%" stop-color="#ffffff" stop-opacity="0.8"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs><path d="M 12 35 C -5 18, 2 52, 28 68 C 68 84, 180 80, 295 52 C 235 73, 80 78, 32 63 C 14 53, 16 32, 28 36 Z" fill="url(#gB)"/><path d="M 22 35 C 8 24, 10 48, 32 61 C 72 75, 192 70, 305 46 C 245 65, 88 69, 38 56 C 22 48, 24 33, 36 36 Z" fill="url(#gR)"/><polygon points="68,14 88,14 62,68 42,68" fill="url(#gR)"/><circle cx="67" cy="15" r="9" fill="url(#fG)"/><path d="M 67 4 L 67 26 M 56 15 L 78 15 M 59 7 L 75 23 M 59 23 L 75 7" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/><polygon points="85,16 122,16 116,26 104,26 87,68 69,68 82,35 74,35 79,26 88,26" fill="url(#gD)"/><polygon points="108,36 132,36 118,68 101,68" fill="url(#gD)" opacity="0.9"/><text x="135" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="900" font-style="italic" font-size="38" fill="url(#gB)" letter-spacing="-1">Logistics</text><text x="282" y="58" font-family="'Segoe UI', Arial, sans-serif" font-weight="700" font-style="italic" font-size="19" fill="url(#gB)">srl</text></svg>`;
 
         const CHECKLIST_PROFESSIONAL = [
             "Prova di tenuta con azoto (minimo 42 bar) superata",
@@ -1063,7 +1119,7 @@
         }
 
         function preparePreReport(mode) {
-            currentReportMode = mode;
+            window.currentReportMode = mode;
             const titleBadge = document.getElementById('form-doc-num-badge');
             const tipoInterventoSelect = document.getElementById('tipo_intervento');
             const section2Title = document.getElementById('section-2-title');
@@ -1136,8 +1192,8 @@
         }
 
         function applyRolePermissions() {
-            if (!activeUser) return;
-            const isAdmin = activeUser.role === 'admin';
+            if (!window.activeUser) return;
+            const isAdmin = window.activeUser.role === 'admin';
             
             document.getElementById('admin-assignment-box').classList.remove('hidden');
             document.getElementById('admin-tech-management-box').classList.toggle('hidden', !isAdmin);
@@ -1153,9 +1209,9 @@
         function renderTableHeader() {
             const headerTr = document.getElementById('assets-table-header');
             if (!headerTr) return;
-            if (currentReportMode === 'base') {
+            if (window.currentReportMode === 'base') {
                 headerTr.innerHTML = `<th class="p-2">Tipologia</th><th class="p-2">Modello</th><th class="p-2 w-20">Q.ta</th><th class="p-2">Matricola</th><th class="p-2">Ubicazione</th><th class="p-2 text-center">Azione</th>`;
-            } else if (currentReportMode === 'caldaia') {
+            } else if (window.currentReportMode === 'caldaia') {
                 headerTr.innerHTML = `<th class="p-2">Marca</th><th class="p-2">Modello Caldaia</th><th class="p-2">Potenza (kW)</th><th class="p-2">Tipo Gas</th><th class="p-2">Matricola / S/N</th><th class="p-2">Note</th><th class="p-2">Ubicazione</th><th class="p-2 text-center">Azione</th>`;
             } else {
                 headerTr.innerHTML = `<th class="p-2">Marca</th><th class="p-2">Modello</th><th class="p-2">Potenza</th><th class="p-2">Gas</th><th class="p-2">S/N UI</th><th class="p-2">S/N UE</th><th class="p-2">Ubicazione</th><th class="p-2 text-center">Azione</th>`;
@@ -1167,8 +1223,8 @@
             if (!container) return;
             container.innerHTML = '';
             let list = CHECKLIST_PROFESSIONAL;
-            if (currentReportMode === 'base') list = CHECKLIST_BASE;
-            if (currentReportMode === 'caldaia') list = CHECKLIST_CALDAIA;
+            if (window.currentReportMode === 'base') list = CHECKLIST_BASE;
+            if (window.currentReportMode === 'caldaia') list = CHECKLIST_CALDAIA;
 
             list.forEach((item, index) => {
                 container.innerHTML += `
@@ -1198,15 +1254,16 @@
         }
 
         function triggerPhotoUpload(index) { document.getElementById(`photo_file_${index}`).click(); }
+        
         function handlePhotoUpload(e, index) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = function(evt) {
-                reportPhotos[index] = evt.target.result;
+                window.reportPhotos[index] = evt.target.result;
                 const preview = document.getElementById(`photo_preview_${index}`);
                 const placeholder = document.getElementById(`photo_placeholder_${index}`);
-                preview.src = reportPhotos[index];
+                preview.src = window.reportPhotos[index];
                 preview.classList.remove('hidden');
                 placeholder.classList.add('hidden');
                 syncToPrint();
@@ -1215,7 +1272,7 @@
         }
 
         function clearPhoto(index) {
-            reportPhotos[index] = null;
+            window.reportPhotos[index] = null;
             document.getElementById(`photo_file_${index}`).value = '';
             document.getElementById(`photo_preview_${index}`).classList.add('hidden');
             document.getElementById(`photo_placeholder_${index}`).classList.remove('hidden');
@@ -1254,7 +1311,7 @@
             document.getElementById('login-error').classList.remove('hidden');
         }
 
-        async function handleLoginSubmit(e) {
+        window.handleLoginSubmit = async function(e) {
             e.preventDefault();
             const email = document.getElementById('login_email').value.trim();
             const password = document.getElementById('login_password').value;
@@ -1269,10 +1326,10 @@
             }
         }
 
-        async function logoutUser() {
+        window.logoutUser = async function() {
             try {
                 await window.FB.signOut(window.FB.auth);
-                activeUser = null;
+                window.activeUser = null;
                 document.getElementById('login-modal').classList.remove('hidden');
                 document.getElementById('user-session-badge').classList.add('hidden');
             } catch (error) {
@@ -1281,7 +1338,7 @@
         }
 
         function applyUserSession() {
-            if (!activeUser) return;
+            if (!window.activeUser) return;
             document.getElementById('login-modal').classList.add('hidden');
             updateUserBadge();
             applyRolePermissions();
@@ -1291,23 +1348,23 @@
         }
 
         function updateUserBadge() {
-            if (!activeUser) return;
+            if (!window.activeUser) return;
             document.getElementById('user-session-badge').classList.remove('hidden');
-            document.getElementById('user-name-display').innerText = activeUser.name || activeUser.email;
+            document.getElementById('user-name-display').innerText = window.activeUser.name || window.activeUser.email;
             const rBadge = document.getElementById('user-role-badge');
-            if (activeUser.role === 'admin') {
+            if (window.activeUser.role === 'admin') {
                 rBadge.innerText = 'Admin';
                 rBadge.className = 'px-1.5 py-0.5 rounded text-[10px] font-bold uppercase bg-iltRed text-white';
             } else {
                 rBadge.innerText = 'Tecnico';
             }
-            document.getElementById('nome_tecnico').value = activeUser.name || '';
+            document.getElementById('nome_tecnico').value = window.activeUser.name || '';
             syncToPrint();
         }
 
-        async function handleCreateUser(e) {
+        window.handleCreateUser = async function(e) {
             e.preventDefault();
-            if (!activeUser || activeUser.role !== 'admin') return;
+            if (!window.activeUser || window.activeUser.role !== 'admin') return;
             const name = document.getElementById('new_user_name').value.trim();
             const email = document.getElementById('new_user_email').value.trim();
             const pass = document.getElementById('new_user_pass').value;
@@ -1326,9 +1383,9 @@
 
         async function loadUsersData() {
             const querySnapshot = await window.FB.getDocs(window.FB.collection(window.FB.db, "users"));
-            usersCache = [];
+            window.usersCache = [];
             querySnapshot.forEach((docSnap) => {
-                usersCache.push({ uid: docSnap.id, ...docSnap.data() });
+                window.usersCache.push({ uid: docSnap.id, ...docSnap.data() });
             });
             renderUsersList();
             populateTechnicianSelect();
@@ -1338,7 +1395,7 @@
             const tbody = document.getElementById('technicians-tbody');
             if (!tbody) return;
             tbody.innerHTML = '';
-            usersCache.forEach(u => {
+            window.usersCache.forEach(u => {
                 const tr = document.createElement('tr');
                 const roleBadge = u.role === 'admin' ? '<span class="bg-red-100 text-red-800 px-1.5 py-0.5 rounded text-[10px] font-bold">Admin</span>' : '<span class="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-[10px] font-bold">Tecnico</span>';
                 tr.innerHTML = `<td class="p-2 font-bold">${u.name || '-'}</td><td class="p-2 text-slate-500 font-mono">${u.email}</td><td class="p-2">${roleBadge}</td>`;
@@ -1350,7 +1407,7 @@
             const select = document.getElementById('assigned_technician_select');
             if (!select) return;
             select.innerHTML = '';
-            usersCache.forEach(t => {
+            window.usersCache.forEach(t => {
                 const opt = document.createElement('option');
                 opt.value = t.uid;
                 opt.innerText = `${t.name} (${t.role.toUpperCase()})`;
@@ -1358,9 +1415,9 @@
             });
         }
 
-        async function saveAsPreReport() {
+        window.saveAsPreReport = async function() {
             const techUid = document.getElementById('assigned_technician_select').value;
-            const techObj = usersCache.find(u => u.uid === techUid);
+            const techObj = window.usersCache.find(u => u.uid === techUid);
             if (!techObj) { showToast('Seleziona un incaricato valido.', 'error'); return; }
 
             const prereportData = {
@@ -1368,7 +1425,7 @@
                 doc_date: document.getElementById('doc_date').value,
                 assigned_uid: techUid,
                 assigned_name: techObj.name,
-                created_by: activeUser.uid,
+                created_by: window.activeUser.uid,
                 created_at: new Date().toISOString(),
                 cliente_nome: document.getElementById('cliente_nome').value,
                 cliente_indirizzo: document.getElementById('cliente_indirizzo').value,
@@ -1382,7 +1439,7 @@
                 totale_acquisto: document.getElementById('totale_acquisto').value,
                 assets: getAssetsData(),
                 relazione: document.getElementById('relazione_tecnica').value,
-                photos: reportPhotos,
+                photos: window.reportPhotos,
                 status: 'assegnato'
             };
 
@@ -1396,13 +1453,13 @@
             }
         }
 
-        async function saveReport() {
+        window.saveReport = async function() {
             const reportData = {
                 num: document.getElementById('doc_num').value,
                 date: document.getElementById('doc_date').value,
                 cliente: document.getElementById('cliente_nome').value || 'Cliente',
                 tipo: document.getElementById('tipo_intervento').value,
-                tecnico: activeUser ? activeUser.name : 'Operatore',
+                tecnico: window.activeUser ? window.activeUser.name : 'Operatore',
                 extraTotal: document.getElementById('extra_total_badge').innerText,
                 created_at: new Date().toISOString()
             };
@@ -1420,20 +1477,31 @@
         function listenPreReports() {
             const q = window.FB.collection(window.FB.db, "prereports");
             window.FB.onSnapshot(q, (snapshot) => {
-                globalPreReports = [];
+                window.globalPreReports = [];
                 snapshot.forEach((docSnap) => {
-                    globalPreReports.push({ id: docSnap.id, ...docSnap.data() });
+                    window.globalPreReports.push({ id: docSnap.id, ...docSnap.data() });
                 });
                 loadAssignedTasks();
             });
         }
 
         function listenHistoryReports() {
-            const q = window.FB.collection(window.FB.db, "reports");
-            window.FB.onSnapshot(q, (snapshot) => {
-                globalHistoryReports = [];
+            // Ascolta i report interventi singoli
+            const qReports = window.FB.collection(window.FB.db, "reports");
+            window.FB.onSnapshot(qReports, (snapshot) => {
+                window.globalHistoryReports = [];
                 snapshot.forEach((docSnap) => {
-                    globalHistoryReports.push({ id: docSnap.id, ...docSnap.data() });
+                    window.globalHistoryReports.push({ id: docSnap.id, type: 'intervento', ...docSnap.data() });
+                });
+                renderHistoryTable();
+            });
+
+            // Ascolta i resoconti giornalieri
+            const qDaily = window.FB.collection(window.FB.db, "daily_reports");
+            window.FB.onSnapshot(qDaily, (snapshot) => {
+                window.globalDailyReports = [];
+                snapshot.forEach((docSnap) => {
+                    window.globalDailyReports.push({ id: docSnap.id, type: 'resoconto', ...docSnap.data() });
                 });
                 renderHistoryTable();
             });
@@ -1446,31 +1514,135 @@
             if (!tbody) return;
 
             tbody.innerHTML = '';
-            if (badge) badge.innerText = globalHistoryReports.length;
-            if (totalCount) totalCount.innerText = `${globalHistoryReports.length} Report`;
+            
+            // Uniamo le due liste in un'unica collection ordinata per data o creazione
+            const combinedHistory = [
+                ...window.globalHistoryReports,
+                ...window.globalDailyReports.map(d => {
+                    // Calcoliamo il totale spese + carburante del resoconto giornaliero
+                    let totalExp = 0;
+                    if(d.expenses) d.expenses.forEach(e => totalExp += parseFloat(e.price || 0));
+                    if(d.fuels) d.fuels.forEach(f => totalExp += parseFloat(f.price || 0));
 
-            if (globalHistoryReports.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nessun report presente nello storico Cloud.</td></tr>`;
+                    return {
+                        id: d.id,
+                        type: 'resoconto',
+                        num: 'RES-' + (d.date ? d.date.replace(/-/g, '') : '00'),
+                        date: d.date,
+                        cliente: `Squadra: ${d.teamMates || 'N/D'} (Mezzo: ${d.vehiclePlate || 'N/D'})`,
+                        tipo: 'Resoconto Giornaliero',
+                        tecnico: d.operator || 'Operatore',
+                        extraTotal: '€ ' + totalExp.toFixed(2),
+                        created_at: d.created_at,
+                        rawData: d
+                    };
+                })
+            ];
+
+            // Ordinamento dal più recente al meno recente
+            combinedHistory.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
+
+            if (badge) badge.innerText = combinedHistory.length;
+            if (totalCount) totalCount.innerText = `${combinedHistory.length} Documenti`;
+
+            if (combinedHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nessun documento presente nello storico Cloud.</td></tr>`;
                 return;
             }
 
-            globalHistoryReports.forEach(r => {
+            combinedHistory.forEach(r => {
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100 text-xs";
+                
+                const typeBadge = r.type === 'resoconto' 
+                    ? '<span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase"><i class="fas fa-calendar-day mr-1"></i>Resoconto</span>' 
+                    : '<span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase"><i class="fas fa-wrench mr-1"></i>Intervento</span>';
+
+                let actionButtons = '';
+                if (r.type === 'resoconto') {
+                    actionButtons = `
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="editDailyReportCloud('${r.id}')" title="Modifica / Carica Resoconto" class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded text-[10px] flex items-center gap-1">
+                                <i class="fas fa-edit"></i> Modifica
+                            </button>
+                            <button onclick="deleteDailyReportCloud('${r.id}')" title="Elimina dal Cloud" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded text-[10px]">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    actionButtons = `
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="deleteReportCloud('${r.id}')" title="Elimina Intervento" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded text-[10px]">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+
                 tr.innerHTML = `
                     <td class="p-3 font-mono font-bold text-iltRed">${r.num || '-'}</td>
                     <td class="p-3">${formatDateToIT(r.date)}</td>
                     <td class="p-3 font-semibold">${r.cliente || '-'}</td>
-                    <td class="p-3">${r.tipo || '-'}</td>
-                    <td class="p-3">${r.tecnico || '-'}</td>
+                    <td class="p-3">${typeBadge} <span class="ml-1 text-slate-600">${r.tipo || '-'}</span></td>
+                    <td class="p-3 font-medium">${r.tecnico || '-'}</td>
                     <td class="p-3 text-green-700 font-bold">${r.extraTotal || '€ 0.00'}</td>
-                    <td class="p-3 text-center"><button onclick="showToast('Report Cloud')" class="px-2 py-1 bg-iltBlue text-white rounded text-[10px]">Visualizza</button></td>
+                    <td class="p-3 text-center">${actionButtons}</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        async function updateTaskStatus(taskId, newStatus) {
+        window.editDailyReportCloud = function(id) {
+            const report = window.globalDailyReports.find(d => d.id === id);
+            if (!report) return;
+
+            document.getElementById('daily_report_date').value = report.date;
+            document.getElementById('daily_team_mates').value = report.teamMates || '';
+            document.getElementById('daily_vehicle_plate').value = report.vehiclePlate || '';
+
+            const expTbody = document.getElementById('daily-expense-tbody');
+            expTbody.innerHTML = '';
+            if (report.expenses && report.expenses.length > 0) {
+                report.expenses.forEach(e => addDailyExpenseRow(e));
+            } else {
+                addDailyExpenseRow();
+            }
+
+            const fuelTbody = document.getElementById('daily-fuel-tbody');
+            fuelTbody.innerHTML = '';
+            if (report.fuels && report.fuels.length > 0) {
+                report.fuels.forEach(f => addDailyFuelRow(f));
+            } else {
+                addDailyFuelRow();
+            }
+
+            switchTab('daily-report');
+            window.generateDailyReportData();
+            showToast(`Resoconto del ${formatDateToIT(report.date)} caricato per la modifica!`, 'info');
+        };
+
+        window.deleteDailyReportCloud = async function(id) {
+            if (!confirm('Sei sicuro di voler eliminare questo Resoconto Giornaliero dal Cloud?')) return;
+            try {
+                await window.FB.deleteDoc(window.FB.doc(window.FB.db, "daily_reports", id));
+                showToast('Resoconto Giornaliero eliminato con successo.', 'success');
+            } catch (e) {
+                showToast('Errore durante l\'eliminazione: ' + e.message, 'error');
+            }
+        };
+
+        window.deleteReportCloud = async function(id) {
+            if (!confirm('Sei sicuro di voler eliminare questo Intervento dallo Storico Cloud?')) return;
+            try {
+                await window.FB.deleteDoc(window.FB.doc(window.FB.db, "reports", id));
+                showToast('Intervento eliminato con successo.', 'success');
+            } catch (e) {
+                showToast('Errore durante l\'eliminazione: ' + e.message, 'error');
+            }
+        };
+
+        window.updateTaskStatus = async function(taskId, newStatus) {
             try {
                 const docRef = window.FB.doc(window.FB.db, "prereports", taskId);
                 await window.FB.updateDoc(docRef, { status: newStatus });
@@ -1480,7 +1652,7 @@
             }
         }
 
-        async function deletePreReportCloud(id) {
+        window.deletePreReportCloud = async function(id) {
             if (!confirm('Eliminare questo incarico dal Cloud?')) return;
             try {
                 await window.FB.deleteDoc(window.FB.doc(window.FB.db, "prereports", id));
@@ -1491,9 +1663,9 @@
         }
 
         function loadAssignedTasks() {
-            let tasks = [...globalPreReports];
-            if (activeUser && activeUser.role === 'tecnico') {
-                tasks = globalPreReports.filter(p => p.assigned_uid === activeUser.uid);
+            let tasks = [...window.globalPreReports];
+            if (window.activeUser && window.activeUser.role === 'tecnico') {
+                tasks = window.globalPreReports.filter(p => p.assigned_uid === window.activeUser.uid);
             }
 
             const badge = document.getElementById('pending-tasks-badge');
@@ -1517,12 +1689,12 @@
                 let actionButtonsHtml = `
                     <div class="flex items-center justify-center gap-1">
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 border">${currentStatus}</span>
-                        ${activeUser.role === 'admin' ? `<button onclick="openPreReportForCompletion('${t.id}')" class="p-1 bg-amber-500 text-slate-900 rounded"><i class="fas fa-edit"></i></button>` : ''}
+                        ${window.activeUser.role === 'admin' ? `<button onclick="openPreReportForCompletion('${t.id}')" class="p-1 bg-amber-500 text-slate-900 rounded"><i class="fas fa-edit"></i></button>` : ''}
                         <button onclick="openTrackingModal('${t.id}')" class="p-1 bg-iltBlue text-white rounded"><i class="fas fa-route"></i></button>
-                        ${currentStatus === 'assegnato' && activeUser.role !== 'admin' ? `<button onclick="updateTaskStatus('${t.id}', 'in_viaggio')" class="px-2 py-1 bg-blue-600 text-white font-bold rounded text-[10px]">Parti</button>` : ''}
-                        ${currentStatus === 'in_viaggio' && activeUser.role !== 'admin' ? `<button onclick="updateTaskStatus('${t.id}', 'in_lavorazione')" class="px-2 py-1 bg-amber-500 text-slate-900 font-bold rounded text-[10px]">Sul Posto</button>` : ''}
+                        ${currentStatus === 'assegnato' && window.activeUser.role !== 'admin' ? `<button onclick="updateTaskStatus('${t.id}', 'in_viaggio')" class="px-2 py-1 bg-blue-600 text-white font-bold rounded text-[10px]">Parti</button>` : ''}
+                        ${currentStatus === 'in_viaggio' && window.activeUser.role !== 'admin' ? `<button onclick="updateTaskStatus('${t.id}', 'in_lavorazione')" class="px-2 py-1 bg-amber-500 text-slate-900 font-bold rounded text-[10px]">Sul Posto</button>` : ''}
                         <button onclick="openPreReportForCompletion('${t.id}')" class="p-1 bg-green-600 text-white rounded" title="Compila"><i class="fas fa-check"></i></button>
-                        ${activeUser.role === 'admin' ? `<button onclick="deletePreReportCloud('${t.id}')" class="p-1 bg-red-600 text-white rounded"><i class="fas fa-trash"></i></button>` : ''}
+                        ${window.activeUser.role === 'admin' ? `<button onclick="deletePreReportCloud('${t.id}')" class="p-1 bg-red-600 text-white rounded"><i class="fas fa-trash"></i></button>` : ''}
                     </div>`;
 
                 tr.innerHTML = `
@@ -1538,8 +1710,8 @@
             });
         }
 
-        function openTrackingModal(id) {
-            const task = globalPreReports.find(p => p.id === id);
+        window.openTrackingModal = function(id) {
+            const task = window.globalPreReports.find(p => p.id === id);
             if (!task) return;
             document.getElementById('trk-id').innerText = task.doc_num;
             document.getElementById('trk-cliente').innerText = task.cliente_nome;
@@ -1583,8 +1755,8 @@
             return assets;
         }
 
-        function openPreReportForCompletion(id) {
-            const item = globalPreReports.find(p => p.id === id);
+        window.openPreReportForCompletion = function(id) {
+            const item = window.globalPreReports.find(p => p.id === id);
             if (!item) return;
             document.getElementById('doc_num').value = item.doc_num;
             document.getElementById('doc_date').value = item.doc_date;
@@ -1613,7 +1785,7 @@
             const tr = document.createElement('tr');
             tr.className = "border-b border-slate-100";
 
-            if (currentReportMode === 'base') {
+            if (window.currentReportMode === 'base') {
                 tr.innerHTML = `
                     <td class="p-1.5"><input type="text" value="${data.comp || ''}" placeholder="Es. Condizionatore / Accessorio" class="asset-comp w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
                     <td class="p-1.5"><input type="text" value="${data.modello || ''}" placeholder="Modello" class="asset-modello w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
@@ -1622,7 +1794,7 @@
                     <td class="p-1.5"><input type="text" value="${data.ubicazione || ''}" placeholder="Destinazione" class="asset-ubicazione w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()"></td>
                     <td class="p-1.5 text-center"><button type="button" onclick="this.closest('tr').remove(); syncToPrint();" class="text-red-500 hover:text-red-700 p-1"><i class="fas fa-trash-can"></i></button></td>
                 `;
-            } else if (currentReportMode === 'caldaia') {
+            } else if (window.currentReportMode === 'caldaia') {
                 tr.innerHTML = `
                     <td class="p-1.5"><input type="text" value="${data.comp || ''}" placeholder="Marca" class="asset-comp w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()"></td>
                     <td class="p-1.5"><input type="text" value="${data.modello || ''}" placeholder="Modello" class="asset-modello w-full p-1.5 border rounded text-xs focus:ring-1 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()"></td>
@@ -1690,14 +1862,14 @@
             tbody.appendChild(tr);
         }
 
-        function generateDailyReportData() {
+        window.generateDailyReportData = function() {
             const dateInput = document.getElementById('daily_report_date');
             if(!dateInput) return;
             const selectedDate = dateInput.value;
             const tbody = document.getElementById('daily-tasks-tbody');
             tbody.innerHTML = '';
 
-            const filteredReports = globalHistoryReports.filter(r => r.date === selectedDate);
+            const filteredReports = window.globalHistoryReports.filter(r => r.date === selectedDate);
 
             if (filteredReports.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Nessun intervento registrato per la data ${formatDateToIT(selectedDate)}.</td></tr>`;
@@ -1716,24 +1888,28 @@
             });
         }
 
-        async function saveDailyReportCloud() {
+        window.saveDailyReportCloud = async function() {
             const date = document.getElementById('daily_report_date').value;
             const teamMates = document.getElementById('daily_team_mates').value;
             const vehiclePlate = document.getElementById('daily_vehicle_plate').value;
             
             let expenses = [];
             document.querySelectorAll('#daily-expense-tbody tr').forEach(tr => {
-                expenses.push({ desc: tr.querySelector('.daily-exp-desc').value, price: tr.querySelector('.daily-exp-price').value });
+                const desc = tr.querySelector('.daily-exp-desc')?.value || '';
+                const price = tr.querySelector('.daily-exp-price')?.value || '0';
+                if(desc || parseFloat(price) > 0) expenses.push({ desc, price });
             });
 
             let fuels = [];
             document.querySelectorAll('#daily-fuel-tbody tr').forEach(tr => {
-                fuels.push({ desc: tr.querySelector('.daily-fuel-desc').value, price: tr.querySelector('.daily-fuel-price').value });
+                const desc = tr.querySelector('.daily-fuel-desc')?.value || '';
+                const price = tr.querySelector('.daily-fuel-price')?.value || '0';
+                if(desc || parseFloat(price) > 0) fuels.push({ desc, price });
             });
 
             const dailyData = {
                 date,
-                operator: activeUser ? activeUser.name : 'Operatore',
+                operator: window.activeUser ? window.activeUser.name : 'Operatore',
                 teamMates,
                 vehiclePlate,
                 expenses,
@@ -1749,143 +1925,178 @@
             }
         }
 
-        function exportDailyReportPDF() {
+        window.exportDailyReportPDF = function() {
             const date = document.getElementById('daily_report_date').value;
+            if (!date) {
+                showToast('Seleziona una data valida prima di esportare.', 'error');
+                return;
+            }
             const formattedDate = formatDateToIT(date);
-            const operator = activeUser ? activeUser.name : 'Operatore';
+            const operator = window.activeUser ? window.activeUser.name : 'Operatore';
             const team = document.getElementById('daily_team_mates').value || '-';
             const plate = document.getElementById('daily_vehicle_plate').value || '-';
 
-            const filteredReports = globalHistoryReports.filter(r => r.date === date);
+            // Filtraggio sicuro basato sulla data
+            const filteredReports = window.globalHistoryReports.filter(r => r.date === date);
             let tasksHtml = '';
+            
             if (filteredReports.length === 0) {
-                tasksHtml = `<tr><td colspan="4" style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #94a3b8;">Nessun intervento registrato in questa data.</td></tr>`;
+                tasksHtml = '<tr><td colspan="4" style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #64748b; font-size: 9px;">Nessun intervento registrato in questa data.</td></tr>';
             } else {
                 filteredReports.forEach(r => {
-                    tasksHtml += `
-                        <tr>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-family: monospace; font-weight: bold; color: #d61124;">${r.num}</td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: 600;">${r.cliente}</td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px;">${r.tipo}</td>
-                            <td style="border: 1px solid #cbd5e1; padding: 6px; color: #15803d; font-weight: bold;">${r.extraTotal || '€ 0.00'}</td>
-                        </tr>`;
+                    tasksHtml += '<tr>' +
+                        '<style="border: 1px solid #cbd5e1; padding: 5px; font-family: monospace; font-weight: bold; color: #d61124; font-size: 9px; width: 90px;">' + (r.num || '-') + '</td>' +
+                        '<td style="border: 1px solid #cbd5e1; padding: 5px; font-weight: 600; font-size: 9px;">' + (r.cliente || '-') + '</td>' +
+                        '<td style="border: 1px solid #cbd5e1; padding: 5px; font-size: 9px;">' + (r.tipo || '-') + '</td>' +
+                        '<td style="border: 1px solid #cbd5e1; padding: 5px; color: #15803d; font-weight: bold; font-size: 9px; text-align: right; width: 75px;">' + (r.extraTotal || '€ 0.00') + '</td>' +
+                        '</tr>';
                 });
             }
 
             let expensesHtml = '';
             document.querySelectorAll('#daily-expense-tbody tr').forEach(tr => {
-                const desc = tr.querySelector('.daily-exp-desc')?.value;
-                const price = tr.querySelector('.daily-exp-price')?.value;
-                if (desc || price) {
-                    expensesHtml += `<tr><td style="border: 1px solid #cbd5e1; padding: 5px;">${desc || '-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right; font-weight: bold;">€ ${parseFloat(price || 0).toFixed(2)}</td></tr>`;
+                const descInput = tr.querySelector('.daily-exp-desc');
+                const priceInput = tr.querySelector('.daily-exp-price');
+                if (descInput || priceInput) {
+                    const desc = descInput ? descInput.value : '';
+                    const price = priceInput ? priceInput.value : '0';
+                    if (desc || parseFloat(price) > 0) {
+                        expensesHtml += '<tr>' +
+                            '<td style="border: 1px solid #cbd5e1; padding: 4px 6px; font-size: 9px;">' + (desc || '-') + '</td>' +
+                            '<td style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: right; font-weight: bold; font-size: 9px; width: 70px;">€ ' + parseFloat(price || 0).toFixed(2) + '</td>' +
+                            '</tr>';
+                    }
                 }
             });
-            if (!expensesHtml) expensesHtml = `<tr><td colspan="2" style="border: 1px solid #cbd5e1; padding: 5px; text-align: center; color: #94a3b8;">Nessuna spesa registrata.</td></tr>`;
+            if (!expensesHtml) expensesHtml = '<tr><td colspan="2" style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: center; color: #64748b; font-size: 9px;">Nessuna spesa registrata.</td></tr>';
 
             let fuelsHtml = '';
             document.querySelectorAll('#daily-fuel-tbody tr').forEach(tr => {
-                const desc = tr.querySelector('.daily-fuel-desc')?.value;
-                const price = tr.querySelector('.daily-fuel-price')?.value;
-                if (desc || price) {
-                    fuelsHtml += `<tr><td style="border: 1px solid #cbd5e1; padding: 5px;">${desc || '-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right; font-weight: bold;">€ ${parseFloat(price || 0).toFixed(2)}</td></tr>`;
+                const descInput = tr.querySelector('.daily-fuel-desc');
+                const priceInput = tr.querySelector('.daily-fuel-price');
+                if (descInput || priceInput) {
+                    const desc = descInput ? descInput.value : '';
+                    const price = priceInput ? priceInput.value : '0';
+                    if (desc || parseFloat(price) > 0) {
+                        fuelsHtml += '<tr>' +
+                            '<td style="border: 1px solid #cbd5e1; padding: 4px 6px; font-size: 9px;">' + (desc || '-') + '</td>' +
+                            '<td style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: right; font-weight: bold; font-size: 9px; width: 70px;">€ ' + parseFloat(price || 0).toFixed(2) + '</td>' +
+                            '</tr>';
+                    }
                 }
             });
-            if (!fuelsHtml) fuelsHtml = `<tr><td colspan="2" style="border: 1px solid #cbd5e1; padding: 5px; text-align: center; color: #94a3b8;">Nessun rifornimento registrato.</td></tr>`;
+            if (!fuelsHtml) fuelsHtml = '<tr><td colspan="2" style="border: 1px solid #cbd5e1; padding: 4px 6px; text-align: center; color: #64748b; font-size: 9px;">Nessun rifornimento registrato.</td></tr>';
 
             const container = document.createElement('div');
-            container.style.cssText = "width: 210mm; background: white; padding: 15mm; font-family: sans-serif; box-sizing: border-box; color: #1e293b; font-size: 11px; line-height: 1.3;";
+            container.style.cssText = "width: 700px; background: #ffffff; padding: 20px; font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; box-sizing: border-box;";
 
             const customLogo = localStorage.getItem('ilt_custom_logo');
-            const logoHtml = customLogo ? `<img src="${customLogo}" style="max-height: 45px; width: auto; object-fit: contain;">` : RAW_SVG_LOGO;
+            const logoHtml = customLogo ? '<img src="' + customLogo + '" style="max-height: 40px; max-width: 140px; width: auto; height: auto; object-fit: contain;">' : RAW_SVG_LOGO;
 
-            container.innerHTML = `
-                <div style="border-bottom: 2px solid #d61124; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="background: white; padding: 4px; border: 1px solid #e2e8f0; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                            ${logoHtml}
-                        </div>
-                        <div>
-                            <h1 style="font-size: 16px; font-weight: 900; color: #0f172a; margin: 0; line-height: 1;">ILT LOGISTICS S.R.L.</h1>
-                            <p style="font-size: 9.5px; color: #475569; margin: 3px 0 0 0;">Servizi Tecnici ed Impiantistica HVAC / F-GAS</p>
-                            <p style="font-size: 8.5px; color: #64748b; margin: 2px 0 0 0; line-height: 1.2;">
-                                Viale della Regione Siciliana Sud Est 5161, 90124 Palermo (PA)<br>
-                                P.IVA/C.F.: 12888410961 | Tel: 091 673 9583
-                            </p>
-                        </div>
-                    </div>
-                    <div style="text-align: right;">
-                        <span style="background: #004aad; color: white; font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; display: inline-block;">RESOCONTO GIORNALIERO</span>
-                        <div style="font-size: 12px; font-family: monospace; font-weight: bold; color: #0f172a; margin-top: 6px;">Data: ${formattedDate}</div>
-                    </div>
-                </div>
+            container.innerHTML = 
+                '<table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid #d61124; padding-bottom: 8px; margin-bottom: 12px;">' +
+                    '<tr>' +
+                        '<td width="150" valign="top" style="padding-right: 10px;">' +
+                            '<div style="background: #ffffff; padding: 4px; border: 1px solid #e2e8f0; border-radius: 4px; text-align: center;">' + logoHtml + '</div>' +
+                        '</td>' +
+                        '<td valign="top" style="padding-left: 5px;">' +
+                            '<div style="font-size: 14px; font-weight: 900; color: #0f172a; line-height: 1.1;">ILT LOGISTICS S.R.L.</div>' +
+                            '<div style="font-size: 9px; color: #475569; margin-top: 2px;">Servizi Tecnici ed Impiantistica HVAC / F-GAS</div>' +
+                            '<div style="font-size: 8px; color: #64748b; margin-top: 2px;">Viale della Regione Siciliana Sud Est 5161, 90124 Palermo (PA) | P.IVA: 12888410961</div>' +
+                        '</td>' +
+                        '<td width="180" valign="top" style="text-align: right;">' +
+                            '<div style="background: #004aad; color: #ffffff; font-size: 8px; font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 3px; display: inline-block;">RESOCONTO GIORNALIERO</div>' +
+                            '<div style="font-size: 11px; font-family: monospace; font-weight: bold; color: #0f172a; margin-top: 6px;">Data: ' + formattedDate + '</div>' +
+                        '</td>' +
+                    '</tr>' +
+                '</table>' +
+                '<table width="100%" cellpadding="6" cellspacing="0" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 9.5px; margin-bottom: 14px;">' +
+                    '<tr>' +
+                        '<td width="50%" valign="top"><strong>Operatore:</strong> ' + operator + '</td>' +
+                        '<td width="50%" valign="top"><strong>Targa Mezzo:</strong> <span style="font-family: monospace; font-weight: bold;">' + plate + '</span></td>' +
+                    '</tr>' +
+                    '<tr>' +
+                        '<td colspan="2" valign="top"><strong>Compagni di Squadra:</strong> ' + team + '</td>' +
+                    '</tr>' +
+                '</table>' +
+                '<div style="font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 9px; border-bottom: 1.5px solid #0f172a; padding-bottom: 2px; margin-bottom: 6px;">1. Interventi Eseguiti nella Giornata</div>' +
+                '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 16px;">' +
+                    '<thead>' +
+                        '<tr style="background: #1e293b; color: #ffffff; font-weight: bold; font-size: 8.5px;">' +
+                            '<th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left; width: 90px;">N° Doc</th>' +
+                            '<th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Cliente</th>' +
+                            '<th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Tipologia Intervento</th>' +
+                            '<th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right; width: 75px;">Extra</th>' +
+                        '</tr>' +
+                    '</thead>' +
+                    '<tbody>' + tasksHtml + '</tbody>' +
+                '</table>' +
+                '<table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 16px;">' +
+                    '<tr>' +
+                        '<td width="48%" valign="top">' +
+                            '<div style="font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 9px; border-bottom: 1.5px solid #0f172a; padding-bottom: 2px; margin-bottom: 6px;">2. Spese Extra Giornaliere</div>' +
+                            '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">' +
+                                '<thead>' +
+                                    '<tr style="background: #f1f5f9; color: #334155; font-weight: bold; font-size: 8.5px;">' +
+                                        '<th style="border: 1px solid #cbd5e1; padding: 4px; text-align: left;">Descrizione</th>' +
+                                        '<th style="border: 1px solid #cbd5e1; padding: 4px; text-align: right; width: 70px;">Importo</th>' +
+                                    '</tr>' +
+                                '</thead>' +
+                                '<tbody>' + expensesHtml + '</tbody>' +
+                            '</table>' +
+                        '</td>' +
+                        '<td width="4%">&nbsp;</td>' +
+                        '<td width="48%" valign="top">' +
+                            '<div style="font-weight: bold; color: #0f172a; text-transform: uppercase; font-size: 9px; border-bottom: 1.5px solid #0f172a; padding-bottom: 2px; margin-bottom: 6px;">3. Rifornimenti Carburante</div>' +
+                            '<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse;">' +
+                                '<thead>' +
+                                    '<tr style="background: #f1f5f9; color: #334155; font-weight: bold; font-size: 8.5px;">' +
+                                        '<th style="border: 1px solid #cbd5e1; padding: 4px; text-align: left;">Stazione / Note</th>' +
+                                        '<th style="border: 1px solid #cbd5e1; padding: 4px; text-align: right; width: 70px;">Importo</th>' +
+                                    '</tr>' +
+                                '</thead>' +
+                                '<tbody>' + fuelsHtml + '</tbody>' +
+                            '</table>' +
+                        '</td>' +
+                    '</tr>' +
+                '</table>' +
+                '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 25px; border-top: 1px solid #e2e8f0; padding-top: 8px;">' +
+                    '<tr>' +
+                        '<td style="text-align: right;">' +
+                            '<div style="font-size: 9px; font-weight: bold; color: #334155;">Firma Operatore</div>' +
+                            '<div style="font-size: 8.5px; color: #64748b; margin-top: 2px;">' + operator + '</div>' +
+                        '</td>' +
+                    '</tr>' +
+                '</table>';
 
-                <div style="background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 10px; margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                    <div><strong>Operatore:</strong> ${operator}</div>
-                    <div><strong>Targa Mezzo:</strong> <span style="font-family: monospace; font-weight: bold;">${plate}</span></div>
-                    <div style="grid-column: span 2;"><strong>Compagni di Squadra:</strong> ${team}</div>
-                </div>
+            const wrapperDiv = document.createElement('div');
+            wrapperDiv.style.cssText = "position: absolute; left: -9999px; top: 0; z-index: -1000;";
+            wrapperDiv.appendChild(container);
+            document.body.appendChild(wrapperDiv);
 
-                <div style="margin-top: 20px;">
-                    <div style="font-weight: bold; color: #1e293b; text-transform: uppercase; font-size: 9.5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">1. Interventi Eseguiti nella Giornata</div>
-                    <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 9.5px;">
-                        <thead>
-                            <tr style="background: #1e293b; color: white; font-weight: bold;">
-                                <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">N° Doc</th>
-                                <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Cliente</th>
-                                <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Tipologia Intervento</th>
-                                <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Extra</th>
-                            </tr>
-                        </thead>
-                        <tbody>${tasksHtml}</tbody>
-                    </table>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
-                    <div>
-                        <div style="font-weight: bold; color: #1e293b; text-transform: uppercase; font-size: 9.5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">2. Spese Extra Giornaliere</div>
-                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 9.5px;">
-                            <thead>
-                                <tr style="background: #f1f5f9; color: #334155; font-weight: bold;">
-                                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Descrizione</th>
-                                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right; width: 80px;">Importo</th>
-                                </tr>
-                            </thead>
-                            <tbody>${expensesHtml}</tbody>
-                        </table>
-                    </div>
-
-                    <div>
-                        <div style="font-weight: bold; color: #1e293b; text-transform: uppercase; font-size: 9.5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">3. Rifornimenti Carburante</div>
-                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 9.5px;">
-                            <thead>
-                                <tr style="background: #f1f5f9; color: #334155; font-weight: bold;">
-                                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Stazione / Note</th>
-                                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right; width: 80px;">Importo</th>
-                                </tr>
-                            </thead>
-                            <tbody>${fuelsHtml}</tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #cbd5e1; text-align: right;">
-                    <p style="font-size: 9.5px; font-weight: bold; color: #334155; margin-bottom: 2px;">Firma Operatore</p>
-                    <p style="font-size: 8.5px; color: #64748b; margin-top: 0;">${operator}</p>
-                </div>
-            `;
+            showToast('Generazione PDF in corso...', 'info');
 
             const opt = {
-                margin:       10,
-                filename:     `Resoconto_Giornaliero_${date}.pdf`,
+                margin:       [8, 8, 8, 8],
+                filename:     'Resoconto_Giornaliero_' + date + '.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true, logging: false, width: 700 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            html2pdf().from(container).set(opt).save();
-        }
+            setTimeout(() => {
+                html2pdf().from(container).set(opt).save().then(() => {
+                    wrapperDiv.remove();
+                    showToast('PDF generato con successo!', 'success');
+                }).catch(err => {
+                    console.error("Errore generazione PDF:", err);
+                    wrapperDiv.remove();
+                    showToast('Errore durante la generazione del PDF', 'error');
+                });
+            }, 300);
+        };
 
-        function syncToPrint() {
+              function syncToPrint() {
             document.getElementById('prt_doc_num').innerText = document.getElementById('doc_num').value || '-';
             document.getElementById('prt_doc_date').innerText = 'Data: ' + formatDateToIT(document.getElementById('doc_date').value);
             document.getElementById('prt_cliente_nome').innerText = document.getElementById('cliente_nome').value || '-';
@@ -1908,7 +2119,7 @@
                 prtAssetsTbody.innerHTML = '';
                 const rows = document.querySelectorAll('#assets-table-body tr');
                 
-                if (currentReportMode === 'base') {
+                if (window.currentReportMode === 'base') {
                     if (prtSec2Title) prtSec2Title.innerText = '2. Lista Prodotti in Consegna';
                     if (prtHeaderTr) prtHeaderTr.innerHTML = `<th class="border border-slate-300 p-1">Tipologia</th><th class="border border-slate-300 p-1">Modello</th><th class="border border-slate-300 p-1">Q.tà</th><th class="border border-slate-300 p-1">Matricola / Lotto</th><th class="border border-slate-300 p-1">Ubicazione</th>`;
                     
@@ -1928,7 +2139,7 @@
                                 <td class="border border-slate-300 p-1">${ubicazione}</td>
                             </tr>`;
                     });
-                } else if (currentReportMode === 'caldaia') {
+                } else if (window.currentReportMode === 'caldaia') {
                     if (prtSec2Title) prtSec2Title.innerText = '2. Censimento Generatore Termico & S/N';
                     if (prtHeaderTr) prtHeaderTr.innerHTML = `<th class="border border-slate-300 p-1">Marca</th><th class="border border-slate-300 p-1">Modello</th><th class="border border-slate-300 p-1">Potenza / Gas</th><th class="border border-slate-300 p-1">Matricola S/N & Note</th><th class="border border-slate-300 p-1">Locale</th>`;
                     
@@ -1981,8 +2192,8 @@
             if (prtChecklistUl) {
                 prtChecklistUl.innerHTML = '';
                 let activeList = CHECKLIST_PROFESSIONAL;
-                if (currentReportMode === 'base') activeList = CHECKLIST_BASE;
-                if (currentReportMode === 'caldaia') activeList = CHECKLIST_CALDAIA;
+                if (window.currentReportMode === 'base') activeList = CHECKLIST_BASE;
+                if (window.currentReportMode === 'caldaia') activeList = CHECKLIST_CALDAIA;
 
                 const checkboxes = document.querySelectorAll('#checklist-container input[type="checkbox"]');
                 let checkedCount = 0;
@@ -2008,11 +2219,11 @@
             const ulSez3 = document.getElementById('prt-ul-sez3');
             const fgasPrintBox = document.getElementById('prt-box-fgas');
 
-            if (currentReportMode === 'base') {
+            if (window.currentReportMode === 'base') {
                 if (fgasPrintBox) fgasPrintBox.classList.add('hidden');
             } else {
                 if (fgasPrintBox) fgasPrintBox.classList.remove('hidden');
-                if (currentReportMode === 'caldaia') {
+                if (window.currentReportMode === 'caldaia') {
                     if (titSez3) titSez3.innerText = "3. Verifiche Combustione & Impianto Termico";
                     if (ulSez3) {
                         ulSez3.innerHTML = `
@@ -2059,7 +2270,7 @@
             setTimeout(() => toast.remove(), 3000);
         }
 
-        function switchTab(tab, force = false, mode = 'professional') {
+        window.switchTab = function(tab, force = false, mode = 'professional') {
             ['new-report', 'history', 'settings', 'assigned-tasks', 'daily-report'].forEach(t => {
                 const el = document.getElementById(`tab-${t}`);
                 if(el) el.classList.add('hidden');
@@ -2067,7 +2278,7 @@
             const target = document.getElementById(`tab-${tab}`);
             if(target) target.classList.remove('hidden');
             if (tab === 'daily-report') {
-                generateDailyReportData();
+                window.generateDailyReportData();
             }
         }
 
@@ -2119,7 +2330,7 @@
             window.addEventListener('touchend', stopDraw);
         }
 
-        function gestisciTipoIntervento() {
+        window.gestisciTipoIntervento = function() {
             const selectElement = document.getElementById('tipo_intervento');
             if (!selectElement) return;
             
@@ -2157,22 +2368,22 @@
             }
         }
 
-        function clearCanvas(canvasId) {
+        window.clearCanvas = function(canvasId) {
             const c = document.getElementById(canvasId);
             if(!c) return;
             c.getContext('2d').clearRect(0, 0, c.width, c.height);
             updateSig(canvasId);
         }
 
-        function exportPDF() {
+        window.exportPDF = function() {
             html2pdf().from(document.getElementById('print-area')).save('Report_Intervento.pdf');
         }
 
-        function optimizeItineraryWithAI() { showToast("Itinerario ottimizzato con successo!", "success"); }
-        function loadDemoData() { showToast("Demo caricata", "info"); }
-        function generateAIReport() { showToast("Generato con AI", "success"); }
-        function saveApiKey() { showToast("API Key salvata", "success"); }
-        function resetForm() { 
+        window.optimizeItineraryWithAI = function() { showToast("Itinerario ottimizzato con successo!", "success"); }
+        window.loadDemoData = function() { showToast("Demo caricata", "info"); }
+        window.generateAIReport = function() { showToast("Generato con AI", "success"); }
+        window.saveApiKey = function() { showToast("API Key salvata", "success"); }
+        window.resetForm = function() { 
             const form = document.getElementById('report-form');
             if(form) form.reset(); 
         }
