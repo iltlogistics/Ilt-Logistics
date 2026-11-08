@@ -11,31 +11,58 @@
     <!-- html2pdf.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs & Init -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, getDoc, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // CONFIGURAZIONE FIREBASE (Sostituisci con le tue credenziali del progetto Firebase)
         const firebaseConfig = {
             apiKey: "AIzaSyA4y7w91L1OPq2_vKxWICGaFE3d4ID02GU",
-  authDomain: "iltlogisitcssrl.firebaseapp.com",
-  projectId: "iltlogisitcssrl",
-  storageBucket: "iltlogisitcssrl.firebasestorage.app",
-  messagingSenderId: "872541639268",
-  appId: "1:872541639268:web:dfc2fd1d019bca46c0c571"
+            authDomain: "iltlogisitcssrl.firebaseapp.com",
+            projectId: "iltlogisitcssrl",
+            storageBucket: "iltlogisitcssrl.firebasestorage.app",
+            messagingSenderId: "872541639268",
+            appId: "1:872541639268:web:dfc2fd1d019bca46c0c571"
         };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Esponiamo gli oggetti globalmente per l'app
         window.FB = { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, setDoc, getDoc, query, where, onSnapshot };
-        
-        // Avvio controllo auth al caricamento
-        window.initFirebaseApp();
+
+        window.FB.onAuthStateChanged(window.FB.auth, async (user) => {
+            if (user) {
+                const userDocRef = window.FB.doc(window.FB.db, "users", user.uid);
+                const userDoc = await window.FB.getDoc(userDocRef);
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    activeUser = { uid: user.uid, email: user.email, name: data.name, role: data.role };
+                } else {
+                    activeUser = { uid: user.uid, email: user.email, name: user.email, role: 'tecnico' };
+                }
+                applyUserSession();
+            } else {
+                activeUser = null;
+                document.getElementById('login-modal').classList.remove('hidden');
+                document.getElementById('user-session-badge').classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initLogo();
+            initDateAndDoc();
+            setupCanvas('canvas-tecnico');
+            setupCanvas('canvas-cliente');
+            renderChecklist();
+            addAssetRow();
+            addExtraRow();
+            addDailyExpenseRow();
+            addDailyFuelRow();
+            const dateInput = document.getElementById('daily_report_date');
+            if(dateInput) dateInput.valueAsDate = new Date();
+        });
     </script>
 
     <script>
@@ -130,7 +157,7 @@
                     <h4 class="text-xs font-bold text-slate-700 mb-2 border-b pb-1">Dettagli Appuntamento</h4>
                     <p class="text-[11px] text-slate-600"><strong>Cliente:</strong> <span id="trk-cliente"></span></p>
                     <p class="text-[11px] text-slate-600"><strong>Indirizzo:</strong> <span id="trk-indirizzo"></span></p>
-                    <p class="text-[11px] text-slate-600"><strong>Tecnico:</strong> <span id="trk-tecnico"></span></p>
+                    <p class="text-[11px] text-slate-600"><strong>Incaricato:</strong> <span id="trk-tecnico"></span></p>
                 </div>
             </div>
         </div>
@@ -163,27 +190,30 @@
                 </div>
 
                 <nav class="flex flex-wrap items-center gap-1.5 bg-slate-800/90 p-1 rounded-xl border border-slate-700">
-    <button onclick="switchTab('assigned-tasks')" id="tab-btn-tasks" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
-        <i class="fas fa-list-check text-amber-400"></i> <span id="tab-tasks-label">Pre-Report</span>
-        <span id="pending-tasks-badge" class="bg-amber-500 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
-    </button>
-    <button onclick="switchTab('new-report', false, 'professional'); preparePreReport('professional')" id="tab-btn-professional" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-iltRed text-white flex items-center gap-1.5 shadow transition">
-        <i class="fas fa-fan"></i> <span>Professionale Clima</span>
-    </button>
-    <button onclick="switchTab('new-report', false, 'caldaia'); preparePreReport('caldaia')" id="tab-btn-caldaia" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-600 text-white flex items-center gap-1.5 shadow transition hover:bg-amber-700">
-        <i class="fas fa-fire"></i> <span>Professionale Caldaia</span>
-    </button>
-    <button onclick="switchTab('new-report', false, 'base'); preparePreReport('base')" id="tab-btn-base" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
-        <i class="fas fa-file-lines"></i> <span>Base</span>
-    </button>
-    <button onclick="switchTab('history')" id="tab-btn-history" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
-        <i class="fas fa-history"></i> <span>Storico</span>
-        <span id="history-badge" class="bg-slate-700 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
-    </button>
-    <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
-        <i class="fas fa-sliders"></i> <span>Impostazioni</span>
-    </button>
-</nav>
+                    <button onclick="switchTab('assigned-tasks')" id="tab-btn-tasks" class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fas fa-list-check text-amber-400"></i> <span id="tab-tasks-label">Pre-Report</span>
+                        <span id="pending-tasks-badge" class="bg-amber-500 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+                    </button>
+                    <button onclick="switchTab('daily-report')" id="tab-btn-daily" class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fas fa-calendar-day text-green-400"></i> <span>Resoconto Giornaliero</span>
+                    </button>
+                    <button onclick="switchTab('new-report', false, 'professional'); preparePreReport('professional')" id="tab-btn-professional" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-iltRed text-white flex items-center gap-1.5 shadow transition">
+                        <i class="fas fa-fan"></i> <span>Professionale Clima</span>
+                    </button>
+                    <button onclick="switchTab('new-report', false, 'caldaia'); preparePreReport('caldaia')" id="tab-btn-caldaia" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-600 text-white flex items-center gap-1.5 shadow transition hover:bg-amber-700">
+                        <i class="fas fa-fire"></i> <span>Professionale Caldaia</span>
+                    </button>
+                    <button onclick="switchTab('new-report', false, 'base'); preparePreReport('base')" id="tab-btn-base" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fas fa-file-lines"></i> <span>Base</span>
+                    </button>
+                    <button onclick="switchTab('history')" id="tab-btn-history" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fas fa-history"></i> <span>Storico</span>
+                        <span id="history-badge" class="bg-slate-700 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">0</span>
+                    </button>
+                    <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg flex items-center gap-1.5 transition">
+                        <i class="fas fa-sliders"></i> <span>Impostazioni</span>
+                    </button>
+                </nav>
             </div>
         </div>
     </header>
@@ -231,12 +261,123 @@
                                 <th class="p-3">Cliente</th>
                                 <th class="p-3">Indirizzo / Contatti</th>
                                 <th class="p-3">Tipologia</th>
-                                <th class="p-3" id="th-tecnico-col">Tecnico Incaricato</th>
+                                <th class="p-3" id="th-tecnico-col">Incaricato</th>
                                 <th class="p-3 text-center">Azione / Stato</th>
                             </tr>
                         </thead>
                         <tbody id="tasks-tbody" class="divide-y divide-slate-100"></tbody>
                     </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB: RESOCONTO GIORNALIERO -->
+        <section id="tab-daily-report" class="hidden space-y-4 no-print">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-5">
+                <div class="flex flex-wrap justify-between items-center border-b border-slate-100 pb-3 gap-3">
+                    <div>
+                        <h2 class="text-base font-bold text-iltDark flex items-center gap-2">
+                            <i class="fas fa-calendar-day text-green-600"></i> Resoconto Giornaliero Lavorazioni & Spese
+                        </h2>
+                        <p class="text-xs text-slate-500">Seleziona la data per generare il resoconto completo dei lavori svolti (Base, Clima, Caldaia), spese e rifornimenti.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs font-bold text-slate-700">Data:</label>
+                        <input type="date" id="daily_report_date" class="text-xs border border-slate-300 rounded-lg p-2 font-semibold focus:ring-2 focus:ring-iltBlue focus:outline-none" onchange="generateDailyReportData()">
+                    </div>
+                </div>
+
+                <!-- COMPAGNI DI SQUADRA E MEZZO -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Compagni di Squadra</label>
+                        <input type="text" id="daily_team_mates" placeholder="Es. Mario Rossi, Luca Bianchi" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        <span class="text-[10px] text-slate-500 mt-0.5 block">Inserisci i nomi separati da virgola.</span>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Targa Mezzo Aziendale</label>
+                        <input type="text" id="daily_vehicle_plate" placeholder="Es. AB123CD" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 bg-white font-mono uppercase focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="button" onclick="generateDailyReportData()" class="w-full py-2.5 bg-iltBlue hover:bg-blue-800 text-white font-bold text-xs rounded-lg transition shadow flex items-center justify-center gap-1.5">
+                            <i class="fas fa-sync-alt"></i> Aggiorna Resoconto
+                        </button>
+                    </div>
+                </div>
+
+                <!-- LISTA LAVORI EFFETTUATI NELLA GIORNATA -->
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Interventi Chiusi / Registrati nella Data</h3>
+                    <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                        <table class="w-full text-left text-xs border-collapse min-w-[600px]">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 uppercase text-[10px] font-bold border-b border-slate-200">
+                                    <th class="p-2.5">N° Doc</th>
+                                    <th class="p-2.5">Cliente</th>
+                                    <th class="p-2.5">Tipologia</th>
+                                    <th class="p-2.5">Operatore</th>
+                                    <th class="p-2.5">Extra / Spese</th>
+                                </tr>
+                            </thead>
+                            <tbody id="daily-tasks-tbody" class="divide-y divide-slate-100">
+                                <tr><td colspan="5" class="p-4 text-center text-slate-400">Nessun intervento registrato in questa data.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SPESE E RIFORNIMENTI GIORNALIERI -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase"><i class="fas fa-receipt text-green-600 mr-1"></i> Spese Extra Giornaliere</h4>
+                            <button type="button" onclick="addDailyExpenseRow()" class="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-[11px] font-bold transition flex items-center gap-1">
+                                <i class="fas fa-plus"></i> Aggiungi Spesa
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-200 text-slate-700 font-bold text-[10px] uppercase">
+                                        <th class="p-1.5">Descrizione</th>
+                                        <th class="p-1.5 w-20">Importo (€)</th>
+                                        <th class="p-1 text-center w-8"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="daily-expense-tbody" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="space-y-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-bold text-slate-700 uppercase"><i class="fas fa-gas-pump text-amber-600 mr-1"></i> Rifornimento Carburante</h4>
+                            <button type="button" onclick="addDailyFuelRow()" class="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded text-[11px] font-bold transition flex items-center gap-1">
+                                <i class="fas fa-plus"></i> Aggiungi Rifornimento
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-200 text-slate-700 font-bold text-[10px] uppercase">
+                                        <th class="p-1.5">Stazione / Note</th>
+                                        <th class="p-1.5 w-20">Importo (€)</th>
+                                        <th class="p-1 text-center w-8"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="daily-fuel-tbody" class="divide-y divide-slate-200"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="saveDailyReportCloud()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-lg transition shadow flex items-center gap-1.5">
+                        <i class="fas fa-floppy-disk"></i> Salva Resoconto nel Cloud
+                    </button>
+                    <button type="button" onclick="exportDailyReportPDF()" class="px-4 py-2 bg-iltRed hover:bg-red-700 text-white font-bold text-xs rounded-lg transition shadow flex items-center gap-1.5">
+                        <i class="fas fa-file-pdf"></i> Esporta Resoconto PDF
+                    </button>
                 </div>
             </div>
         </section>
@@ -285,7 +426,7 @@
                     <div id="admin-assignment-box" class="hidden bg-amber-50 border border-amber-200 p-3.5 rounded-xl flex items-center justify-between gap-4">
                         <div class="flex items-center gap-2 text-xs text-amber-900 font-bold">
                             <i class="fas fa-user-gear text-base text-amber-600"></i>
-                            <span>Assegna questo Pre-Report ad un tecnico operativo:</span>
+                            <span>Assegna questo Pre-Report a un operatore (Tecnico o Amministratore):</span>
                         </div>
                         <div class="flex items-center gap-2 min-w-[220px]">
                             <select id="assigned_technician_select" class="w-full text-xs font-bold border border-amber-300 rounded-lg p-2 bg-white text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-none"></select>
@@ -302,21 +443,20 @@
                             <input type="date" id="doc_date" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
                         </div>
                         <div>
-    <label class="block text-xs font-semibold text-slate-600 mb-1">Tipologia Intervento</label>
-    <!-- NOTA L'AGGIUNTA DI onchange="gestisciTipoIntervento()" QUI SOTTO -->
-    <select id="tipo_intervento" onchange="gestisciTipoIntervento()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-semibold text-slate-700 focus:ring-2 focus:ring-iltBlue focus:outline-none">
-        <option>Installazione & Collaudo Climatizzatore</option>
-        <option>Consegna e Installazione & Collaudo Climatizzatore</option>
-        <option>Sopralluogo Tecnico & Fattibilità Impianto</option>
-        <option>Manutenzione clima Ordinaria / Pulizia Filtri & Sanificazione</option>
-        <option>Manutenzione clima Straordinaria & Riparazione</option>
-        <option>Ricerca Perdita Refrigerante & Ricarica F-GAS</option>
-        <option>Installazione & Collaudo Caldaia / Sistema Termico</option>
-        <option>Consegna e Installazione & Collaudo Caldaia / Sistema Termico</option>
-        <option>Manutenzione Ordinaria & Controllo Fumi Caldaia</option>
-    <option>Manutenzione Straordinaria & Riparazione Caldaia</option>
-    </select>
-</div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipologia Intervento</label>
+                            <select id="tipo_intervento" onchange="gestisciTipoIntervento()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-semibold text-slate-700 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                                <option>Installazione & Collaudo Climatizzatore</option>
+                                <option>Consegna e Installazione & Collaudo Climatizzatore</option>
+                                <option>Sopralluogo Tecnico & Fattibilità Impianto</option>
+                                <option>Manutenzione clima Ordinaria / Pulizia Filtri & Sanificazione</option>
+                                <option>Manutenzione clima Straordinaria & Riparazione</option>
+                                <option>Ricerca Perdita Refrigerante & Ricarica F-GAS</option>
+                                <option>Installazione & Collaudo Caldaia / Sistema Termico</option>
+                                <option>Consegna e Installazione & Collaudo Caldaia / Sistema Termico</option>
+                                <option>Manutenzione Ordinaria & Controllo Fumi Caldaia</option>
+                                <option>Manutenzione Straordinaria & Riparazione Caldaia</option>
+                            </select>
+                        </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Cliente / Spett.le</label>
                             <input type="text" id="cliente_nome" placeholder="Es. Cosentino Giuseppe" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
@@ -335,7 +475,6 @@
                             <input type="email" id="cliente_email" placeholder="cliente@email.it" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
                         </div>
 
-                        <!-- CAMPI AGGIUNTI -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Cellulare / Tel. Cliente</label>
                             <input type="tel" id="cliente_tel" placeholder="Es. 3331234567" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
@@ -390,110 +529,110 @@
                     </div>
                 </div>
 
-                <!-- SEZIONE 3: PARAMETRI STRUMENTALI (CLIMA O CALDAIA) -->
-<div id="sezione-parametri-container" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
-    <h2 class="text-sm font-bold text-iltDark flex items-center gap-2 border-b border-slate-100 pb-2.5">
-        <span class="p-1.5 bg-green-50 text-green-700 rounded-md" id="sezione-3-icon"><i class="fas fa-gauge-high"></i></span>
-        <span id="sezione-3-titolo">3. Parametri Strumentali, Elettrici & Normativa F-GAS</span>
-    </h2>
+                <!-- SEZIONE 3: PARAMETRI STRUMENTALI -->
+                <div id="sezione-parametri-container" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                    <h2 class="text-sm font-bold text-iltDark flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                        <span class="p-1.5 bg-green-50 text-green-700 rounded-md" id="sezione-3-icon"><i class="fas fa-gauge-high"></i></span>
+                        <span id="sezione-3-titolo">3. Parametri Strumentali, Elettrici & Normativa F-GAS</span>
+                    </h2>
 
-    <!-- BLOCCO CLIMA (F-GAS) -->
-    <div id="blocco-parametri-clima" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Tenuta Azoto (bar)</label>
-            <input type="text" id="fgas_azoto" value="42 bar (Superata)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Prova Vuoto Circuito</label>
-            <input type="text" id="fgas_vuoto" value="-1.0 bar (30 min) OK" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo Refrigerante</label>
-            <select id="fgas_tipo_gas" onchange="calcolaCO2Eq(); syncToPrint();" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none">
-                <option value="R32" data-gwp="675">R32 (GWP 675)</option>
-                <option value="R410A" data-gwp="2088">R410A (GWP 2088)</option>
-                <option value="R134a" data-gwp="1430">R134a (GWP 1430)</option>
-                <option value="R290" data-gwp="3">R290 (GWP 3)</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Carica Gas Caricata (kg)</label>
-            <input type="number" step="0.01" id="fgas_kg_carica" value="1.20" oninput="calcolaCO2Eq(); syncToPrint();" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Tonnellate CO2 Eq.</label>
-            <input type="text" id="fgas_co2_eq" readonly value="0.81 t" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-slate-700 bg-slate-50">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Assorbimento Elettrico (A)</label>
-            <input type="text" id="fgas_ampere" value="4.5 A (Max 6.2A)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">N° Patentino F-GAS</label>
-            <input type="text" id="fgas_patentino" value="XPERT/FGAS/23/2529" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Drenaggio Condensa</label>
-            <input type="text" id="fgas_condensa" value="Test Flusso Ok per Gravità" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div class="sm:col-span-2">
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Temperature Aria Split & Delta-T (°C)</label>
-            <input type="text" id="fgas_temp_split" value="Mandata: +12°C | Ripresa: +24°C (ΔT: 12°C OK)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div class="sm:col-span-2">
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Pressioni di Esercizio Linee (Bar)</label>
-            <input type="text" id="fgas_pressione" value="Bassa Pressione: 8.5 bar | Alta Pressione: 28.0 bar" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
-        </div>
-    </div>
+                    <!-- BLOCCO CLIMA -->
+                    <div id="blocco-parametri-clima" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tenuta Azoto (bar)</label>
+                            <input type="text" id="fgas_azoto" value="42 bar (Superata)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Prova Vuoto Circuito</label>
+                            <input type="text" id="fgas_vuoto" value="-1.0 bar (30 min) OK" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo Refrigerante</label>
+                            <select id="fgas_tipo_gas" onchange="calcolaCO2Eq(); syncToPrint();" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                                <option value="R32" data-gwp="675">R32 (GWP 675)</option>
+                                <option value="R410A" data-gwp="2088">R410A (GWP 2088)</option>
+                                <option value="R134a" data-gwp="1430">R134a (GWP 1430)</option>
+                                <option value="R290" data-gwp="3">R290 (GWP 3)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Carica Gas (kg)</label>
+                            <input type="number" step="0.01" id="fgas_kg_carica" value="1.20" oninput="calcolaCO2Eq(); syncToPrint();" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tonnellate CO2 Eq.</label>
+                            <input type="text" id="fgas_co2_eq" readonly value="0.81 t" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-slate-700 bg-slate-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Assorbimento (A)</label>
+                            <input type="text" id="fgas_ampere" value="4.5 A (Max 6.2A)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">N° Patentino F-GAS</label>
+                            <input type="text" id="fgas_patentino" value="XPERT/FGAS/23/2529" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Drenaggio Condensa</label>
+                            <input type="text" id="fgas_condensa" value="Test Flusso Ok per Gravità" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Temperature Aria Split & Delta-T (°C)</label>
+                            <input type="text" id="fgas_temp_split" value="Mandata: +12°C | Ripresa: +24°C (ΔT: 12°C OK)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Pressioni di Esercizio Linee (Bar)</label>
+                            <input type="text" id="fgas_pressione" value="Bassa Pressione: 8.5 bar | Alta Pressione: 28.0 bar" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                    </div>
 
-    <!-- BLOCCO CALDAIA -->
-    <div id="blocco-parametri-caldaia" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Tenuta Impianto Gas (bar/mbar)</label>
-            <input type="text" id="term_tenuta_gas" value="Prova Ok a 100 mbar (UNI 7129)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo Alimentazione Gas</label>
-            <select id="term_tipo_gas" onchange="syncToPrint()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-bold text-amber-700 focus:ring-2 focus:ring-amber-500 focus:outline-none">
-                <option value="Metano (G20)">Metano (G20)</option>
-                <option value="GPL (G31)">GPL (G31)</option>
-                <option value="Aria Propanata">Aria Propanata</option>
-            </select>
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Pressione Idraulica (bar)</label>
-            <input type="text" id="term_pressione_idr" value="1.2 bar (OK)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Tiraggio Canna Fumaria (Pa)</label>
-            <input type="text" id="term_tiraggio" value="-12.5 Pa (A norma)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">CO In Combustione (ppm)</label>
-            <input type="text" id="term_co_ppm" value="24 ppm" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">CO2 % / O2 % Fumi</label>
-            <input type="text" id="term_co2_fumi" value="CO2: 9.1% | O2: 4.8%" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Rendimento Combustione (%)</label>
-            <input type="text" id="term_rendimento" value="94.2% (Classe A)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-green-700 focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Temp. Fumi / Ambiente (°C)</label>
-            <input type="text" id="term_temp_fumi" value="Fumi: +68°C | Amb: +20°C" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div class="sm:col-span-2">
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Codice Catasto / Libretto Impianto</label>
-            <input type="text" id="term_codice_catasto" value="CIT-PA-2026-9842" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-amber-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
-        </div>
-        <div class="sm:col-span-2">
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Bollino Termico / Certificazione</label>
-            <input type="text" id="term_bollino" value="Bollino Verde N° 8492048 - Valido fino al 2028" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
-        </div>
-    </div>
-</div>
+                    <!-- BLOCCO CALDAIA -->
+                    <div id="blocco-parametri-caldaia" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tenuta Impianto Gas</label>
+                            <input type="text" id="term_tenuta_gas" value="Prova Ok a 100 mbar (UNI 7129)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo Alimentazione Gas</label>
+                            <select id="term_tipo_gas" onchange="syncToPrint()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-bold text-amber-700 focus:ring-2 focus:ring-amber-500 focus:outline-none">
+                                <option value="Metano (G20)">Metano (G20)</option>
+                                <option value="GPL (G31)">GPL (G31)</option>
+                                <option value="Aria Propanata">Aria Propanata</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Pressione Idraulica (bar)</label>
+                            <input type="text" id="term_pressione_idr" value="1.2 bar (OK)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tiraggio Canna Fumaria</label>
+                            <input type="text" id="term_tiraggio" value="-12.5 Pa (A norma)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">CO In Combustione (ppm)</label>
+                            <input type="text" id="term_co_ppm" value="24 ppm" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">CO2 % / O2 % Fumi</label>
+                            <input type="text" id="term_co2_fumi" value="CO2: 9.1% | O2: 4.8%" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Rendimento Combustione</label>
+                            <input type="text" id="term_rendimento" value="94.2% (Classe A)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-green-700 focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Temp. Fumi / Ambiente</label>
+                            <input type="text" id="term_temp_fumi" value="Fumi: +68°C | Amb: +20°C" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Codice Catasto / Libretto</label>
+                            <input type="text" id="term_codice_catasto" value="CIT-PA-2026-9842" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-amber-800 focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Bollino Termico / Certificazione</label>
+                            <input type="text" id="term_bollino" value="Bollino Verde N° 8492048 - Valido fino al 2028" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                    </div>
+                </div>
 
                 <!-- CHECKLIST -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3.5">
@@ -612,10 +751,10 @@
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
                         <div class="flex justify-between items-center mb-2">
-                            <label class="text-xs font-bold text-slate-700 uppercase">Firma Tecnico</label>
+                            <label class="text-xs font-bold text-slate-700 uppercase">Firma Operatore</label>
                             <button type="button" onclick="clearCanvas('canvas-tecnico')" class="text-xs text-slate-400 hover:text-red-600">Pulisci</button>
                         </div>
-                        <input type="text" id="nome_tecnico" placeholder="Nome Tecnico" class="w-full text-xs border border-slate-300 rounded-lg p-2 mb-2 focus:outline-none">
+                        <input type="text" id="nome_tecnico" placeholder="Nome Operatore" class="w-full text-xs border border-slate-300 rounded-lg p-2 mb-2 focus:outline-none">
                         <div class="border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 canvas-container">
                             <canvas id="canvas-tecnico" width="400" height="110" class="w-full h-24 cursor-crosshair"></canvas>
                         </div>
@@ -709,11 +848,9 @@
 
                     <div class="grid grid-cols-2 gap-3">
                         <div id="prt-box-fgas" class="border border-slate-300 p-2 rounded bg-slate-50">
-    <div class="font-bold text-slate-800 uppercase border-b border-slate-200 pb-0.5 mb-1 text-[9px]" id="prt-titolo-sez3">3. Verifiche F-GAS & Elettriche</div>
-    <ul class="space-y-0.5 text-[9.5px]" id="prt-ul-sez3">
-        <!-- Voci dinamiche gestite via JS -->
-    </ul>
-</div>
+                            <div class="font-bold text-slate-800 uppercase border-b border-slate-200 pb-0.5 mb-1 text-[9px]" id="prt-titolo-sez3">3. Verifiche F-GAS & Elettriche</div>
+                            <ul class="space-y-0.5 text-[9.5px]" id="prt-ul-sez3"></ul>
+                        </div>
                         <div class="border border-slate-300 p-2 rounded bg-slate-50">
                             <div class="flex justify-between items-center border-b border-slate-200 pb-0.5 mb-1">
                                 <div class="font-bold text-slate-800 uppercase text-[9px]">4. Checklist</div>
@@ -730,9 +867,9 @@
 
                     <div class="grid grid-cols-2 gap-6 pt-2 border-t border-slate-300">
                         <div class="text-center">
-                            <p class="font-bold text-[9.5px] text-slate-700 mb-0.5">Tecnico</p>
+                            <p class="font-bold text-[9.5px] text-slate-700 mb-0.5">Operatore</p>
                             <p id="prt_nome_tecnico" class="text-[8.5px] text-slate-500 mb-1">-</p>
-                            <img id="prt_img_tecnico" class="h-12 mx-auto object-contain border-b border-slate-400 min-w-[100px]" alt="Firma Tecnico">
+                            <img id="prt_img_tecnico" class="h-12 mx-auto object-contain border-b border-slate-400 min-w-[100px]" alt="Firma Operatore">
                         </div>
                         <div class="text-center">
                             <p class="font-bold text-[9.5px] text-slate-700 mb-0.5">Cliente</p>
@@ -764,7 +901,7 @@
                                 <th class="p-3">Data</th>
                                 <th class="p-3">Cliente</th>
                                 <th class="p-3">Tipologia</th>
-                                <th class="p-3">Tecnico</th>
+                                <th class="p-3">Operatore</th>
                                 <th class="p-3">Extra</th>
                                 <th class="p-3 text-center">Azioni</th>
                             </tr>
@@ -866,6 +1003,7 @@
         let currentReportMode = 'professional';
         let reportPhotos = { 1: null, 2: null, 3: null, 4: null };
         let globalPreReports = [];
+        let globalHistoryReports = [];
         let usersCache = [];
 
         const CHECKLIST_PROFESSIONAL = [
@@ -900,34 +1038,6 @@
             "Pulizia area di installazione e ritiro materiale d'imballo",
             "Consegna libretto uso/manutenzione e istruzioni al cliente"
         ];
-
-        window.initFirebaseApp = function() {
-            window.FB.onAuthStateChanged(window.FB.auth, async (user) => {
-                if (user) {
-                    const userDocRef = window.FB.doc(window.FB.db, "users", user.uid);
-                    const userDoc = await window.FB.getDoc(userDocRef);
-                    if (userDoc.exists()) {
-                        const data = userDoc.data();
-                        activeUser = { uid: user.uid, email: user.email, name: data.name, role: data.role };
-                    } else {
-                        activeUser = { uid: user.uid, email: user.email, name: user.email, role: 'tecnico' };
-                    }
-                    applyUserSession();
-                } else {
-                    activeUser = null;
-                    document.getElementById('login-modal').classList.remove('hidden');
-                    document.getElementById('user-session-badge').classList.add('hidden');
-                }
-            });
-
-            initLogo();
-            initDateAndDoc();
-            setupCanvas('canvas-tecnico');
-            setupCanvas('canvas-cliente');
-            renderChecklist();
-            addAssetRow();
-            addExtraRow();
-        }
 
         function formatDateToIT(dateString) {
             if (!dateString) return '-';
@@ -997,7 +1107,7 @@
                     <option>Sopralluogo Tecnico & Fattibilità Impianto Gas/Fumi</option>
                     <option>Prova di Tenuta Impianto Gas (UNI 7129 / 11528)</option>`;
 
-            } else { // Modalità Clima ('professional')
+            } else { 
                 if (titleBadge) titleBadge.innerText = "MODALITÀ: PROFESSIONALE CLIMA";
                 if (section2Title) section2Title.innerText = "2. Censimento Apparecchiature & S/N";
                 if (addRowBtnText) addRowBtnText.innerText = "Aggiungi Macchina";
@@ -1029,13 +1139,11 @@
             if (!activeUser) return;
             const isAdmin = activeUser.role === 'admin';
             
-            // Elementi visibili SOLO all'amministratore
-            ['tab-btn-professional', 'tab-btn-caldaia', 'tab-btn-base', 'btn-save-prereport', 'admin-assignment-box', 'th-tecnico-col', 'admin-tech-management-box', 'admin-logo-box'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.classList.toggle('hidden', !isAdmin);
-            });
+            document.getElementById('admin-assignment-box').classList.remove('hidden');
+            document.getElementById('admin-tech-management-box').classList.toggle('hidden', !isAdmin);
+            document.getElementById('admin-logo-box').classList.toggle('hidden', !isAdmin);
+            document.getElementById('btn-save-prereport').classList.remove('hidden');
 
-            // Se l'utente è un tecnico, carichiamo la schermata dei suoi incarichi assegnati
             if (isAdmin) {
                 loadUsersData();
             }
@@ -1052,6 +1160,41 @@
             } else {
                 headerTr.innerHTML = `<th class="p-2">Marca</th><th class="p-2">Modello</th><th class="p-2">Potenza</th><th class="p-2">Gas</th><th class="p-2">S/N UI</th><th class="p-2">S/N UE</th><th class="p-2">Ubicazione</th><th class="p-2 text-center">Azione</th>`;
             }
+        }
+
+        function renderChecklist() {
+            const container = document.getElementById('checklist-container');
+            if (!container) return;
+            container.innerHTML = '';
+            let list = CHECKLIST_PROFESSIONAL;
+            if (currentReportMode === 'base') list = CHECKLIST_BASE;
+            if (currentReportMode === 'caldaia') list = CHECKLIST_CALDAIA;
+
+            list.forEach((item, index) => {
+                container.innerHTML += `
+                    <label class="flex items-center gap-2 text-xs p-1.5 bg-slate-50 border rounded-lg cursor-pointer hover:bg-slate-100">
+                        <input type="checkbox" checked onchange="syncToPrint()" class="rounded text-iltBlue focus:ring-iltBlue w-4 h-4">
+                        <span>${item}</span>
+                    </label>
+                `;
+            });
+        }
+
+        function toggleAllChecklist(status) {
+            document.querySelectorAll('#checklist-container input[type="checkbox"]').forEach(cb => cb.checked = status);
+            syncToPrint();
+        }
+
+        function calcolaCO2Eq() {
+            const select = document.getElementById('fgas_tipo_gas');
+            const kgInput = document.getElementById('fgas_kg_carica');
+            const co2Input = document.getElementById('fgas_co2_eq');
+            if (!select || !kgInput || !co2Input) return;
+            const selectedOpt = select.options[select.selectedIndex];
+            const gwp = parseFloat(selectedOpt.getAttribute('data-gwp')) || 0;
+            const kg = parseFloat(kgInput.value) || 0;
+            const tons = (gwp * kg) / 1000;
+            co2Input.value = tons.toFixed(2) + ' t';
         }
 
         function triggerPhotoUpload(index) { document.getElementById(`photo_file_${index}`).click(); }
@@ -1144,6 +1287,7 @@
             applyRolePermissions();
             listenPreReports();
             listenHistoryReports();
+            loadUsersData();
         }
 
         function updateUserBadge() {
@@ -1206,19 +1350,18 @@
             const select = document.getElementById('assigned_technician_select');
             if (!select) return;
             select.innerHTML = '';
-            usersCache.filter(u => u.role === 'tecnico').forEach(t => {
+            usersCache.forEach(t => {
                 const opt = document.createElement('option');
                 opt.value = t.uid;
-                opt.innerText = `${t.name} (${t.email})`;
+                opt.innerText = `${t.name} (${t.role.toUpperCase()})`;
                 select.appendChild(opt);
             });
         }
 
         async function saveAsPreReport() {
-            if (!activeUser || activeUser.role !== 'admin') return;
             const techUid = document.getElementById('assigned_technician_select').value;
             const techObj = usersCache.find(u => u.uid === techUid);
-            if (!techObj) { showToast('Seleziona un tecnico valido.', 'error'); return; }
+            if (!techObj) { showToast('Seleziona un incaricato valido.', 'error'); return; }
 
             const prereportData = {
                 doc_num: document.getElementById('doc_num').value,
@@ -1253,6 +1396,27 @@
             }
         }
 
+        async function saveReport() {
+            const reportData = {
+                num: document.getElementById('doc_num').value,
+                date: document.getElementById('doc_date').value,
+                cliente: document.getElementById('cliente_nome').value || 'Cliente',
+                tipo: document.getElementById('tipo_intervento').value,
+                tecnico: activeUser ? activeUser.name : 'Operatore',
+                extraTotal: document.getElementById('extra_total_badge').innerText,
+                created_at: new Date().toISOString()
+            };
+
+            try {
+                await window.FB.addDoc(window.FB.collection(window.FB.db, "reports"), reportData);
+                showToast("Report salvato nello Storico Cloud!", "success");
+                resetForm();
+                switchTab('history');
+            } catch (e) {
+                showToast("Errore salvataggio storico: " + e.message, 'error');
+            }
+        }
+
         function listenPreReports() {
             const q = window.FB.collection(window.FB.db, "prereports");
             window.FB.onSnapshot(q, (snapshot) => {
@@ -1261,6 +1425,48 @@
                     globalPreReports.push({ id: docSnap.id, ...docSnap.data() });
                 });
                 loadAssignedTasks();
+            });
+        }
+
+        function listenHistoryReports() {
+            const q = window.FB.collection(window.FB.db, "reports");
+            window.FB.onSnapshot(q, (snapshot) => {
+                globalHistoryReports = [];
+                snapshot.forEach((docSnap) => {
+                    globalHistoryReports.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                renderHistoryTable();
+            });
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-tbody');
+            const badge = document.getElementById('history-badge');
+            const totalCount = document.getElementById('history-total-count');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            if (badge) badge.innerText = globalHistoryReports.length;
+            if (totalCount) totalCount.innerText = `${globalHistoryReports.length} Report`;
+
+            if (globalHistoryReports.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nessun report presente nello storico Cloud.</td></tr>`;
+                return;
+            }
+
+            globalHistoryReports.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-iltRed">${r.num || '-'}</td>
+                    <td class="p-3">${formatDateToIT(r.date)}</td>
+                    <td class="p-3 font-semibold">${r.cliente || '-'}</td>
+                    <td class="p-3">${r.tipo || '-'}</td>
+                    <td class="p-3">${r.tecnico || '-'}</td>
+                    <td class="p-3 text-green-700 font-bold">${r.extraTotal || '€ 0.00'}</td>
+                    <td class="p-3 text-center"><button onclick="showToast('Report Cloud')" class="px-2 py-1 bg-iltBlue text-white rounded text-[10px]">Visualizza</button></td>
+                `;
+                tbody.appendChild(tr);
             });
         }
 
@@ -1275,7 +1481,6 @@
         }
 
         async function deletePreReportCloud(id) {
-            if (!activeUser || activeUser.role !== 'admin') return;
             if (!confirm('Eliminare questo incarico dal Cloud?')) return;
             try {
                 await window.FB.deleteDoc(window.FB.doc(window.FB.db, "prereports", id));
@@ -1287,51 +1492,38 @@
 
         function loadAssignedTasks() {
             let tasks = [...globalPreReports];
-            
-            // Se l'utente loggato è un tecnico, filtra solo i suoi incarichi
             if (activeUser && activeUser.role === 'tecnico') {
                 tasks = globalPreReports.filter(p => p.assigned_uid === activeUser.uid);
             }
 
-            document.getElementById('pending-tasks-badge').innerText = tasks.length;
-            document.getElementById('tasks-count-tag').innerText = `${tasks.length} Incarichi`;
+            const badge = document.getElementById('pending-tasks-badge');
+            const countTag = document.getElementById('tasks-count-tag');
+            if(badge) badge.innerText = tasks.length;
+            if(countTag) countTag.innerText = `${tasks.length} Incarichi`;
 
             const tbody = document.getElementById('tasks-tbody');
+            if(!tbody) return;
             tbody.innerHTML = '';
-            
             if (tasks.length === 0) {
-                const colSpan = (activeUser && activeUser.role === 'admin') ? 7 : 6;
-                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-6 text-center text-slate-400">Nessun incarico presente nel Cloud.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Nessun incarico presente nel Cloud.</td></tr>`;
                 return;
             }
 
             tasks.forEach(t => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
-                let tecnicoColHtml = activeUser.role === 'admin' ? `<td class="p-3 font-bold">${t.assigned_name || '-'}</td>` : '';
                 
                 const currentStatus = t.status || 'assegnato';
-                let actionButtonsHtml = '';
-
-                if (activeUser.role === 'admin') {
-                    // Azioni disponibili per l'Admin
-                    actionButtonsHtml = `
-                        <div class="flex items-center justify-center gap-1">
-                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 border">${currentStatus}</span>
-                            <button onclick="openPreReportForCompletion('${t.id}')" class="p-1 bg-amber-500 text-slate-900 rounded" title="Modifica"><i class="fas fa-edit"></i></button>
-                            <button onclick="openTrackingModal('${t.id}')" class="p-1 bg-iltBlue text-white rounded" title="Traccia"><i class="fas fa-route"></i></button>
-                            <button onclick="deletePreReportCloud('${t.id}')" class="p-1 bg-red-600 text-white rounded" title="Elimina"><i class="fas fa-trash"></i></button>
-                        </div>`;
-                } else {
-                    // Azioni dinamiche per il Tecnico sul campo
-                    if (currentStatus === 'assegnato') {
-                        actionButtonsHtml = `<button onclick="updateTaskStatus('${t.id}', 'in_viaggio')" class="px-3 py-1.5 bg-blue-600 text-white font-bold rounded text-xs shadow hover:bg-blue-700">In Viaggio</button>`;
-                    } else if (currentStatus === 'in_viaggio') {
-                        actionButtonsHtml = `<button onclick="updateTaskStatus('${t.id}', 'in_lavorazione')" class="px-3 py-1.5 bg-amber-500 text-slate-900 font-bold rounded text-xs shadow hover:bg-amber-600">Sul Posto</button>`;
-                    } else {
-                        actionButtonsHtml = `<button onclick="openPreReportForCompletion('${t.id}')" class="px-3 py-1.5 bg-green-600 text-white font-bold rounded text-xs shadow hover:bg-green-700">Compila Report</button>`;
-                    }
-                }
+                let actionButtonsHtml = `
+                    <div class="flex items-center justify-center gap-1">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 border">${currentStatus}</span>
+                        ${activeUser.role === 'admin' ? `<button onclick="openPreReportForCompletion('${t.id}')" class="p-1 bg-amber-500 text-slate-900 rounded"><i class="fas fa-edit"></i></button>` : ''}
+                        <button onclick="openTrackingModal('${t.id}')" class="p-1 bg-iltBlue text-white rounded"><i class="fas fa-route"></i></button>
+                        ${currentStatus === 'assegnato' && activeUser.role !== 'admin' ? `<button onclick="updateTaskStatus('${t.id}', 'in_viaggio')" class="px-2 py-1 bg-blue-600 text-white font-bold rounded text-[10px]">Parti</button>` : ''}
+                        ${currentStatus === 'in_viaggio' && activeUser.role !== 'admin' ? `<button onclick="updateTaskStatus('${t.id}', 'in_lavorazione')" class="px-2 py-1 bg-amber-500 text-slate-900 font-bold rounded text-[10px]">Sul Posto</button>` : ''}
+                        <button onclick="openPreReportForCompletion('${t.id}')" class="p-1 bg-green-600 text-white rounded" title="Compila"><i class="fas fa-check"></i></button>
+                        ${activeUser.role === 'admin' ? `<button onclick="deletePreReportCloud('${t.id}')" class="p-1 bg-red-600 text-white rounded"><i class="fas fa-trash"></i></button>` : ''}
+                    </div>`;
 
                 tr.innerHTML = `
                     <td class="p-3 font-mono font-bold text-iltRed">${t.doc_num}</td>
@@ -1339,7 +1531,7 @@
                     <td class="p-3 font-semibold">${t.cliente_nome}</td>
                     <td class="p-3">${t.cliente_indirizzo || '-'}</td>
                     <td class="p-3"><span class="bg-blue-50 text-iltBlue px-2 py-0.5 rounded text-[10px]">${t.tipo_intervento}</span></td>
-                    ${tecnicoColHtml}
+                    <td class="p-3 font-bold">${t.assigned_name || '-'}</td>
                     <td class="p-3 text-center">${actionButtonsHtml}</td>
                 `;
                 tbody.appendChild(tr);
@@ -1359,7 +1551,7 @@
             const status = task.status || 'assegnato';
             const steps = [
                 { id: 'assegnato', title: 'Programmato', desc: 'Incarico assegnato.' },
-                { id: 'in_viaggio', title: 'In Viaggio', desc: 'Tecnico in movimento.' },
+                { id: 'in_viaggio', title: 'In Viaggio', desc: 'Operatore in movimento.' },
                 { id: 'in_lavorazione', title: 'In Lavorazione', desc: 'Intervento in corso.' }
             ];
 
@@ -1415,54 +1607,6 @@
             syncToPrint();
         }
 
-// Sincronizzazione della tabella prodotti/apparecchiature per la stampa
-    const prtAssetsTbody = document.getElementById('prt_assets_tbody');
-    const prtSec2Title = document.getElementById('prt_section_2_title');
-    if (prtAssetsTbody) {
-        prtAssetsTbody.innerHTML = '';
-        const rows = document.querySelectorAll('#assets-table-body tr');
-        
-        if (prtSec2Title) {
-            prtSec2Title.innerText = currentReportMode === 'base' ? '2. Lista Prodotti in Consegna' : '1. Apparecchiature';
-        }
-
-        rows.forEach(tr => {
-            if (currentReportMode === 'base') {
-                const tipo = tr.querySelector('.asset-comp')?.value || '-';
-                const modello = tr.querySelector('.asset-modello')?.value || '-';
-                const qta = tr.querySelector('.asset-potenza')?.value || '-'; // Usiamo il campo potenza come quantità/misura nella base
-                const mat = tr.querySelector('.asset-gas')?.value || '-';     // Usiamo il campo gas come matricola/lotto nella base
-                const ubicazione = tr.querySelector('.asset-ubicazione')?.value || '-';
-                
-                prtAssetsTbody.innerHTML += `
-                    <tr>
-                        <td class="border border-slate-300 p-1 font-semibold">${tipo}</td>
-                        <td class="border border-slate-300 p-1">${modello}</td>
-                        <td class="border border-slate-300 p-1 text-center font-bold">${qta}</td>
-                        <td class="border border-slate-300 p-1 font-mono">${mat}</td>
-                        <td class="border border-slate-300 p-1">${ubicazione}</td>
-                    </tr>`;
-            } else {
-                const comp = tr.querySelector('.asset-comp')?.value || '-';
-                const modello = tr.querySelector('.asset-modello')?.value || '-';
-                const potenza = tr.querySelector('.asset-potenza')?.value || '-';
-                const gas = tr.querySelector('.asset-gas')?.value || '-';
-                const snUi = tr.querySelector('.asset-sn-ui')?.value || '';
-                const snUe = tr.querySelector('.asset-sn-ue')?.value || '';
-                const ubicazione = tr.querySelector('.asset-ubicazione')?.value || '-';
-                
-                prtAssetsTbody.innerHTML += `
-                    <tr>
-                        <td class="border border-slate-300 p-1 font-semibold">${comp}</td>
-                        <td class="border border-slate-300 p-1">${modello}</td>
-                        <td class="border border-slate-300 p-1">${potenza} / ${gas}</td>
-                        <td class="border border-slate-300 p-1 font-mono">UI: ${snUi}<br>UE: ${snUe}</td>
-                        <td class="border border-slate-300 p-1">${ubicazione}</td>
-                    </tr>`;
-            }
-        });
-    }
-
         function addAssetRow(data = {}) {
             const tbody = document.getElementById('assets-table-body');
             if (!tbody) return;
@@ -1505,86 +1649,240 @@
             syncToPrint();
         }
 
+        function addExtraRow(data = {}) {
+            const tbody = document.getElementById('extra-table-body');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="p-1.5"><input type="text" value="${data.desc || ''}" class="extra-desc w-full p-1 border rounded text-xs" oninput="calculateExtraTotal(); syncToPrint();"></td>
+                <td class="p-1.5"><input type="number" step="0.01" value="${data.price || '0.00'}" class="extra-price w-full p-1 border rounded text-xs text-right" oninput="calculateExtraTotal(); syncToPrint();"></td>
+                <td class="p-1.5"><select class="extra-mode w-full p-1 border rounded text-xs"><option>Contanti</option><option>POS</option></select></td>
+                <td class="p-1 text-center"><button type="button" onclick="this.closest('tr').remove(); calculateExtraTotal();" class="text-red-500"><i class="fas fa-times"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+            calculateExtraTotal();
+        }
+
         function calculateExtraTotal() {
             let total = 0;
             document.querySelectorAll('.extra-price').forEach(i => total += parseFloat(i.value) || 0);
             document.getElementById('extra_total_badge').innerText = '€ ' + total.toFixed(2);
         }
 
-        function renderChecklist() {
-            const container = document.getElementById('checklist-container');
-            if (!container) return;
-            container.innerHTML = '';
-            
-            let list = CHECKLIST_PROFESSIONAL;
-            if (currentReportMode === 'base') list = CHECKLIST_BASE;
-            if (currentReportMode === 'caldaia') list = CHECKLIST_CALDAIA;
+        function addDailyExpenseRow(data = {}) {
+            const tbody = document.getElementById('daily-expense-tbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="p-1.5"><input type="text" value="${data.desc || ''}" placeholder="Es. Parcheggio / Materiale" class="daily-exp-desc w-full p-1 border rounded text-xs"></td>
+                <td class="p-1.5"><input type="number" step="0.01" value="${data.price || '0.00'}" class="daily-exp-price w-full p-1 border rounded text-xs text-right"></td>
+                <td class="p-1 text-center"><button type="button" onclick="this.closest('tr').remove()" class="text-red-500"><i class="fas fa-times"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+        }
 
-            list.forEach((item) => {
-                container.innerHTML += `
-                    <div class="flex items-start gap-2 bg-slate-50 p-2 rounded border text-xs">
-                        <input type="checkbox" checked onchange="syncToPrint()" class="mt-0.5">
-                        <label class="text-slate-700 font-medium">${item}</label>
-                    </div>`;
+        function addDailyFuelRow(data = {}) {
+            const tbody = document.getElementById('daily-fuel-tbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="p-1.5"><input type="text" value="${data.desc || ''}" placeholder="Es. Eni Station / Q8" class="daily-fuel-desc w-full p-1 border rounded text-xs"></td>
+                <td class="p-1.5"><input type="number" step="0.01" value="${data.price || '0.00'}" class="daily-fuel-price w-full p-1 border rounded text-xs text-right"></td>
+                <td class="p-1 text-center"><button type="button" onclick="this.closest('tr').remove()" class="text-red-500"><i class="fas fa-times"></i></button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function generateDailyReportData() {
+            const dateInput = document.getElementById('daily_report_date');
+            if(!dateInput) return;
+            const selectedDate = dateInput.value;
+            const tbody = document.getElementById('daily-tasks-tbody');
+            tbody.innerHTML = '';
+
+            const filteredReports = globalHistoryReports.filter(r => r.date === selectedDate);
+
+            if (filteredReports.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Nessun intervento registrato per la data ${formatDateToIT(selectedDate)}.</td></tr>`;
+                return;
+            }
+
+            filteredReports.forEach(r => {
+                tbody.innerHTML += `
+                    <tr class="border-b">
+                        <td class="p-2.5 font-mono font-bold text-iltRed">${r.num}</td>
+                        <td class="p-2.5 font-semibold">${r.cliente}</td>
+                        <td class="p-2.5">${r.tipo}</td>
+                        <td class="p-2.5">${r.tecnico}</td>
+                        <td class="p-2.5 text-green-700 font-bold">${r.extraTotal || '€ 0.00'}</td>
+                    </tr>`;
             });
-            syncToPrint();
         }
 
-        function toggleAllChecklist(status) {
-            document.querySelectorAll('#checklist-container input[type="checkbox"]').forEach(cb => cb.checked = status);
-            syncToPrint();
-        }
-
-        function calcolaCO2Eq() {
-            const selectGas = document.getElementById('fgas_tipo_gas');
-            if (!selectGas) return;
-            const selectedOption = selectGas.options[selectGas.selectedIndex];
-            const gwp = parseFloat(selectedOption.getAttribute('data-gwp')) || 0;
-            const kg = parseFloat(document.getElementById('fgas_kg_carica').value) || 0;
+        async function saveDailyReportCloud() {
+            const date = document.getElementById('daily_report_date').value;
+            const teamMates = document.getElementById('daily_team_mates').value;
+            const vehiclePlate = document.getElementById('daily_vehicle_plate').value;
             
-            const co2Eq = (kg * gwp) / 1000;
-            document.getElementById('fgas_co2_eq').value = co2Eq.toFixed(2) + ' t';
-            syncToPrint();
-        }
+            let expenses = [];
+            document.querySelectorAll('#daily-expense-tbody tr').forEach(tr => {
+                expenses.push({ desc: tr.querySelector('.daily-exp-desc').value, price: tr.querySelector('.daily-exp-price').value });
+            });
 
-        async function saveReport() {
-            const reportData = {
-                num: document.getElementById('doc_num').value,
-                date: document.getElementById('doc_date').value,
-                cliente: document.getElementById('cliente_nome').value,
-                tipo: document.getElementById('tipo_intervento').value,
-                tecnico: activeUser ? activeUser.name : 'Tecnico',
-                extraTotal: document.getElementById('extra_total_badge').innerText,
-                assets: getAssetsData(),
-                photos: reportPhotos,
+            let fuels = [];
+            document.querySelectorAll('#daily-fuel-tbody tr').forEach(tr => {
+                fuels.push({ desc: tr.querySelector('.daily-fuel-desc').value, price: tr.querySelector('.daily-fuel-price').value });
+            });
+
+            const dailyData = {
+                date,
+                operator: activeUser ? activeUser.name : 'Operatore',
+                teamMates,
+                vehiclePlate,
+                expenses,
+                fuels,
                 created_at: new Date().toISOString()
             };
 
             try {
-                await window.FB.addDoc(window.FB.collection(window.FB.db, "reports_history"), reportData);
-                showToast("Report salvato nello storico Cloud!", "success");
-                switchTab('history');
+                await window.FB.addDoc(window.FB.collection(window.FB.db, "daily_reports"), dailyData);
+                showToast("Resoconto giornaliero salvato nel Cloud!", "success");
             } catch (e) {
-                showToast("Errore salvataggio storico: " + e.message, 'error');
+                showToast("Errore salvataggio: " + e.message, 'error');
             }
         }
 
-        function listenHistoryReports() {
-            const q = window.FB.collection(window.FB.db, "reports_history");
-            window.FB.onSnapshot(q, (snapshot) => {
-                let history = [];
-                snapshot.forEach((docSnap) => {
-                    history.push({ id: docSnap.id, ...docSnap.data() });
+        function exportDailyReportPDF() {
+            const date = document.getElementById('daily_report_date').value;
+            const formattedDate = formatDateToIT(date);
+            const operator = activeUser ? activeUser.name : 'Operatore';
+            const team = document.getElementById('daily_team_mates').value || '-';
+            const plate = document.getElementById('daily_vehicle_plate').value || '-';
+
+            const filteredReports = globalHistoryReports.filter(r => r.date === date);
+            let tasksHtml = '';
+            if (filteredReports.length === 0) {
+                tasksHtml = `<tr><td colspan="4" style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; color: #94a3b8;">Nessun intervento registrato in questa data.</td></tr>`;
+            } else {
+                filteredReports.forEach(r => {
+                    tasksHtml += `
+                        <tr>
+                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-family: monospace; font-weight: bold; color: #d61124;">${r.num}</td>
+                            <td style="border: 1px solid #cbd5e1; padding: 6px; font-weight: 600;">${r.cliente}</td>
+                            <td style="border: 1px solid #cbd5e1; padding: 6px;">${r.tipo}</td>
+                            <td style="border: 1px solid #cbd5e1; padding: 6px; color: #15803d; font-weight: bold;">${r.extraTotal || '€ 0.00'}</td>
+                        </tr>`;
                 });
-                document.getElementById('history-badge').innerText = history.length;
-                document.getElementById('history-total-count').innerText = `${history.length} Report`;
-                const tbody = document.getElementById('history-tbody');
-                tbody.innerHTML = '';
-                if (history.length === 0) { tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Nessun report nel Cloud.</td></tr>`; return; }
-                history.forEach(r => {
-                    tbody.innerHTML += `<tr class="border-b"><td class="p-3 font-mono font-bold text-iltRed">${r.num}</td><td class="p-3">${r.date}</td><td class="p-3 font-semibold">${r.cliente}</td><td class="p-3">${r.tipo}</td><td class="p-3">${r.tecnico}</td><td class="p-3 text-green-700">${r.extraTotal}</td><td class="p-3 text-center"><button onclick="showToast('Visualizzazione storico Cloud','info')" class="text-iltBlue font-bold">Visualizza</button></td></tr>`;
-                });
+            }
+
+            let expensesHtml = '';
+            document.querySelectorAll('#daily-expense-tbody tr').forEach(tr => {
+                const desc = tr.querySelector('.daily-exp-desc')?.value;
+                const price = tr.querySelector('.daily-exp-price')?.value;
+                if (desc || price) {
+                    expensesHtml += `<tr><td style="border: 1px solid #cbd5e1; padding: 5px;">${desc || '-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right; font-weight: bold;">€ ${parseFloat(price || 0).toFixed(2)}</td></tr>`;
+                }
             });
+            if (!expensesHtml) expensesHtml = `<tr><td colspan="2" style="border: 1px solid #cbd5e1; padding: 5px; text-align: center; color: #94a3b8;">Nessuna spesa registrata.</td></tr>`;
+
+            let fuelsHtml = '';
+            document.querySelectorAll('#daily-fuel-tbody tr').forEach(tr => {
+                const desc = tr.querySelector('.daily-fuel-desc')?.value;
+                const price = tr.querySelector('.daily-fuel-price')?.value;
+                if (desc || price) {
+                    fuelsHtml += `<tr><td style="border: 1px solid #cbd5e1; padding: 5px;">${desc || '-'}</td><td style="border: 1px solid #cbd5e1; padding: 5px; text-align: right; font-weight: bold;">€ ${parseFloat(price || 0).toFixed(2)}</td></tr>`;
+                }
+            });
+            if (!fuelsHtml) fuelsHtml = `<tr><td colspan="2" style="border: 1px solid #cbd5e1; padding: 5px; text-align: center; color: #94a3b8;">Nessun rifornimento registrato.</td></tr>`;
+
+            const container = document.createElement('div');
+            container.style.cssText = "width: 210mm; background: white; padding: 15mm; font-family: sans-serif; box-sizing: border-box; color: #1e293b; font-size: 11px; line-height: 1.3;";
+
+            const customLogo = localStorage.getItem('ilt_custom_logo');
+            const logoHtml = customLogo ? `<img src="${customLogo}" style="max-height: 45px; width: auto; object-fit: contain;">` : RAW_SVG_LOGO;
+
+            container.innerHTML = `
+                <div style="border-bottom: 2px solid #d61124; padding-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="background: white; padding: 4px; border: 1px solid #e2e8f0; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                            ${logoHtml}
+                        </div>
+                        <div>
+                            <h1 style="font-size: 16px; font-weight: 900; color: #0f172a; margin: 0; line-height: 1;">ILT LOGISTICS S.R.L.</h1>
+                            <p style="font-size: 9.5px; color: #475569; margin: 3px 0 0 0;">Servizi Tecnici ed Impiantistica HVAC / F-GAS</p>
+                            <p style="font-size: 8.5px; color: #64748b; margin: 2px 0 0 0; line-height: 1.2;">
+                                Viale della Regione Siciliana Sud Est 5161, 90124 Palermo (PA)<br>
+                                P.IVA/C.F.: 12888410961 | Tel: 091 673 9583
+                            </p>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="background: #004aad; color: white; font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 4px 10px; border-radius: 4px; display: inline-block;">RESOCONTO GIORNALIERO</span>
+                        <div style="font-size: 12px; font-family: monospace; font-weight: bold; color: #0f172a; margin-top: 6px;">Data: ${formattedDate}</div>
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 10px; margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div><strong>Operatore:</strong> ${operator}</div>
+                    <div><strong>Targa Mezzo:</strong> <span style="font-family: monospace; font-weight: bold;">${plate}</span></div>
+                    <div style="grid-column: span 2;"><strong>Compagni di Squadra:</strong> ${team}</div>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <div style="font-weight: bold; color: #1e293b; text-transform: uppercase; font-size: 9.5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">1. Interventi Eseguiti nella Giornata</div>
+                    <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 9.5px;">
+                        <thead>
+                            <tr style="background: #1e293b; color: white; font-weight: bold;">
+                                <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">N° Doc</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Cliente</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Tipologia Intervento</th>
+                                <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: left;">Extra</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tasksHtml}</tbody>
+                    </table>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                    <div>
+                        <div style="font-weight: bold; color: #1e293b; text-transform: uppercase; font-size: 9.5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">2. Spese Extra Giornaliere</div>
+                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 9.5px;">
+                            <thead>
+                                <tr style="background: #f1f5f9; color: #334155; font-weight: bold;">
+                                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Descrizione</th>
+                                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right; width: 80px;">Importo</th>
+                                </tr>
+                            </thead>
+                            <tbody>${expensesHtml}</tbody>
+                        </table>
+                    </div>
+
+                    <div>
+                        <div style="font-weight: bold; color: #1e293b; text-transform: uppercase; font-size: 9.5px; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px;">3. Rifornimenti Carburante</div>
+                        <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 9.5px;">
+                            <thead>
+                                <tr style="background: #f1f5f9; color: #334155; font-weight: bold;">
+                                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: left;">Stazione / Note</th>
+                                    <th style="border: 1px solid #cbd5e1; padding: 5px; text-align: right; width: 80px;">Importo</th>
+                                </tr>
+                            </thead>
+                            <tbody>${fuelsHtml}</tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; padding-top: 15px; border-top: 1px solid #cbd5e1; text-align: right;">
+                    <p style="font-size: 9.5px; font-weight: bold; color: #334155; margin-bottom: 2px;">Firma Operatore</p>
+                    <p style="font-size: 8.5px; color: #64748b; margin-top: 0;">${operator}</p>
+                </div>
+            `;
+
+            const opt = {
+                margin:       10,
+                filename:     `Resoconto_Giornaliero_${date}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().from(container).set(opt).save();
         }
 
         function syncToPrint() {
@@ -1602,19 +1900,19 @@
             document.getElementById('prt_nome_tecnico').innerText = document.getElementById('nome_tecnico').value || '-';
             document.getElementById('prt_nome_cliente_sub').innerText = document.getElementById('cliente_nome').value || '-';
 
-            // Sincronizzazione della tabella prodotti/apparecchiature per la stampa
             const prtAssetsTbody = document.getElementById('prt_assets_tbody');
             const prtSec2Title = document.getElementById('prt_section_2_title');
+            const prtHeaderTr = document.querySelector('#print-area thead tr');
+
             if (prtAssetsTbody) {
                 prtAssetsTbody.innerHTML = '';
                 const rows = document.querySelectorAll('#assets-table-body tr');
                 
-                if (prtSec2Title) {
-                    prtSec2Title.innerText = currentReportMode === 'base' ? '2. Lista Prodotti in Consegna' : '1. Apparecchiature';
-                }
-
-                rows.forEach(tr => {
-                    if (currentReportMode === 'base') {
+                if (currentReportMode === 'base') {
+                    if (prtSec2Title) prtSec2Title.innerText = '2. Lista Prodotti in Consegna';
+                    if (prtHeaderTr) prtHeaderTr.innerHTML = `<th class="border border-slate-300 p-1">Tipologia</th><th class="border border-slate-300 p-1">Modello</th><th class="border border-slate-300 p-1">Q.tà</th><th class="border border-slate-300 p-1">Matricola / Lotto</th><th class="border border-slate-300 p-1">Ubicazione</th>`;
+                    
+                    rows.forEach(tr => {
                         const tipo = tr.querySelector('.asset-comp')?.value || '-';
                         const modello = tr.querySelector('.asset-modello')?.value || '-';
                         const qta = tr.querySelector('.asset-potenza')?.value || '-';
@@ -1629,7 +1927,34 @@
                                 <td class="border border-slate-300 p-1 font-mono">${mat}</td>
                                 <td class="border border-slate-300 p-1">${ubicazione}</td>
                             </tr>`;
-                    } else {
+                    });
+                } else if (currentReportMode === 'caldaia') {
+                    if (prtSec2Title) prtSec2Title.innerText = '2. Censimento Generatore Termico & S/N';
+                    if (prtHeaderTr) prtHeaderTr.innerHTML = `<th class="border border-slate-300 p-1">Marca</th><th class="border border-slate-300 p-1">Modello</th><th class="border border-slate-300 p-1">Potenza / Gas</th><th class="border border-slate-300 p-1">Matricola S/N & Note</th><th class="border border-slate-300 p-1">Locale</th>`;
+                    
+                    rows.forEach(tr => {
+                        const comp = tr.querySelector('.asset-comp')?.value || '-';
+                        const modello = tr.querySelector('.asset-modello')?.value || '-';
+                        const potenza = tr.querySelector('.asset-potenza')?.value || '-';
+                        const gas = tr.querySelector('.asset-gas')?.value || '-';
+                        const snUi = tr.querySelector('.asset-sn-ui')?.value || '';
+                        const snUe = tr.querySelector('.asset-sn-ue')?.value || '';
+                        const ubicazione = tr.querySelector('.asset-ubicazione')?.value || '-';
+                        
+                        prtAssetsTbody.innerHTML += `
+                            <tr>
+                                <td class="border border-slate-300 p-1 font-semibold">${comp}</td>
+                                <td class="border border-slate-300 p-1">${modello}</td>
+                                <td class="border border-slate-300 p-1">${potenza} kW | ${gas}</td>
+                                <td class="border border-slate-300 p-1 font-mono">S/N: ${snUi}<br>Note: ${snUe}</td>
+                                <td class="border border-slate-300 p-1">${ubicazione}</td>
+                            </tr>`;
+                    });
+                } else {
+                    if (prtSec2Title) prtSec2Title.innerText = '1. Apparecchiature';
+                    if (prtHeaderTr) prtHeaderTr.innerHTML = `<th class="border border-slate-300 p-1">Marca</th><th class="border border-slate-300 p-1">Modello</th><th class="border border-slate-300 p-1">Dettagli / Potenza</th><th class="border border-slate-300 p-1">Matricole S/N</th><th class="border border-slate-300 p-1">Ubicazione</th>`;
+                    
+                    rows.forEach(tr => {
                         const comp = tr.querySelector('.asset-comp')?.value || '-';
                         const modello = tr.querySelector('.asset-modello')?.value || '-';
                         const potenza = tr.querySelector('.asset-potenza')?.value || '-';
@@ -1644,13 +1969,12 @@
                                 <td class="border border-slate-300 p-1">${modello}</td>
                                 <td class="border border-slate-300 p-1">${potenza} / ${gas}</td>
                                 <td class="border border-slate-300 p-1 font-mono">UI: ${snUi}<br>UE: ${snUe}</td>
-                                <td class="p-1 border border-slate-300">${ubicazione}</td>
+                                <td class="border border-slate-300 p-1">${ubicazione}</td>
                             </tr>`;
-                    }
-                });
+                    });
+                }
             }
 
-            // Sincronizzazione dinamica della Checklist per la stampa
             const prtChecklistUl = document.getElementById('prt_checklist_ul');
             const prtChecklistBadge = document.getElementById('prt_checklist_badge');
             
@@ -1680,51 +2004,54 @@
                 }
             }
 
-            // Sincronizzazione dinamica della Sezione 3
             const titSez3 = document.getElementById('prt-titolo-sez3');
             const ulSez3 = document.getElementById('prt-ul-sez3');
+            const fgasPrintBox = document.getElementById('prt-box-fgas');
 
-            if (currentReportMode === 'caldaia') {
-                if (titSez3) titSez3.innerText = "3. Verifiche Combustione & Impianto Termico";
-                if (ulSez3) {
-                    ulSez3.innerHTML = `
-                        <li><strong>Tenuta Impianto Gas:</strong> ${document.getElementById('term_tenuta_gas')?.value || '-'}</li>
-                        <li><strong>Alimentazione Gas:</strong> ${document.getElementById('term_tipo_gas')?.value || '-'}</li>
-                        <li><strong>Pressione Idraulica:</strong> ${document.getElementById('term_pressione_idr')?.value || '-'}</li>
-                        <li><strong>Tiraggio Canna Fumaria:</strong> ${document.getElementById('term_tiraggio')?.value || '-'}</li>
-                        <li><strong>CO in Combustione:</strong> ${document.getElementById('term_co_ppm')?.value || '-'}</li>
-                        <li><strong>CO2 / O2 Fumi:</strong> ${document.getElementById('term_co2_fumi')?.value || '-'}</li>
-                        <li><strong>Rendimento Termico:</strong> <span class="font-bold text-green-700">${document.getElementById('term_rendimento')?.value || '-'}</span></li>
-                        <li><strong>Temp. Fumi / Ambiente:</strong> ${document.getElementById('term_temp_fumi')?.value || '-'}</li>
-                        <li><strong>Catasto Impianti:</strong> <span class="font-mono font-bold">${document.getElementById('term_codice_catasto')?.value || '-'}</span></li>
-                        <li><strong>Bollino Termico:</strong> ${document.getElementById('term_bollino')?.value || '-'}</li>
-                    `;
-                }
-            } else if (currentReportMode === 'professional') {
-                if (titSez3) titSez3.innerText = "3. Verifiche F-GAS & Elettriche";
-                if (ulSez3) {
-                    const tipoGas = document.getElementById('fgas_tipo_gas')?.value || '-';
-                    const kgCarica = document.getElementById('fgas_kg_carica')?.value || '0';
-                    ulSez3.innerHTML = `
-                        <li><strong>Tenuta Azoto:</strong> ${document.getElementById('fgas_azoto')?.value || '-'}</li>
-                        <li><strong>Prova Vuoto:</strong> ${document.getElementById('fgas_vuoto')?.value || '-'}</li>
-                        <li><strong>Refrigerante / Carica:</strong> ${tipoGas} (${kgCarica} kg)</li>
-                        <li><strong>Tonnellate CO2 Eq.:</strong> ${document.getElementById('fgas_co2_eq')?.value || '-'}</li>
-                        <li><strong>Assorbimento Elettrico:</strong> ${document.getElementById('fgas_ampere')?.value || '-'}</li>
-                        <li><strong>Pressioni Linee:</strong> ${document.getElementById('fgas_pressione')?.value || '-'}</li>
-                        <li><strong>Temp. & Delta-T:</strong> ${document.getElementById('fgas_temp_split')?.value || '-'}</li>
-                        <li><strong>Drenaggio Condensa:</strong> ${document.getElementById('fgas_condensa')?.value || '-'}</li>
-                        <li><strong>Patentino F-GAS:</strong> <span class="font-mono font-bold text-iltBlue">${document.getElementById('fgas_patentino')?.value || '-'}</span></li>
-                    `;
-                }
+            if (currentReportMode === 'base') {
+                if (fgasPrintBox) fgasPrintBox.classList.add('hidden');
             } else {
-                if (titSez3) titSez3.innerText = "3. Note Tecniche / Consegna";
-                if (ulSez3) ulSez3.innerHTML = `<li>Nessun parametro strumentale richiesto per la modalità Base.</li>`;
+                if (fgasPrintBox) fgasPrintBox.classList.remove('hidden');
+                if (currentReportMode === 'caldaia') {
+                    if (titSez3) titSez3.innerText = "3. Verifiche Combustione & Impianto Termico";
+                    if (ulSez3) {
+                        ulSez3.innerHTML = `
+                            <li><strong>Tenuta Impianto Gas:</strong> ${document.getElementById('term_tenuta_gas')?.value || '-'}</li>
+                            <li><strong>Alimentazione Gas:</strong> ${document.getElementById('term_tipo_gas')?.value || '-'}</li>
+                            <li><strong>Pressione Idraulica:</strong> ${document.getElementById('term_pressione_idr')?.value || '-'}</li>
+                            <li><strong>Tiraggio Canna Fumaria:</strong> ${document.getElementById('term_tiraggio')?.value || '-'}</li>
+                            <li><strong>CO in Combustione:</strong> ${document.getElementById('term_co_ppm')?.value || '-'}</li>
+                            <li><strong>CO2 / O2 Fumi:</strong> ${document.getElementById('term_co2_fumi')?.value || '-'}</li>
+                            <li><strong>Rendimento Termico:</strong> <span class="font-bold text-green-700">${document.getElementById('term_rendimento')?.value || '-'}</span></li>
+                            <li><strong>Temp. Fumi / Ambiente:</strong> ${document.getElementById('term_temp_fumi')?.value || '-'}</li>
+                            <li><strong>Catasto Impianti:</strong> <span class="font-mono font-bold">${document.getElementById('term_codice_catasto')?.value || '-'}</span></li>
+                            <li><strong>Bollino Termico:</strong> ${document.getElementById('term_bollino')?.value || '-'}</li>
+                        `;
+                    }
+                } else {
+                    if (titSez3) titSez3.innerText = "3. Verifiche F-GAS & Elettriche";
+                    if (ulSez3) {
+                        const tipoGas = document.getElementById('fgas_tipo_gas')?.value || '-';
+                        const kgCarica = document.getElementById('fgas_kg_carica')?.value || '0';
+                        ulSez3.innerHTML = `
+                            <li><strong>Tenuta Azoto:</strong> ${document.getElementById('fgas_azoto')?.value || '-'}</li>
+                            <li><strong>Prova Vuoto:</strong> ${document.getElementById('fgas_vuoto')?.value || '-'}</li>
+                            <li><strong>Refrigerante / Carica:</strong> ${tipoGas} (${kgCarica} kg)</li>
+                            <li><strong>Tonnellate CO2 Eq.:</strong> ${document.getElementById('fgas_co2_eq')?.value || '-'}</li>
+                            <li><strong>Assorbimento Elettrico:</strong> ${document.getElementById('fgas_ampere')?.value || '-'}</li>
+                            <li><strong>Pressioni Linee:</strong> ${document.getElementById('fgas_pressione')?.value || '-'}</li>
+                            <li><strong>Temp. & Delta-T:</strong> ${document.getElementById('fgas_temp_split')?.value || '-'}</li>
+                            <li><strong>Drenaggio Condensa:</strong> ${document.getElementById('fgas_condensa')?.value || '-'}</li>
+                            <li><strong>Patentino F-GAS:</strong> <span class="font-mono font-bold text-iltBlue">${document.getElementById('fgas_patentino')?.value || '-'}</span></li>
+                        `;
+                    }
+                }
             }
         }
 
         function showToast(msg, type = 'info') {
             const container = document.getElementById('toast-container');
+            if(!container) return;
             const toast = document.createElement('div');
             toast.className = `${type === 'success' ? 'bg-green-700' : 'bg-slate-800'} text-white text-xs px-4 py-2.5 rounded shadow-xl`;
             toast.innerText = msg;
@@ -1733,13 +2060,22 @@
         }
 
         function switchTab(tab, force = false, mode = 'professional') {
-            ['new-report', 'history', 'settings', 'assigned-tasks'].forEach(t => document.getElementById(`tab-${t}`).classList.add('hidden'));
-            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            ['new-report', 'history', 'settings', 'assigned-tasks', 'daily-report'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if(el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(`tab-${tab}`);
+            if(target) target.classList.remove('hidden');
+            if (tab === 'daily-report') {
+                generateDailyReportData();
+            }
         }
 
         function initDateAndDoc() {
-            document.getElementById('doc_date').valueAsDate = new Date();
-            document.getElementById('doc_num').value = 'INT-2026-' + Math.floor(1000 + Math.random() * 9000);
+            const dateDoc = document.getElementById('doc_date');
+            if(dateDoc) dateDoc.valueAsDate = new Date();
+            const docNum = document.getElementById('doc_num');
+            if(docNum) docNum.value = 'INT-2026-' + Math.floor(1000 + Math.random() * 9000);
             syncToPrint();
         }
 
@@ -1773,33 +2109,6 @@
                 e.preventDefault();
             }
 
-            function gestisciTipoIntervento() {
-                const selectElement = document.getElementById('tipo_intervento');
-                if (!selectElement) return;
-                
-                const tipo = selectElement.value;
-                const relazioneInput = document.getElementById('relazione_tecnica');
-                const isSopralluogo = tipo.toLowerCase().includes('sopralluogo');
-
-                if (isSopralluogo) {
-                    if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
-                        relazioneInput.value = "Sopralluogo eseguito per verifica fattibilità installazione. Verificata predisposizione elettrica/gas, posizionamento unità e percorso scarico condensa/fumi.";
-                    }
-                } else if (tipo.toLowerCase().includes('manutenzione')) {
-                    if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
-                        relazioneInput.value = "Eseguita pulizia e sanificazione filtri / bruciatore. Verifica drenaggio ed esecuzione test di funzionamento termico.";
-                    }
-                } else if (tipo.toLowerCase().includes('installazione')) {
-                    if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
-                        relazioneInput.value = "Installazione completata a regola d'arte. Eseguita prova di tenuta e collaudo funzionale iniziale.";
-                    }
-                }
-
-                if (typeof syncToPrint === 'function') {
-                    syncToPrint();
-                }
-            }
-
             function stopDraw() { drawing = false; }
 
             canvas.addEventListener('mousedown', startDraw);
@@ -1810,14 +2119,47 @@
             window.addEventListener('touchend', stopDraw);
         }
 
+        function gestisciTipoIntervento() {
+            const selectElement = document.getElementById('tipo_intervento');
+            if (!selectElement) return;
+            
+            const tipo = selectElement.value;
+            const relazioneInput = document.getElementById('relazione_tecnica');
+            const isSopralluogo = tipo.toLowerCase().includes('sopralluogo');
+
+            if (isSopralluogo) {
+                if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
+                    relazioneInput.value = "Sopralluogo eseguito per verifica fattibilità installazione. Verificata predisposizione elettrica/gas, posizionamento unità e percorso scarico condensa/fumi.";
+                }
+            } else if (tipo.toLowerCase().includes('manutenzione')) {
+                if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
+                    relazioneInput.value = "Eseguita pulizia e sanificazione filtri / bruciatore. Verifica drenaggio ed esecuzione test di funzionamento termico.";
+                }
+            } else if (tipo.toLowerCase().includes('installazione')) {
+                if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
+                    relazioneInput.value = "Installazione completata a regola d'arte. Eseguita prova di tenuta e collaudo funzionale iniziale.";
+                }
+            }
+            syncToPrint();
+        }
+
         function updateSig(canvasId) {
-            const data = document.getElementById(canvasId).toDataURL();
-            if (canvasId === 'canvas-tecnico') document.getElementById('prt_img_tecnico').src = data;
-            if (canvasId === 'canvas-cliente') document.getElementById('prt_img_cliente').src = data;
+            const canvas = document.getElementById(canvasId);
+            if(!canvas) return;
+            const data = canvas.toDataURL();
+            if (canvasId === 'canvas-tecnico') {
+                const img = document.getElementById('prt_img_tecnico');
+                if(img) img.src = data;
+            }
+            if (canvasId === 'canvas-cliente') {
+                const img = document.getElementById('prt_img_cliente');
+                if(img) img.src = data;
+            }
         }
 
         function clearCanvas(canvasId) {
             const c = document.getElementById(canvasId);
+            if(!c) return;
             c.getContext('2d').clearRect(0, 0, c.width, c.height);
             updateSig(canvasId);
         }
@@ -1830,7 +2172,10 @@
         function loadDemoData() { showToast("Demo caricata", "info"); }
         function generateAIReport() { showToast("Generato con AI", "success"); }
         function saveApiKey() { showToast("API Key salvata", "success"); }
-        function resetForm() { document.getElementById('report-form').reset(); }
+        function resetForm() { 
+            const form = document.getElementById('report-form');
+            if(form) form.reset(); 
+        }
     </script>
 </body>
 </html>
