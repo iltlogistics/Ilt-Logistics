@@ -269,6 +269,7 @@
 
             <!-- FORM -->
             <form id="report-form" class="space-y-5 no-print" onsubmit="event.preventDefault();">
+                <!-- 1. DATI COMMITTENTE E RIFERIMENTI DOCUMENTO -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
                         <h2 class="text-sm font-bold text-iltDark flex items-center gap-2">
@@ -298,43 +299,55 @@
                             <input type="date" id="doc_date" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipologia Intervento</label>
-                            <select id="tipo_intervento" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-semibold text-slate-700 focus:ring-2 focus:ring-iltBlue focus:outline-none">
-                                <option>Installazione & Collaudo Climatizzatore</option>
-                                <option>Sopralluogo Tecnico & Fattibilità</option>
-                                <option>Manutenzione Ordinaria / Pulizia Filtri</option>
-                                <option>Riparazione & Ricerca Perdita Refrigerante</option>
-                            </select>
-                        </div>
+    <label class="block text-xs font-semibold text-slate-600 mb-1">Tipologia Intervento</label>
+    <!-- NOTA L'AGGIUNTA DI onchange="gestisciTipoIntervento()" QUI SOTTO -->
+    <select id="tipo_intervento" onchange="gestisciTipoIntervento()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-semibold text-slate-700 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+        <option>Installazione & Collaudo Climatizzatore</option>
+        <option>Sopralluogo Tecnico & Fattibilità Impianto</option>
+        <option>Manutenzione Ordinaria / Pulizia Filtri & Sanificazione</option>
+        <option>Manutenzione Straordinaria & Riparazione</option>
+        <option>Ricerca Perdita Refrigerante & Ricarica F-GAS</option>
+    </select>
+</div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Cliente / Spett.le</label>
-                            <input type="text" id="cliente_nome" placeholder="Es. Cosentino Giuseppe" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            <input type="text" id="cliente_nome" placeholder="Es. Cosentino Giuseppe" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
                         </div>
 
                         <div class="sm:col-span-2">
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Indirizzo / Ubicazione Immobile</label>
-                            <input type="text" id="cliente_indirizzo" placeholder="Es. Via Giovanni Pacini 39, Palermo (PA)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            <input type="text" id="cliente_indirizzo" placeholder="Es. Via Giovanni Pacini 39, Palermo (PA)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Codice Fiscale / P.IVA</label>
-                            <input type="text" id="cliente_cf" placeholder="Es. CSNGPP59E03G273A" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            <input type="text" id="cliente_cf" placeholder="Es. CSNGPP59E03G273A" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Email Cliente</label>
-                            <input type="email" id="cliente_email" placeholder="cliente@email.it" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            <input type="email" id="cliente_email" placeholder="cliente@email.it" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
                         </div>
+
+                        <!-- CAMPI AGGIUNTI -->
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Cellulare / Tel. Cliente</label>
-                            <input type="tel" id="cliente_tel" placeholder="Es. 3331234567" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            <input type="tel" id="cliente_tel" placeholder="Es. 3331234567" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Referente in Loco (se diverso)</label>
+                            <input type="text" id="referente_loco" placeholder="Es. Sig. Mario (Tel. 339...)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Note Logistiche / Accesso Cantiere</label>
+                            <input type="text" id="note_logistiche" placeholder="Es. Piano 2 con ascensore, citofono 14, ZTL attiva" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
                         </div>
 
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Rivenditore / Provenienza</label>
-                            <input type="text" id="rivenditore" placeholder="Es. MediaMarket S.p.A." class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            <input type="text" id="rivenditore" placeholder="Es. MediaMarket S.p.A." class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">N° Bolla / Ricevuta</label>
-                            <input type="text" id="num_scontrino" placeholder="Es. 3538146" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            <input type="text" id="num_scontrino" placeholder="Es. 3538146" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Data Bolla / Ricevuta</label>
@@ -342,7 +355,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Totale Acquisto (€)</label>
-                            <input type="text" id="totale_acquisto" placeholder="Es. 559,09" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                            <input type="text" id="totale_acquisto" placeholder="Es. 559,09" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none" oninput="syncToPrint()">
                         </div>
                     </div>
                 </div>
@@ -369,43 +382,62 @@
                     </div>
                 </div>
 
-                <!-- PARAMETRI STRUMENTALI -->
-                <div id="sezione-parametri-fgas" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                    <h2 class="text-sm font-bold text-iltDark flex items-center gap-2 border-b border-slate-100 pb-2.5">
-                        <span class="p-1.5 bg-green-50 text-green-700 rounded-md"><i class="fas fa-gauge-high"></i></span>
-                        <span>3. Parametri Strumentali & F-GAS</span>
-                    </h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Tenuta Azoto (bar)</label>
-                            <input type="text" id="fgas_azoto" value="42 bar (Superata)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Prova Vuoto Circuito</label>
-                            <input type="text" id="fgas_vuoto" value="-1.0 bar (30 min) OK" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Pressione Bassa</label>
-                            <input type="text" id="fgas_pressione" value="8.5 bar (Regime Inverter)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Drenaggio Condensa</label>
-                            <input type="text" id="fgas_condensa" value="Test Flusso Ok per Gravità" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">N° Patentino F-GAS</label>
-                            <input type="text" id="fgas_patentino" value="XPERT/FGAS/23/2529" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Gas Aggiunto (g)</label>
-                            <input type="text" id="fgas_gas_aggiunto" value="0 g" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
-                        </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Temperature Aria Split (°C)</label>
-                            <input type="text" id="fgas_temp_split" value="Split Letto: +6.8 °C | Split Studio: +7.2 °C" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
-                        </div>
-                    </div>
-                </div>
+                <!-- PARAMETRI STRUMENTALI & F-GAS (PROFESSIONALE) -->
+<div id="sezione-parametri-fgas" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+    <h2 class="text-sm font-bold text-iltDark flex items-center gap-2 border-b border-slate-100 pb-2.5">
+        <span class="p-1.5 bg-green-50 text-green-700 rounded-md"><i class="fas fa-gauge-high"></i></span>
+        <span>3. Parametri Strumentali, Elettrici & Normativa F-GAS</span>
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tenuta Azoto (bar)</label>
+            <input type="text" id="fgas_azoto" value="42 bar (Superata)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Prova Vuoto Circuito</label>
+            <input type="text" id="fgas_vuoto" value="-1.0 bar (30 min) OK" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipo Refrigerante</label>
+            <select id="fgas_tipo_gas" onchange="calcolaCO2Eq()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none">
+                <option value="R32" data-gwp="675">R32 (GWP 675)</option>
+                <option value="R410A" data-gwp="2088">R410A (GWP 2088)</option>
+                <option value="R134a" data-gwp="1430">R134a (GWP 1430)</option>
+                <option value="R290" data-gwp="3">R290 (GWP 3)</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Carica Gas Caricata (kg)</label>
+            <input type="number" step="0.01" id="fgas_kg_carica" value="1.20" oninput="calcolaCO2Eq()" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+        </div>
+
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tonnellate CO2 Eq.</label>
+            <input type="text" id="fgas_co2_eq" readonly value="0.81 t" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-slate-700 bg-slate-50">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Assorbimento Elettrico (A)</label>
+            <input type="text" id="fgas_ampere" value="4.5 A (Max 6.2A)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">N° Patentino F-GAS</label>
+            <input type="text" id="fgas_patentino" value="XPERT/FGAS/23/2529" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono font-bold text-iltBlue focus:ring-2 focus:ring-iltBlue focus:outline-none">
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Drenaggio Condensa</label>
+            <input type="text" id="fgas_condensa" value="Test Flusso Ok per Gravità" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-iltBlue focus:outline-none">
+        </div>
+
+        <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Temperature Aria Split & Delta-T (°C)</label>
+            <input type="text" id="fgas_temp_split" value="Mandata: +12°C | Ripresa: +24°C (ΔT: 12°C OK)" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+        </div>
+        <div class="sm:col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Pressioni di Esercizio Linee (Bar)</label>
+            <input type="text" id="fgas_pressione" value="Bassa Pressione: 8.5 bar | Alta Pressione: 28.0 bar" class="w-full text-xs border border-slate-300 rounded-lg p-2.5 font-mono focus:ring-2 focus:ring-iltBlue focus:outline-none">
+        </div>
+    </div>
+</div>
 
                 <!-- CHECKLIST -->
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-3.5">
@@ -603,8 +635,8 @@
                         <table class="w-full text-left border-collapse border border-slate-300 text-[9.5px]">
                             <thead>
                                 <tr class="bg-slate-800 text-white font-bold">
-                                    <th class="border border-slate-300 p-1">Componente</th>
-                                    <th class="border border-slate-300 p-1">Marca / Modello</th>
+                                    <th class="border border-slate-300 p-1">Marca</th>
+                                    <th class="border border-slate-300 p-1">Modello</th>
                                     <th class="border border-slate-300 p-1">Dettagli / Potenza</th>
                                     <th class="border border-slate-300 p-1">Matricole S/N</th>
                                     <th class="border border-slate-300 p-1">Ubicazione</th>
@@ -621,15 +653,19 @@
 
                     <div class="grid grid-cols-2 gap-3">
                         <div id="prt-box-fgas" class="border border-slate-300 p-2 rounded bg-slate-50">
-                            <div class="font-bold text-slate-800 uppercase border-b border-slate-200 pb-0.5 mb-1 text-[9px]">3. Verifiche F-GAS</div>
-                            <ul class="space-y-0.5 text-[9.5px]">
-                                <li><strong>Tenuta Azoto:</strong> <span id="prt_fgas_azoto">-</span></li>
-                                <li><strong>Vuoto:</strong> <span id="prt_fgas_vuoto">-</span></li>
-                                <li><strong>Pressione:</strong> <span id="prt_fgas_pressione">-</span></li>
-                                <li><strong>Condensa:</strong> <span id="prt_fgas_condensa">-</span></li>
-                                <li><strong>Patentino:</strong> <span id="prt_fgas_patentino" class="font-mono font-bold text-iltBlue">-</span></li>
-                            </ul>
-                        </div>
+    <div class="font-bold text-slate-800 uppercase border-b border-slate-200 pb-0.5 mb-1 text-[9px]">3. Verifiche F-GAS & Elettriche</div>
+    <ul class="space-y-0.5 text-[9.5px]">
+        <li><strong>Tenuta Azoto:</strong> <span id="prt_fgas_azoto">-</span></li>
+        <li><strong>Prova Vuoto:</strong> <span id="prt_fgas_vuoto">-</span></li>
+        <li><strong>Refrigerante / Carica:</strong> <span id="prt_fgas_gas_info">-</span></li>
+        <li><strong>Tonnellate CO2 Eq.:</strong> <span id="prt_fgas_co2">-</span></li>
+        <li><strong>Assorbimento:</strong> <span id="prt_fgas_ampere">-</span></li>
+        <li><strong>Pressioni Linee:</strong> <span id="prt_fgas_pressione">-</span></li>
+        <li><strong>Temp. & Delta-T:</strong> <span id="prt_fgas_temp">-</span></li>
+        <li><strong>Drenaggio Condensa:</strong> <span id="prt_fgas_condensa">-</span></li>
+        <li><strong>Patentino F-GAS:</strong> <span id="prt_fgas_patentino" class="font-mono font-bold text-iltBlue">-</span></li>
+    </ul>
+</div>
                         <div class="border border-slate-300 p-2 rounded bg-slate-50">
                             <div class="flex justify-between items-center border-b border-slate-200 pb-0.5 mb-1">
                                 <div class="font-bold text-slate-800 uppercase text-[9px]">4. Checklist</div>
@@ -874,13 +910,24 @@
                 if (fgasFormSection) fgasFormSection.classList.add('hidden');
                 if (fgasPrintBox) fgasPrintBox.classList.add('hidden');
                 tipoInterventoSelect.innerHTML = `<option>Consegna Base</option><option>Consegna e incasso</option><option>Ritiro Raee</option>`;
+                checklistState = new Array(CHECKLIST_BASE.length).fill(true);
             } else {
                 if (titleBadge) titleBadge.innerText = "MODALITÀ: PROFESSIONAL";
                 if (section2Title) section2Title.innerText = "2. Censimento Apparecchiature & S/N";
                 if (addRowBtnText) addRowBtnText.innerText = "Aggiungi Macchina";
                 if (fgasFormSection) fgasFormSection.classList.remove('hidden');
                 if (fgasPrintBox) fgasPrintBox.classList.remove('hidden');
-                tipoInterventoSelect.innerHTML = `<option>Installazione & Collaudo Climatizzatore</option><option>Manutenzione Ordinaria / Pulizia Filtri</option>`;
+                
+                // Voci complete per la modalità Professional (con Sopralluogo e altre opzioni)
+                tipoInterventoSelect.innerHTML = `
+                    <option>Installazione & Collaudo Climatizzatore</option>
+                    <option>Sopralluogo Tecnico & Fattibilità Impianto</option>
+                    <option>Manutenzione Ordinaria / Pulizia Filtri & Sanificazione</option>
+                    <option>Manutenzione Straordinaria & Riparazione</option>
+                    <option>Ricerca Perdita Refrigerante & Ricarica F-GAS</option>
+                `;
+                
+                checklistState = new Array(CHECKLIST_PROFESSIONAL.length).fill(true);
             }
             document.getElementById('assets-table-body').innerHTML = '';
             renderTableHeader();
@@ -895,7 +942,7 @@
             if (currentReportMode === 'base') {
                 headerTr.innerHTML = `<th class="p-2">Tipologia</th><th class="p-2">Modello</th><th class="p-2 w-20">Q.ta</th><th class="p-2">Matricola</th><th class="p-2">Ubicazione</th><th class="p-2 text-center">Azione</th>`;
             } else {
-                headerTr.innerHTML = `<th class="p-2">Componente</th><th class="p-2">Modello</th><th class="p-2">Potenza</th><th class="p-2">Gas</th><th class="p-2">S/N UI</th><th class="p-2">S/N UE</th><th class="p-2">Ubicazione</th><th class="p-2 text-center">Azione</th>`;
+                headerTr.innerHTML = `<th class="p-2">Marca</th><th class="p-2">Modello</th><th class="p-2">Potenza</th><th class="p-2">Gas</th><th class="p-2">S/N UI</th><th class="p-2">S/N UE</th><th class="p-2">Ubicazione</th><th class="p-2 text-center">Azione</th>`;
             }
         }
 
@@ -1273,8 +1320,8 @@
             const tbody = document.getElementById('assets-table-body');
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="p-1.5"><input type="text" value="${data.comp || 'Unità Interna'}" class="asset-comp w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
-                <td class="p-1.5"><input type="text" value="${data.modello || 'Daikin'}" class="asset-modello w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
+                <td class="p-1.5"><input type="text" value="${data.comp || 'Daikin'}" class="asset-comp w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
+                <td class="p-1.5"><input type="text" value="${data.modello || 'CX35V3B1'}" class="asset-modello w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
                 <td class="p-1.5"><input type="text" value="${data.potenza || '12000 BTU'}" class="asset-potenza w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
                 <td class="p-1.5"><input type="text" value="${data.gas || 'R32'}" class="asset-gas w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
                 <td class="p-1.5"><input type="text" value="${data.sn_ui || ''}" placeholder="S/N UI" class="asset-sn-ui w-full p-1.5 border rounded text-xs" oninput="syncToPrint()"></td>
@@ -1319,6 +1366,18 @@
             document.querySelectorAll('#checklist-container input[type="checkbox"]').forEach(cb => cb.checked = status);
             syncToPrint();
         }
+function calcolaCO2Eq() {
+    const selectGas = document.getElementById('fgas_tipo_gas');
+    if (!selectGas) return;
+    const selectedOption = selectGas.options[selectGas.selectedIndex];
+    const gwp = parseFloat(selectedOption.getAttribute('data-gwp')) || 0;
+    const kg = parseFloat(document.getElementById('fgas_kg_carica').value) || 0;
+    
+    // Formula tonnellate CO2 equivalente = (kg * GWP) / 1000
+    const co2Eq = (kg * gwp) / 1000;
+    document.getElementById('fgas_co2_eq').value = co2Eq.toFixed(2) + ' t';
+    syncToPrint();
+}
 
         async function saveReport() {
             const reportData = {
@@ -1361,20 +1420,37 @@
         }
 
         function syncToPrint() {
-            document.getElementById('prt_doc_num').innerText = document.getElementById('doc_num').value || '-';
-            document.getElementById('prt_doc_date').innerText = 'Data: ' + formatDateToIT(document.getElementById('doc_date').value);
-            document.getElementById('prt_cliente_nome').innerText = document.getElementById('cliente_nome').value || '-';
-            document.getElementById('prt_cliente_indirizzo').innerText = document.getElementById('cliente_indirizzo').value || '-';
-            document.getElementById('prt_cliente_cf').innerText = document.getElementById('cliente_cf').value || '-';
-            document.getElementById('prt_cliente_email').innerText = document.getElementById('cliente_email').value || '-';
-            document.getElementById('prt_rivenditore').innerText = document.getElementById('rivenditore').value || '-';
-            document.getElementById('prt_num_scontrino').innerText = document.getElementById('num_scontrino').value || '-';
-            document.getElementById('prt_totale_acquisto').innerText = document.getElementById('totale_acquisto').value ? '€ ' + document.getElementById('totale_acquisto').value : '-';
-            document.getElementById('prt_tipo_txt').innerText = document.getElementById('tipo_intervento').value || '-';
-            document.getElementById('prt_relazione').innerText = document.getElementById('relazione_tecnica').value || '-';
-            document.getElementById('prt_nome_tecnico').innerText = document.getElementById('nome_tecnico').value || '-';
-            document.getElementById('prt_nome_cliente_sub').innerText = document.getElementById('cliente_nome').value || '-';
-        }
+    document.getElementById('prt_doc_num').innerText = document.getElementById('doc_num').value || '-';
+    document.getElementById('prt_doc_date').innerText = 'Data: ' + formatDateToIT(document.getElementById('doc_date').value);
+    document.getElementById('prt_cliente_nome').innerText = document.getElementById('cliente_nome').value || '-';
+    document.getElementById('prt_cliente_indirizzo').innerText = document.getElementById('cliente_indirizzo').value || '-';
+    document.getElementById('prt_cliente_cf').innerText = document.getElementById('cliente_cf').value || '-';
+    document.getElementById('prt_cliente_email').innerText = document.getElementById('cliente_email').value || '-';
+    document.getElementById('prt_rivenditore').innerText = document.getElementById('rivenditore').value || '-';
+    document.getElementById('prt_num_scontrino').innerText = document.getElementById('num_scontrino').value || '-';
+    document.getElementById('prt_totale_acquisto').innerText = document.getElementById('totale_acquisto').value ? '€ ' + document.getElementById('totale_acquisto').value : '-';
+    document.getElementById('prt_tipo_txt').innerText = document.getElementById('tipo_intervento').value || '-';
+    document.getElementById('prt_relazione').innerText = document.getElementById('relazione_tecnica').value || '-';
+    document.getElementById('prt_nome_tecnico').innerText = document.getElementById('nome_tecnico').value || '-';
+    document.getElementById('prt_nome_cliente_sub').innerText = document.getElementById('cliente_nome').value || '-';
+
+    // --- AGGIUNTA: Sincronizzazione campi F-GAS & Professionali ---
+    if (document.getElementById('prt_fgas_azoto')) {
+        document.getElementById('prt_fgas_azoto').innerText = document.getElementById('fgas_azoto').value || '-';
+        document.getElementById('prt_fgas_vuoto').innerText = document.getElementById('fgas_vuoto').value || '-';
+        
+        const tipoGas = document.getElementById('fgas_tipo_gas').value;
+        const kgCarica = document.getElementById('fgas_kg_carica').value;
+        document.getElementById('prt_fgas_gas_info').innerText = `${tipoGas} (${kgCarica} kg)`;
+        
+        document.getElementById('prt_fgas_co2').innerText = document.getElementById('fgas_co2_eq').value || '-';
+        document.getElementById('prt_fgas_ampere').innerText = document.getElementById('fgas_ampere').value || '-';
+        document.getElementById('prt_fgas_pressione').innerText = document.getElementById('fgas_pressione').value || '-';
+        document.getElementById('prt_fgas_temp').innerText = document.getElementById('fgas_temp_split').value || '-';
+        document.getElementById('prt_fgas_condensa').innerText = document.getElementById('fgas_condensa').value || '-';
+        document.getElementById('prt_fgas_patentino').innerText = document.getElementById('fgas_patentino').value || '-';
+    }
+}
 
         function showToast(msg, type = 'info') {
             const container = document.getElementById('toast-container');
@@ -1425,6 +1501,57 @@
                 updateSig(canvasId);
                 e.preventDefault();
             }
+function gestisciTipoIntervento() {
+    const selectElement = document.getElementById('tipo_intervento');
+    if (!selectElement) return;
+    
+    const tipo = selectElement.value;
+    const sezioneFgas = document.getElementById('sezione-parametri-fgas');
+    const fgasPrintBox = document.getElementById('prt-box-fgas');
+    const relazioneInput = document.getElementById('relazione_tecnica');
+
+    // Controlliamo se la stringa contiene "Sopralluogo" (case-insensitive o esatto)
+    const isSopralluogo = tipo.toLowerCase().includes('sopralluogo');
+
+    if (isSopralluogo) {
+        // Nascondiamo visivamente la sezione F-GAS
+        if (sezioneFgas) {
+            sezioneFgas.style.display = 'none'; // Usiamo style.display per essere sicuri al 100% che sparisca
+        }
+        if (fgasPrintBox) {
+            fgasPrintBox.style.display = 'none';
+        }
+        
+        // Inseriamo il testo automatico se vuoto
+        if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
+            relazioneInput.value = "Sopralluogo eseguito per verifica fattibilità installazione. Verificata predisposizione elettrica, posizionamento unità interna/esterna e percorso scarico condensa.";
+        }
+    } else {
+        // Mostriamo nuovamente la sezione F-GAS per gli altri interventi
+        if (sezioneFgas) {
+            sezioneFgas.style.display = 'block';
+        }
+        if (fgasPrintBox) {
+            fgasPrintBox.style.display = 'block';
+        }
+    }
+
+    // Template per manutenzione o installazione
+    if (tipo.toLowerCase().includes('manutenzione ordinaria')) {
+        if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
+            relazioneInput.value = "Eseguita pulizia e sanificazione filtri unità interna. Verifica drenaggio condensa ed esecuzione test di funzionamento termico.";
+        }
+    } else if (tipo.toLowerCase().includes('installazione')) {
+        if (relazioneInput && (!relazioneInput.value || relazioneInput.value.trim() === "")) {
+            relazioneInput.value = "Installazione completata a regola d'arte. Eseguita prova di tenuta con azoto a 42 bar, vuoto di 30 min e collaudo con rilievo parametri Delta-T.";
+        }
+    }
+
+    // Sincronizza l'anteprima di stampa
+    if (typeof syncToPrint === 'function') {
+        syncToPrint();
+    }
+}
 
             function stopDraw() { drawing = false; }
 
